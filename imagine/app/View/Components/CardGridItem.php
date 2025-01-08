@@ -21,7 +21,7 @@ class CardGridItem extends Component
     public function getDataAttributes()
     {
         return [
-            'rarity' => strtolower(str_replace(' ', '-', $this->card['rarity'])),
+            'rarity' => $this->card['rarity'], // Keep original rarity format
             'type' => strtolower(str_replace(' ', '-', $this->card['card_type'])),
             'name' => strtolower($this->card['name']),
         ];

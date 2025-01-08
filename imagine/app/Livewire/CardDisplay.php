@@ -25,6 +25,42 @@ class CardDisplay extends Component
         ];
     }
 
+    public function getNormalizedRarity()
+    {
+        return strtolower(str_replace(' ', '-', $this->card['rarity']));
+    }
+
+    public function isRare()
+    {
+        return $this->card['rarity'] === 'Rare';
+    }
+
+    public function isMythicRare()
+    {
+        return $this->card['rarity'] === 'Mythic Rare';
+    }
+
+    public function isUncommon()
+    {
+        return $this->card['rarity'] === 'Uncommon';
+    }
+
+    public function isCommon()
+    {
+        return $this->card['rarity'] === 'Common';
+    }
+
+    public function getRarityClasses()
+    {
+        if ($this->isMythicRare()) {
+            return 'mythic-rare-card mythic-holographic';
+        }
+        if ($this->isRare()) {
+            return 'rare-card rare-holographic';
+        }
+        return '';
+    }
+
     public function toggleDetails()
     {
         $this->showDetails = !$this->showDetails;

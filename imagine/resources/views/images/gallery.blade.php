@@ -178,81 +178,6 @@
         margin: -12px;
     }
 
-    /* Card Styling */
-    .mtg-card {
-        backface-visibility: hidden;
-        transform-style: preserve-3d;
-        will-change: transform;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .mtg-card:hover {
-        transform: translateY(-4px);
-    }
-
-    .clip-type-border {
-        clip-path: polygon(0% 0%, 95% 0%, 100% 50%, 95% 100%, 0% 100%);
-    }
-
-    .mtg-card::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        opacity: 0;
-        pointer-events: none;
-        border-radius: 0.75rem;
-        transition: opacity 0.3s ease-out;
-        background-size: 200% 100%;
-    }
-
-    .mtg-card:hover::after {
-        opacity: 1;
-        animation: shimmer 1.5s infinite linear;
-    }
-
-    /* Rarity Effects */
-    .mtg-card[data-rarity="common"]::after,
-    .mtg-card[data-rarity="uncommon"]::after {
-        background: linear-gradient(
-            120deg,
-            transparent 10%,
-            rgba(255, 255, 255, 0.2) 20%,
-            transparent 30%
-        );
-    }
-
-    .mtg-card[data-rarity="rare"]::after {
-        background: linear-gradient(
-            120deg,
-            transparent 10%,
-            rgba(255, 215, 0, 0.3) 20%,
-            transparent 30%
-        );
-    }
-
-    .mtg-card[data-rarity="mythic-rare"]::after {
-        background: linear-gradient(
-            120deg,
-            transparent 10%,
-            rgba(255, 140, 0, 0.3) 20%,
-            transparent 30%
-        );
-    }
-
-    .mtg-card[data-rarity="rare"],
-    .mtg-card[data-rarity="mythic-rare"] {
-        box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .mtg-card[data-rarity="rare"]:hover {
-        box-shadow: 0 20px 50px -12px rgba(255, 215, 0, 0.25), 0 0 0 1px rgba(255, 215, 0, 0.15);
-    }
-
-    .mtg-card[data-rarity="mythic-rare"]:hover {
-        box-shadow: 0 20px 50px -12px rgba(255, 140, 0, 0.3), 0 0 0 1px rgba(255, 140, 0, 0.2);
-    }
-
     /* Card Frame Elements */
     .card-frame {
         background-color: #f4e6c7;
@@ -346,42 +271,6 @@
         text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
     }
 
-    /* Enhanced Card Styling */
-    .mtg-card {
-        transform: translateZ(0);
-        backface-visibility: hidden;
-        transform-style: preserve-3d;
-        will-change: transform;
-    }
-
-    .mtg-card:hover {
-        transform: translateY(-8px) translateZ(0);
-    }
-
-    /* Rarity-specific Enhancements */
-    .mtg-card[data-rarity="mythic-rare"] {
-        box-shadow: 
-            0 0 0 1px rgba(255, 140, 0, 0.1),
-            0 4px 12px rgba(255, 140, 0, 0.1);
-    }
-
-    .mtg-card[data-rarity="rare"] {
-        box-shadow: 
-            0 0 0 1px rgba(255, 215, 0, 0.1),
-            0 4px 12px rgba(255, 215, 0, 0.1);
-    }
-
-    .mtg-card[data-rarity="mythic-rare"]:hover {
-        box-shadow: 
-            0 0 0 1px rgba(255, 140, 0, 0.2),
-            0 12px 24px rgba(255, 140, 0, 0.2);
-    }
-
-    .mtg-card[data-rarity="rare"]:hover {
-        box-shadow: 
-            0 0 0 1px rgba(255, 215, 0, 0.2),
-            0 12px 24px rgba(255, 215, 0, 0.2);
-    }
 
     /* Grid Layout Refinements */
     .grid-sizer,
@@ -456,7 +345,7 @@
 
         // Initialize 3D effect for cards
         const initializeCardEffects = () => {
-            const cards = document.querySelectorAll('.mtg-card');
+            const cards = document.querySelectorAll('.card-container');
             cards.forEach(card => {
                 new MTGCard3DTiltEffect(card);
             });

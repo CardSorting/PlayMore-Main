@@ -100,6 +100,7 @@ class MTGCard3DTiltEffect {
             case 'Mythic Rare': return 12;
             case 'Rare': return 10;
             case 'Uncommon': return 8;
+            case 'Common': return 6;
             default: return 6;
         }
     }
@@ -109,6 +110,7 @@ class MTGCard3DTiltEffect {
             case 'Mythic Rare': return 1.05;
             case 'Rare': return 1.04;
             case 'Uncommon': return 1.03;
+            case 'Common': return 1.02;
             default: return 1.02;
         }
     }
@@ -118,6 +120,7 @@ class MTGCard3DTiltEffect {
             case 'Mythic Rare': return '0 0 20px rgba(255,140,0,0.3)';
             case 'Rare': return '0 0 15px rgba(255,215,0,0.2)';
             case 'Uncommon': return '0 0 10px rgba(192,192,192,0.15)';
+            case 'Common': return '0 0 5px rgba(0,0,0,0.1)';
             default: return '0 0 5px rgba(0,0,0,0.1)';
         }
     }
@@ -215,13 +218,6 @@ class MTGCard3DTiltEffect {
                     100% { filter: hue-rotate(360deg) brightness(1); }
                 }
 
-                .mythic-rare-card {
-                    box-shadow: ${this.getRarityBasedGlowIntensity()};
-                }
-
-                .rare-card {
-                    box-shadow: ${this.getRarityBasedGlowIntensity()};
-                }
             `;
             document.head.appendChild(style);
         }

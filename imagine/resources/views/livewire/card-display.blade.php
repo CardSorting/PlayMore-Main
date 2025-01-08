@@ -2,9 +2,8 @@
     <div class="mtg-card bg-white overflow-hidden shadow-xl rounded-lg p-4 transform transition-all duration-700 ease-out
                 {{ $showFlipAnimation ? 'rotate-y-180 scale-105' : '' }} 
                 hover:shadow-[0_0_40px_rgba(255,215,0,0.4)]
-                {{ $card['rarity'] === 'Mythic Rare' ? 'mythic-rare-card' : '' }}
-                {{ $card['rarity'] === 'Rare' ? 'rare-card' : '' }}"
-         data-rarity="{{ $card['rarity'] }}"
+                {{ $this->getRarityClasses() }}"
+         data-rarity="{{ $this->getNormalizedRarity() }}"
          style="transform-style: preserve-3d; perspective: 1000px;">
         
         <!-- Front of Card -->
@@ -12,11 +11,6 @@
                     {{ $showFlipAnimation ? 'opacity-0 rotate-y-180' : 'opacity-100' }}"
              style="backface-visibility: hidden;">
             
-            <!-- Enhanced Holographic Overlay -->
-            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none z-10
-                        {{ $card['rarity'] === 'Mythic Rare' ? 'mythic-holographic' : '' }}
-                        {{ $card['rarity'] === 'Rare' ? 'rare-holographic' : '' }}">
-            </div>
             
             <div class="card-frame h-full flex flex-col bg-[#f8e7c9] border-8 border-[#171314] rounded-lg overflow-hidden relative">
     <!-- Card Frame Texture -->
@@ -56,7 +50,7 @@
                                 group-hover:scale-110 group-hover:filter group-hover:brightness-110"
                          loading="lazy">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-                    @if($card['rarity'] === 'Mythic Rare' || $card['rarity'] === 'Rare')
+                    @if($this->isMythicRare() || $this->isRare())
                         <div class="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_0deg,rgba(255,255,255,0.2)_90deg,transparent_180deg)] animate-rotate-slow opacity-0 group-hover:opacity-100"></div>
                     @endif
                 </div>
@@ -88,13 +82,13 @@
                     <div class="relative flex justify-between items-center w-full z-10">
                         <div class="flex items-center space-x-2">
                             <span class="rarity-symbol text-xs
-                                @if($card['rarity'] == 'Mythic Rare') text-orange-400
-                                @elseif($card['rarity'] == 'Rare') text-yellow-300
-                                @elseif($card['rarity'] == 'Uncommon') text-gray-400
+                                @if($this->isMythicRare()) text-orange-400
+                                @elseif($this->isRare()) text-yellow-300
+                                @elseif($this->isUncommon()) text-gray-400
                                 @else text-gray-600 @endif">
-                                @if($card['rarity'] == 'Mythic Rare') M
-                                @elseif($card['rarity'] == 'Rare') R
-                                @elseif($card['rarity'] == 'Uncommon') U
+                                @if($this->isMythicRare()) M
+                                @elseif($this->isRare()) R
+                                @elseif($this->isUncommon()) U
                                 @else C @endif
                             </span>
                             <span class="rarity-details font-medium tracking-wide">{{ $card['rarity'] }}</span>

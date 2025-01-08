@@ -39,9 +39,14 @@ class CardController extends Controller
     /**
      * Show the form for creating a new card.
      */
-    public function create()
+    public function create(Request $request)
     {
-        return view('images.create-card');
+        $image = Gallery::where('type', 'image')
+            ->findOrFail($request->image_id);
+
+        return view('dashboard.cards.create', [
+            'image' => $image
+        ]);
     }
 
     /**

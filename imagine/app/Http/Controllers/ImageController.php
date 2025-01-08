@@ -82,6 +82,7 @@ class ImageController extends Controller
                     
                     foreach ($data['output']['image_urls'] as $imageUrl) {
                         auth()->user()->galleries()->create([
+                            'type' => 'image',
                             'image_url' => str_replace('\\', '', $imageUrl),
                             'prompt' => $taskInfo['prompt'],
                             'aspect_ratio' => $taskInfo['aspect_ratio'],

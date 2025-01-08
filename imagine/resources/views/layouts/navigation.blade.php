@@ -1,26 +1,45 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="bg-white border-b border-gray-100 shadow-sm">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
+                    <a href="{{ route('dashboard') }}" class="transition hover:opacity-75">
                         <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
                     </a>
                 </div>
 
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('images.gallery')" :active="request()->routeIs('images.gallery')">
-                        {{ __('Gallery') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('images.create')" :active="request()->routeIs('images.create')">
-                        {{ __('Generate Image') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('cards.index')" :active="request()->routeIs('cards.*')">
-                        {{ __('Cards') }}
-                    </x-nav-link>
+                <!-- Primary Navigation Links -->
+                <div class="hidden sm:flex sm:items-center sm:ms-6">
+                    <div class="flex items-center space-x-6">
+                        <!-- Gallery Link -->
+                        <x-nav-link :href="route('images.gallery')" :active="request()->routeIs('images.gallery')" 
+                            class="flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-50">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span>{{ __('Gallery') }}</span>
+                        </x-nav-link>
+
+                        <!-- Generate Link -->
+                        <x-nav-link :href="route('images.create')" :active="request()->routeIs('images.create')"
+                            class="flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-50">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{{ __('Generate') }}</span>
+                        </x-nav-link>
+
+                        <!-- Collection Link -->
+                        <x-nav-link :href="route('cards.index')" :active="request()->routeIs('cards.*')"
+                            class="flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-50">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                            <span>{{ __('Collection') }}</span>
+                        </x-nav-link>
+                    </div>
                 </div>
             </div>
 
@@ -28,7 +47,7 @@
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
                             <div>{{ Auth::user()->name }}</div>
 
                             <div class="ms-1">
@@ -40,7 +59,10 @@
                     </x-slot>
 
                     <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
+                        <x-dropdown-link :href="route('profile.edit')" class="flex items-center">
+                            <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
                             {{ __('Profile') }}
                         </x-dropdown-link>
 
@@ -50,7 +72,11 @@
 
                             <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault();
-                                                this.closest('form').submit();">
+                                                this.closest('form').submit();"
+                                    class="flex items-center text-red-600 hover:text-red-700 hover:bg-red-50">
+                                <svg class="w-5 h-5 mr-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
                                 {{ __('Log Out') }}
                             </x-dropdown-link>
                         </form>
@@ -73,26 +99,45 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('images.gallery')" :active="request()->routeIs('images.gallery')">
+            <!-- Navigation Links -->
+            <x-responsive-nav-link :href="route('images.gallery')" :active="request()->routeIs('images.gallery')"
+                class="flex items-center px-4 py-2 border-l-4 transition-colors">
+                <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
                 {{ __('Gallery') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('images.create')" :active="request()->routeIs('images.create')">
-                {{ __('Generate Image') }}
+            
+            <x-responsive-nav-link :href="route('images.create')" :active="request()->routeIs('images.create')"
+                class="flex items-center px-4 py-2 border-l-4 transition-colors">
+                <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ __('Generate') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('cards.index')" :active="request()->routeIs('cards.*')">
-                {{ __('Cards') }}
+
+            <x-responsive-nav-link :href="route('cards.index')" :active="request()->routeIs('cards.*')"
+                class="flex items-center px-4 py-2 border-l-4 transition-colors">
+                <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                {{ __('Collection') }}
             </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
+        <div class="pt-4 pb-1 border-t border-gray-200 bg-gray-50">
             <div class="px-4">
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                 <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
             </div>
 
             <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
+                <x-responsive-nav-link :href="route('profile.edit')"
+                    class="flex items-center px-4 py-2">
+                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
 
@@ -102,7 +147,11 @@
 
                     <x-responsive-nav-link :href="route('logout')"
                             onclick="event.preventDefault();
-                                        this.closest('form').submit();">
+                                        this.closest('form').submit();"
+                            class="flex items-center px-4 py-2 text-red-600">
+                        <svg class="w-5 h-5 mr-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
                         {{ __('Log Out') }}
                     </x-responsive-nav-link>
                 </form>

@@ -9,11 +9,11 @@
 @endsection
 
 @section('content')
-<div class="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Main Layout Container -->
-    <div class="w-full">
-        <!-- Main Content -->
-        <div class="w-full">
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8">
+        @if($cards->isEmpty())
+            <x-empty-state type="cards" />
+        @else
             <!-- Collection Header -->
             <div class="bg-white sticky top-0 z-10 p-4 mb-6 rounded-lg shadow-sm border-b border-gray-200">
                 <div class="flex justify-between items-center">
@@ -28,12 +28,12 @@
             <div class="flex justify-end mb-4 space-x-2">
                 <button class="view-btn p-2 rounded-lg hover:bg-gray-100 transition-colors" data-view="grid">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                 </button>
                 <button class="view-btn p-2 rounded-lg hover:bg-gray-100 transition-colors" data-view="list">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
             </div>
@@ -51,9 +51,10 @@
                     <div id="gridView" class="grid grid-cols-3 gap-8 relative opacity-0" 
                          style="grid-auto-rows: 1fr;"
                          x-data="{ hoveredCard: null }">
-                    @foreach($cards as $card)
-                        <x-card-grid-item :card="$card" />
-                    @endforeach
+                        @foreach($cards as $card)
+                            <x-card-grid-item :card="$card" />
+                        @endforeach
+                    </div>
                 </div>
 
                 <!-- List View -->
@@ -66,188 +67,16 @@
                 </div>
             </div>
 
-            @if(isset($cards))
-                <div class="mt-8">
-                    {{ $cards->links() }}
-                </div>
-            @endif
-        </div>
+            <div class="mt-8">
+                {{ $cards->links() }}
+            </div>
+        @endif
     </div>
 </div>
 
 <!-- Modals -->
 <x-card-details-modal />
 @endsection
-
-@push('styles')
-<style>
-    /* Card Container */
-    .card-container {
-        height: 100%;
-        transform-style: preserve-3d;
-        backface-visibility: hidden;
-    }
-
-    /* Card Item */
-    .card-item {
-        transform: translateY(20px);
-        opacity: 0;
-        transition: all 0.5s ease-out;
-    }
-
-    .card-item.visible {
-        transform: translateY(0);
-        opacity: 1;
-    }
-
-    #listView .card-item {
-        width: 100%;
-        margin-bottom: 8px;
-    }
-
-    /* Grid Layout */
-    #gridView {
-        display: grid;
-        width: 100%;
-    }
-
-    #gridView > * {
-        width: 100%;
-        height: 100%;
-    }
-
-    .card-container {
-        aspect-ratio: 2.5/3.5;
-    }
-
-    /* Animations */
-    @keyframes fadeInScale {
-        0% {
-            opacity: 0;
-            transform: scale(0.95) translateY(10px);
-        }
-        100% {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
-    }
-
-    @keyframes shimmer {
-        0% { background-position: -1000px 0; }
-        100% { background-position: 1000px 0; }
-    }
-
-    @keyframes rotate-slow {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
-    /* Card Frame Elements */
-    .card-frame {
-        background-color: #f4e6c7;
-        border: 12px solid #171314;
-        box-shadow: 
-            inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-            0 0 15px rgba(0, 0, 0, 0.3);
-        display: flex;
-        flex-direction: column;
-    }
-
-    .card-header {
-        flex: 0 0 auto;
-        height: 12%;
-        min-height: 2.5rem;
-        border-bottom: 2px solid #171314;
-    }
-
-    .card-art {
-        flex: 0 0 45%;
-        position: relative;
-        margin: 0.75rem;
-        border: 4px solid #171314;
-        border-radius: 0.375rem;
-    }
-
-    .card-type {
-        flex: 0 0 auto;
-        height: 8%;
-        min-height: 2rem;
-        margin: 0.75rem;
-    }
-
-    .card-text {
-        flex: 1 1 auto;
-        min-height: 25%;
-        margin: 0.75rem;
-        border: 2px solid #171314;
-        border-radius: 0.375rem;
-        background-color: #f4e6c7;
-    }
-
-    .card-footer {
-        flex: 0 0 auto;
-        height: 10%;
-        min-height: 2rem;
-        margin: 0.75rem;
-        border-radius: 0.375rem;
-        background-color: #171314;
-    }
-
-    /* Text Styling */
-    .abilities-text {
-        font-family: 'Matrix', ui-serif, Georgia, Cambria, serif;
-        line-height: 1.5;
-        color: #171314;
-    }
-
-    .flavor-text {
-        font-family: 'MPlantin', ui-serif, Georgia, Cambria, serif;
-        font-style: italic;
-        line-height: 1.5;
-        color: rgba(23, 19, 20, 0.9);
-    }
-
-    .card-name {
-        font-family: 'Beleren', ui-serif, Georgia, Cambria, serif;
-        font-weight: bold;
-        letter-spacing: 0.05em;
-        color: #e6e3de;
-        text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
-    }
-
-    /* Scrollbar */
-    .scrollbar-thin::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .scrollbar-thin::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .scrollbar-thin::-webkit-scrollbar-thumb {
-        background: rgba(23, 19, 20, 0.2);
-        border-radius: 2px;
-    }
-
-    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-        background: rgba(23, 19, 20, 0.3);
-    }
-
-    /* Enhanced Type Border */
-    .clip-type-border::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-            to right,
-            transparent,
-            rgba(255, 255, 255, 0.1) 50%,
-            transparent
-        );
-        clip-path: inherit;
-    }
-</style>
-@endpush
 
 @push('scripts')
 <script>
@@ -311,4 +140,69 @@
         setTimeout(() => switchView('grid'), 150);
     });
 </script>
+@endpush
+
+@push('styles')
+<style>
+    /* Card Container */
+    .card-container {
+        height: 100%;
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
+    }
+
+    /* Card Item */
+    .card-item {
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.5s ease-out;
+    }
+
+    .card-item.visible {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    #listView .card-item {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    /* Grid Layout */
+    #gridView {
+        display: grid;
+        width: 100%;
+    }
+
+    #gridView > * {
+        width: 100%;
+        height: 100%;
+    }
+
+    .card-container {
+        aspect-ratio: 2.5/3.5;
+    }
+
+    /* Animations */
+    @keyframes fadeInScale {
+        0% {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    @keyframes shimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+    }
+
+    @keyframes rotate-slow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
 @endpush

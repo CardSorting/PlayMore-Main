@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\CardController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -29,14 +30,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Card Routes
-    Route::prefix('dashboard')->name('cards.')->group(function () {
-        Route::get('/cards', [CardController::class, 'index'])->name('index');
-        Route::get('/cards/create', [CardController::class, 'create'])->name('create');
-        Route::post('/cards', [CardController::class, 'store'])->name('store');
-        Route::get('/cards/{card}', [CardController::class, 'show'])->name('show');
-        Route::get('/cards/{card}/edit', [CardController::class, 'edit'])->name('edit');
-        Route::put('/cards/{card}', [CardController::class, 'update'])->name('update');
-        Route::delete('/cards/{card}', [CardController::class, 'destroy'])->name('destroy');
+    Route::controller(CardController::class)->prefix('dashboard/cards')->name('cards.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{card}', 'show')->name('show');
+        Route::get('/{card}/edit', 'edit')->name('edit');
+        Route::put('/{card}', 'update')->name('update');
+        Route::delete('/{card}', 'destroy')->name('destroy');
     });
 
     // Profile Routes

@@ -18,6 +18,9 @@
                     <x-nav-link :href="route('images.create')" :active="request()->routeIs('images.create')">
                         {{ __('Generate Image') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('cards.index')" :active="request()->routeIs('cards.*')">
+                        {{ __('Cards') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -75,6 +78,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('images.create')" :active="request()->routeIs('images.create')">
                 {{ __('Generate Image') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('cards.index')" :active="request()->routeIs('cards.*')">
+                {{ __('Cards') }}
             </x-responsive-nav-link>
         </div>
 

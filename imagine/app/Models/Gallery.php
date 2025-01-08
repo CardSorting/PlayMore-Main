@@ -12,12 +12,20 @@ class Gallery extends Model
 
     protected $fillable = [
         'user_id',
+        'type',
+        'name',
         'image_url',
         'prompt',
         'aspect_ratio',
         'process_mode',
         'task_id',
-        'metadata'
+        'metadata',
+        'mana_cost',
+        'card_type',
+        'abilities',
+        'flavor_text',
+        'power_toughness',
+        'rarity'
     ];
 
     protected $casts = [

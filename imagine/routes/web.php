@@ -26,8 +26,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/generate', [ImageController::class, 'generate'])->name('generate');
         Route::get('/status/{taskId}', [ImageController::class, 'status'])->name('status');
         Route::get('/gallery', [ImageController::class, 'gallery'])->name('gallery');
-        Route::get('/card/{id}', [ImageController::class, 'createCard'])->name('create-card');
-        Route::post('/card', [ImageController::class, 'storeCard'])->name('store-card');
+    });
+
+    // Card Routes
+    Route::prefix('dashboard')->name('cards.')->group(function () {
+        Route::get('/cards', [CardController::class, 'index'])->name('index');
+        Route::get('/cards/create', [CardController::class, 'create'])->name('create');
+        Route::post('/cards', [CardController::class, 'store'])->name('store');
+        Route::get('/cards/{card}', [CardController::class, 'show'])->name('show');
+        Route::get('/cards/{card}/edit', [CardController::class, 'edit'])->name('edit');
+        Route::put('/cards/{card}', [CardController::class, 'update'])->name('update');
+        Route::delete('/cards/{card}', [CardController::class, 'destroy'])->name('destroy');
     });
 
     // Profile Routes

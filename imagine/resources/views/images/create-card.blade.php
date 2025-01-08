@@ -14,34 +14,56 @@
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <div class="mt-8">
                         <div id="card-container" class="mtg-card w-[375px] h-[525px] mx-auto relative rounded-[18px] shadow-lg overflow-hidden bg-white">
-                            <div class="card-frame h-full p-3 flex flex-col">
+                            <div class="card-frame h-full flex flex-col bg-[#f8e7c9] border-8 border-[#171314] rounded-lg overflow-hidden relative">
+                                <!-- Card Frame Texture -->
+                                <div class="absolute inset-0 mix-blend-overlay opacity-30 pointer-events-none" style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiMyOTI1MjQiIHN0cm9rZS1vcGFjaXR5PSIwLjA1Ij48L3BhdGg+Cjwvc3ZnPg==');"></div>
                                 <!-- Header: Card Name and Mana Cost -->
-                                <div class="card-header flex justify-between items-center bg-gradient-to-r from-gray-200 to-gray-100 p-2 rounded-t-md mb-1">
-                                    <h2 class="card-name text-xl font-bold text-shadow text-black">Unnamed Card</h2>
+                                <!-- Title Bar with Enhanced Styling -->
+                                <div class="card-title-bar relative flex justify-between items-center px-3 py-2 bg-[#171314] text-[#d3ced9]">
+                                    <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
+                                    <div class="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                                    <h2 class="card-name text-xl font-beleren font-bold text-shadow text-[#d3ced9] relative z-10">Unnamed Card</h2>
                                     <div class="mana-cost flex space-x-1">
                                         <div class="mana-symbol text-gray-500">No Mana Cost</div>
                                     </div>
                                 </div>
 
-                                <!-- Card Image -->
-                                <img src="{{ $image->image_url }}" alt="Card Image" class="w-full h-[220px] object-cover object-center rounded mb-1">
-
-                                <!-- Card Type -->
-                                <div class="card-type bg-gradient-to-r from-gray-200 to-gray-100 p-2 text-sm border-b border-black border-opacity-20 mb-1 text-black">
-                                    Unknown Type
+                                <!-- Art Box -->
+                                <div class="relative mx-2 mt-2 mb-2 overflow-hidden group h-[45%]">
+                                    <div class="absolute inset-0 border border-[#171314] z-20 pointer-events-none"></div>
+                                    <img src="{{ $image->image_url }}" alt="Card Image" class="w-full h-[180px] object-cover object-center">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10"></div>
                                 </div>
 
-                                <!-- Card Text: Abilities and Flavor Text -->
-                                <div class="card-text bg-gray-100 bg-opacity-90 p-3 rounded flex-grow overflow-y-auto text-sm leading-relaxed text-black">
-                                    <p class="abilities-text mb-2 text-black">No abilities</p>
-                                    <p class="flavor-text mt-2 italic text-black">No flavor text</p>
+                                <!-- Type Line with Enhanced Border -->
+                                <div class="card-type relative mx-2 mb-2">
+                                    <div class="absolute inset-0 bg-[#171314]"></div>
+                                    <div class="relative px-3 py-1 text-sm font-matrix bg-[#f8e7c9] text-[#171314] tracking-wide border-t border-b border-[#171314]">
+                                        Unknown Type
+                                    </div>
                                 </div>
 
-                <!-- Footer: Rarity and Power/Toughness -->
-                <div class="card-footer flex justify-between items-center text-white text-xs mt-1 bg-black bg-opacity-50 p-2 rounded-b-md">
-                    <span class="rarity-details transition-all duration-500">???</span>
-                    <span class="power-toughness">N/A</span>
-                </div>
+                                <!-- Text Box -->
+                                <div class="card-text relative mx-2 h-[30%] bg-[#f8e7c9] overflow-hidden border border-[#171314] text-[#171314]">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/5"></div>
+                                    <div class="absolute inset-0 border border-white/10"></div>
+                                    <div class="relative p-4 flex flex-col h-full">
+                                        <div class="flex-grow overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-[#171314]/20 scrollbar-track-transparent">
+                                            <p class="abilities-text mb-2 font-matrix text-black">No abilities</p>
+                                            <p class="flavor-text mt-2 font-mplantin italic text-black">No flavor text</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Info Line -->
+                                <div class="card-footer relative flex justify-between items-center mt-2 mx-2 mb-2 px-3 py-1.5 bg-[#171314] text-[#d3ced9] text-xs font-matrix tracking-wide">
+                                    <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
+                                    <div class="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                                    <div class="relative flex justify-between items-center w-full z-10">
+                                        <span class="rarity-details transition-all duration-500">???</span>
+                                        <span class="power-toughness">N/A</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -55,49 +77,49 @@
                             <p class="mt-1 text-sm">You have already created a card for this image. Each image can only be used for one card.</p>
                         </div>
                     @endif
-                    <form method="POST" action="{{ route('images.store-card') }}" class="space-y-6" {!! $cardExists ? 'onsubmit="return false;"' : '' !!}>
+                    <form method="POST" action="{{ route('images.store-card') }}" class="space-y-6">
                     @csrf
                     <input type="hidden" name="image_url" value="{{ $image->image_url }}">
                     
                     <!-- Card Name -->
                     <div>
                         <x-input-label for="name" value="Card Name" />
-                        <x-text-input id="name" name="name" type="text" class="mt-1 block w-full {{ $cardExists ? 'opacity-50 cursor-not-allowed' : '' }}" required {{ $cardExists ? 'disabled' : '' }} />
+                        <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" required />
                         <x-input-error :messages="$errors->get('name')" class="mt-2" />
                     </div>
 
                     <!-- Mana Cost -->
                     <div>
                         <x-input-label for="mana_cost" value="Mana Cost (e.g., 2RG for 2 colorless, 1 red, 1 green)" />
-                        <x-text-input id="mana_cost" name="mana_cost" type="text" class="mt-1 block w-full {{ $cardExists ? 'opacity-50 cursor-not-allowed' : '' }}" required {{ $cardExists ? 'disabled' : '' }} />
+                        <x-text-input id="mana_cost" name="mana_cost" type="text" class="mt-1 block w-full" required />
                         <x-input-error :messages="$errors->get('mana_cost')" class="mt-2" />
                     </div>
 
                     <!-- Card Type -->
                     <div>
                         <x-input-label for="card_type" value="Card Type" />
-                        <x-text-input id="card_type" name="card_type" type="text" class="mt-1 block w-full {{ $cardExists ? 'opacity-50 cursor-not-allowed' : '' }}" required placeholder="e.g., Creature - Dragon" {{ $cardExists ? 'disabled' : '' }} />
+                        <x-text-input id="card_type" name="card_type" type="text" class="mt-1 block w-full" required placeholder="e.g., Creature - Dragon" />
                         <x-input-error :messages="$errors->get('card_type')" class="mt-2" />
                     </div>
 
                     <!-- Card Text/Abilities -->
                     <div>
                         <x-input-label for="abilities" value="Card Text/Abilities" />
-                        <textarea id="abilities" name="abilities" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 {{ $cardExists ? 'opacity-50 cursor-not-allowed' : '' }}" required {{ $cardExists ? 'disabled' : '' }}></textarea>
+                        <textarea id="abilities" name="abilities" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required></textarea>
                         <x-input-error :messages="$errors->get('abilities')" class="mt-2" />
                     </div>
 
                     <!-- Flavor Text -->
                     <div>
                         <x-input-label for="flavor_text" value="Flavor Text (optional)" />
-                        <textarea id="flavor_text" name="flavor_text" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 {{ $cardExists ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $cardExists ? 'disabled' : '' }}></textarea>
+                        <textarea id="flavor_text" name="flavor_text" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></textarea>
                         <x-input-error :messages="$errors->get('flavor_text')" class="mt-2" />
                     </div>
 
                     <!-- Power/Toughness (for creatures) -->
                     <div>
                         <x-input-label for="power_toughness" value="Power/Toughness (for creatures, e.g. 3/4)" />
-                        <x-text-input id="power_toughness" name="power_toughness" type="text" class="mt-1 block w-full {{ $cardExists ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $cardExists ? 'disabled' : '' }} />
+                        <x-text-input id="power_toughness" name="power_toughness" type="text" class="mt-1 block w-full" />
                         <x-input-error :messages="$errors->get('power_toughness')" class="mt-2" />
                     </div>
 
@@ -129,6 +151,95 @@
     </div>
 
     <style>
+        /* Card Fonts */
+        @font-face {
+            font-family: 'Beleren';
+            src: url('/fonts/Beleren-Bold.woff2') format('woff2');
+            font-weight: bold;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Matrix';
+            src: url('/fonts/Matrix-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'MPlantin';
+            src: url('/fonts/MPlantin-Italic.woff2') format('woff2');
+            font-weight: normal;
+            font-style: italic;
+            font-display: swap;
+        }
+
+        .font-beleren {
+            font-family: 'Beleren', ui-serif, Georgia, Cambria, serif;
+        }
+
+        .font-matrix {
+            font-family: 'Matrix', ui-serif, Georgia, Cambria, serif;
+        }
+
+        .font-mplantin {
+            font-family: 'MPlantin', ui-serif, Georgia, Cambria, serif;
+        }
+
+        /* Card Frame Elements */
+        .card-frame {
+            background-color: #f4e6c7;
+            border: 12px solid #171314;
+            box-shadow: 
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+                0 0 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Enhanced Card Layout */
+        .card-header {
+            flex: 0 0 auto;
+            height: 12%;
+            min-height: 2.5rem;
+            border-bottom: 2px solid #171314;
+        }
+
+        .card-art {
+            flex: 0 0 45%;
+            position: relative;
+            margin: 0.75rem;
+            border: 4px solid #171314;
+            border-radius: 0.375rem;
+        }
+
+        .card-type {
+            flex: 0 0 auto;
+            height: 8%;
+            min-height: 2rem;
+            margin: 0.75rem;
+        }
+
+        .card-text {
+            flex: 1 1 auto;
+            min-height: 25%;
+            margin: 0.75rem;
+            border: 2px solid #171314;
+            border-radius: 0.375rem;
+            background-color: #f4e6c7;
+        }
+
+        .card-footer {
+            flex: 0 0 auto;
+            height: 10%;
+            min-height: 2rem;
+            margin: 0.75rem;
+            border-radius: 0.375rem;
+            background-color: #171314;
+        }
+
         @keyframes flipInY {
             from {
                 transform: perspective(400px) rotateY(90deg);
@@ -191,10 +302,74 @@
     </style>
 
     <script>
-        // Form submission and animations
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.querySelector('form');
             const cardContainer = document.getElementById('card-container');
+            const formFields = document.querySelectorAll('input, textarea, select');
+            
+            // Live preview update function
+            function updatePreview() {
+                const name = document.getElementById('name').value || 'Unnamed Card';
+                const manaCost = document.getElementById('mana_cost').value;
+                const manaContainer = document.querySelector('.mana-cost');
+                const cardType = document.getElementById('card_type').value || 'Unknown Type';
+                const abilities = document.getElementById('abilities').value || 'No abilities';
+                const flavorText = document.getElementById('flavor_text').value;
+                const powerToughness = document.getElementById('power_toughness').value || 'N/A';
+
+                // Update card name with preserved class
+                const cardNameEl = document.querySelector('.card-name');
+                cardNameEl.textContent = name;
+                cardNameEl.className = 'card-name text-xl font-beleren font-bold text-shadow text-[#d3ced9] relative z-10';
+
+                // Update mana cost
+                if (!manaCost) {
+                    manaContainer.innerHTML = '<div class="mana-symbol text-gray-500">No Mana Cost</div>';
+                } else {
+                    // Split mana cost string into individual symbols, handling both comma-separated and direct string
+                    const symbols = manaCost.includes(',') ? manaCost.split(',') : manaCost.split('');
+                    manaContainer.innerHTML = symbols.map(symbol => {
+                        const bgColor = {
+                            'W': 'bg-yellow-200 text-black',
+                            'U': 'bg-blue-500 text-white',
+                            'B': 'bg-black text-white',
+                            'R': 'bg-red-500 text-white',
+                            'G': 'bg-green-500 text-white'
+                        }[symbol.toUpperCase()] || 'bg-gray-400 text-black';
+                        
+                        return `<div class="mana-symbol rounded-full flex justify-center items-center text-sm font-bold w-8 h-8 ${bgColor} border border-[#171314]">${symbol}</div>`;
+                    }).join('');
+                }
+
+                // Update card type
+                const cardTypeContainer = document.querySelector('.card-type');
+                const cardTypeInner = cardTypeContainer.querySelector('div:last-child');
+                cardTypeInner.textContent = cardType;
+
+                // Update abilities and flavor text with preserved classes
+                const abilitiesEl = document.querySelector('.abilities-text');
+                abilitiesEl.textContent = abilities;
+                abilitiesEl.className = 'abilities-text mb-2 font-matrix text-black';
+
+                const flavorTextEl = document.querySelector('.flavor-text');
+                flavorTextEl.textContent = flavorText || 'No flavor text';
+                flavorTextEl.className = 'flavor-text mt-2 font-mplantin italic text-black';
+
+                // Update footer (only power/toughness since rarity is random)
+                document.querySelector('.rarity-details').textContent = '???';
+                document.querySelector('.power-toughness').textContent = powerToughness;
+            }
+            
+            // Initialize form fields and preview
+            function initializeForm() {
+                // Add event listeners to all form fields for live preview
+                formFields.forEach(field => {
+                    field.addEventListener('input', updatePreview);
+                });
+                
+                // Initial preview update
+                updatePreview();
+            }
             
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -248,101 +423,8 @@
                 }
             });
 
-            // Check for existing card with same image URL
-            const imageUrl = '{{ $image->image_url }}';
-            const cards = JSON.parse(sessionStorage.getItem('cards') || '[]');
-            const existingCard = cards.find(card => card.image_url === imageUrl);
-            
-            if (existingCard) {
-                const form = document.querySelector('form');
-                const submitButton = form.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded';
-                errorDiv.textContent = 'You have already created a card for this image.';
-                form.insertBefore(errorDiv, submitButton.parentElement);
-            }
-
-            // Store cards in session storage for validation
-            const response = await fetch('{{ route("images.gallery") }}');
-            const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const cards = Array.from(doc.querySelectorAll('[data-card-container]')).map(el => ({
-                image_url: el.getAttribute('data-image-url')
-            }));
-            sessionStorage.setItem('cards', JSON.stringify(cards));
-
-            // Add error handling for validation response
-            if (!response.ok) {
-                const errorData = await response.json();
-                if (errorData.errors && errorData.errors.image_url) {
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded';
-                    errorDiv.textContent = errorData.errors.image_url[0];
-                    form.insertBefore(errorDiv, submitButton.parentElement);
-                }
-                submitButton.disabled = false;
-                submitButton.innerHTML = 'Create Card';
-                return;
-            }
-        });
-
-        // Live preview updates
-        document.addEventListener('DOMContentLoaded', () => {
-            const updatePreview = () => {
-                const name = document.getElementById('name').value || 'Unnamed Card';
-                const manaCost = document.getElementById('mana_cost').value;
-                const cardType = document.getElementById('card_type').value || 'Unknown Type';
-                const abilities = document.getElementById('abilities').value || 'No abilities';
-                const flavorText = document.getElementById('flavor_text').value;
-                const powerToughness = document.getElementById('power_toughness').value || 'N/A';
-                // Update card name with preserved class
-                const cardNameEl = document.querySelector('.card-name');
-                cardNameEl.textContent = name;
-                cardNameEl.className = 'card-name text-xl font-bold text-shadow text-black';
-
-                // Update mana cost
-                const manaContainer = document.querySelector('.mana-cost');
-                if (manaCost) {
-                    manaContainer.innerHTML = manaCost.split('').map(symbol => {
-                        const bgColor = {
-                            'W': 'bg-yellow-200 text-black',
-                            'U': 'bg-blue-500 text-white',
-                            'B': 'bg-black text-white',
-                            'R': 'bg-red-500 text-white',
-                            'G': 'bg-green-500 text-white'
-                        }[symbol.toUpperCase()] || 'bg-gray-400 text-black';
-                        
-                        return `<div class="mana-symbol rounded-full flex justify-center items-center text-sm font-bold w-8 h-8 ${bgColor}">${symbol}</div>`;
-                    }).join('');
-                }
-
-                // Update card type with preserved class
-                const cardTypeEl = document.querySelector('.card-type');
-                cardTypeEl.textContent = cardType;
-                cardTypeEl.className = 'card-type bg-gradient-to-r from-gray-200 to-gray-100 p-2 text-sm border-b border-black border-opacity-20 mb-1 text-black';
-
-                // Update abilities and flavor text with preserved classes
-                const abilitiesEl = document.querySelector('.abilities-text');
-                abilitiesEl.textContent = abilities;
-                abilitiesEl.className = 'abilities-text mb-2 text-black';
-
-                const flavorTextEl = document.querySelector('.flavor-text');
-                flavorTextEl.textContent = flavorText || 'No flavor text';
-                flavorTextEl.className = 'flavor-text mt-2 italic text-black';
-
-                // Update footer (only power/toughness since rarity is random)
-                document.querySelector('.rarity-details').textContent = '???';
-                document.querySelector('.power-toughness').textContent = powerToughness;
-            };
-
-            // Add event listeners to all form fields
-            const formFields = document.querySelectorAll('input, textarea, select');
-            formFields.forEach(field => {
-                field.addEventListener('input', updatePreview);
-            });
+            // Initialize the form
+            initializeForm();
         });
     </script>
 </x-app-layout>

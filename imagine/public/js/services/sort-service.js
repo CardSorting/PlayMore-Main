@@ -13,7 +13,8 @@ class SortService {
     }
 
     initializeEventListeners() {
-        const sortSelect = document.getElementById('sort');
+        // Sort select with data attribute
+        const sortSelect = document.querySelector('[data-sort-control]');
         if (sortSelect) {
             sortSelect.addEventListener('change', (e) => {
                 this.currentSort.field = e.target.value;
@@ -21,7 +22,8 @@ class SortService {
             });
         }
 
-        const sortDirectionButton = document.querySelector('[aria-label="Toggle sort direction"]');
+        // Sort direction button with ID
+        const sortDirectionButton = document.getElementById('sortDirection');
         if (sortDirectionButton) {
             sortDirectionButton.addEventListener('click', () => this.toggleSortDirection());
         }
@@ -97,9 +99,12 @@ class SortService {
     }
 
     updateSortDirectionIndicator() {
-        const button = document.querySelector('[aria-label="Toggle sort direction"]');
+        const button = document.getElementById('sortDirection');
         if (!button) return;
 
+        // Update button appearance
+        button.classList.toggle('bg-purple-50', !this.currentSort.ascending);
+        
         const svg = button.querySelector('svg');
         if (!svg) return;
 
@@ -111,6 +116,11 @@ class SortService {
                 : 'M7 4v12m0 0l4-4m-4 4l-4-4m14-8V4m0 0l-4 4m4-4l4 4' // Down/Up arrows
             );
         }
+
+        // Update aria-label for accessibility
+        button.setAttribute('aria-label', 
+            this.currentSort.ascending ? 'Sort Descending' : 'Sort Ascending'
+        );
     }
 
     getCurrentSort() {

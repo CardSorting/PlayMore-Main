@@ -4,9 +4,10 @@ class MasonryService {
         this.instance = null;
         this.options = {
             itemSelector: '.card-item',
-            columnWidth: '.card-item',
-            percentPosition: true,
-            transitionDuration: '0.3s'
+            columnWidth: '.grid-sizer',
+            percentPosition: false,
+            transitionDuration: '0.3s',
+            gutter: 24 // matches gap-6 (1.5rem = 24px)
         };
     }
 

@@ -36,9 +36,15 @@ class ViewService {
             btn.classList.toggle('bg-gray-100', isActive);
         });
         
-        // First set opacity to 0 for smooth transition
-        gridView.style.opacity = '0';
-        listView.style.opacity = '0';
+        // First set opacity to 0 for smooth transition if elements exist
+        if (gridView) gridView.style.opacity = '0';
+        if (listView) listView.style.opacity = '0';
+
+        // Exit early if required elements don't exist
+        if (!gridView || !listView) {
+            console.warn('Required view elements not found');
+            return;
+        }
 
         // Short delay to ensure opacity transition is visible
         setTimeout(() => {

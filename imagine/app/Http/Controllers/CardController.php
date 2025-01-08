@@ -14,11 +14,10 @@ class CardController extends Controller
     public function __construct()
     {
         \Validator::extend('unique_card', function ($attribute, $value, $parameters, $validator) {
-            $cards = collect(session('cards', []));
             $data = $validator->getData();
-            return !$cards->contains(function ($card) use ($data) {
-                return $card['image_url'] === $data['image_url'];
-            });
+            return !Gallery::where('type', 'card')
+                ->where('image_url', $data['image_url'])
+                ->exists();
         }, 'You have already created a card for this image.');
     }
 
@@ -54,18 +53,81 @@ class CardController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'mana_cost' => ['required', 'string', 'max:50'],
-            'card_type' => ['required', 'string', 'max:255'],
-            'abilities' => ['required', 'string'],
-            'flavor_text' => ['nullable', 'string'],
-            'power_toughness' => ['nullable', 'string', 'max:10'],
-            'image_url' => ['required', 'url', 'unique_card']
-        ]);
+        try {
+            \Log::info('Card creation attempt', [
+                'request' => $request->all(),
+                'user_id' => auth()->id()
+            ]);
+            
+            // Validate all data upfront
+            try {
+                $validatedData = $request->validate([
+                    'image_id' => ['required', 'exists:galleries,id'],
+                    'name' => ['required', 'string', 'max:255'],
+                    'mana_cost' => ['required', 'string', 'max:50'],
+                    'card_type' => ['required', 'string', 'max:255'],
+                    'abilities' => ['required', 'string'],
+                    'flavor_text' => ['nullable', 'string'],
+                    'power_toughness' => ['nullable', 'string', 'max:10'],
+                    'image_url' => ['required', 'url']
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                \Log::error('Card creation validation failed', [
+                    'errors' => $e->errors(),
+                    'request_data' => $request->all()
+                ]);
+                return back()
+                    ->withErrors($e->errors())
+                    ->withInput();
+            }
 
-        // Randomly select rarity with weighted probabilities
-        $rarities = [
+            // Get the original image
+            $image = Gallery::where('id', $validatedData['image_id'])
+                ->where('type', 'image')
+                ->first();
+
+            if (!$image) {
+                \Log::error('Invalid image selected', [
+                    'image_id' => $validatedData['image_id'],
+                    'user_id' => auth()->id()
+                ]);
+                return back()
+                    ->withInput()
+                    ->withErrors(['error' => 'Invalid image selected.']);
+            }
+
+            // Check if a card already exists for this image
+            $existingCard = Gallery::where('type', 'card')
+                ->where('image_url', $image->image_url)
+                ->first();
+                
+            if ($existingCard) {
+                \Log::warning('Attempted to create duplicate card', [
+                    'image_id' => $image->id,
+                    'image_url' => $image->image_url,
+                    'existing_card_id' => $existingCard->id,
+                    'user_id' => auth()->id()
+                ]);
+                return back()
+                    ->withInput()
+                    ->withErrors(['error' => 'A card already exists for this image.']);
+            }
+
+            // Verify image URL matches
+            if ($validatedData['image_url'] !== $image->image_url) {
+                \Log::error('Image URL mismatch', [
+                    'provided_url' => $validatedData['image_url'],
+                    'actual_url' => $image->image_url,
+                    'image_id' => $image->id,
+                    'user_id' => auth()->id()
+                ]);
+                return back()
+                    ->withInput()
+                    ->withErrors(['error' => 'Invalid image URL provided.']);
+            }
+
+            // Randomly select rarity with weighted probabilities
+            $rarities = [
             'Common' => 50,      // 50% chance
             'Uncommon' => 30,    // 30% chance
             'Rare' => 15,        // 15% chance
@@ -84,33 +146,77 @@ class CardController extends Controller
             $roll -= $weight;
         }
 
-        // Format mana cost into comma-separated list
-        $manaCost = implode(',', str_split($request->mana_cost));
-        
-        $card = auth()->user()->galleries()->create([
-            'type' => 'card',
-            'name' => $request->name,
-            'mana_cost' => $manaCost,
-            'card_type' => $request->card_type,
-            'abilities' => $request->abilities,
-            'flavor_text' => $request->flavor_text,
-            'power_toughness' => $request->power_toughness,
-            'rarity' => $selectedRarity,
-            'image_url' => $request->image_url,
-        ]);
-
-        // Return JSON response with card data for animation
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'card' => $card,
-                'message' => 'Card created successfully!'
+            // Format mana cost into comma-separated list
+            $manaCost = implode(',', str_split($request->mana_cost));
+            
+            \Log::info('Creating card with data', [
+                'type' => 'card',
+                'name' => $request->name,
+                'mana_cost' => $manaCost,
+                'card_type' => $request->card_type,
+                'abilities' => $request->abilities,
+                'flavor_text' => $request->flavor_text,
+                'power_toughness' => $request->power_toughness,
+                'image_url' => $request->image_url
             ]);
-        }
 
-        return redirect()->route('cards.index')
-            ->with('success', 'Card created successfully!')
-            ->with('last_card', $card);
+            // Create the card using the original image's data
+            $card = auth()->user()->galleries()->create([
+                'type' => 'card',
+                'name' => $validatedData['name'],
+                'mana_cost' => implode(',', str_split($validatedData['mana_cost'])),
+                'card_type' => $validatedData['card_type'],
+                'abilities' => $validatedData['abilities'],
+                'flavor_text' => $validatedData['flavor_text'],
+                'power_toughness' => $validatedData['power_toughness'],
+                'rarity' => $selectedRarity,
+                'image_url' => $image->image_url,
+                'metadata' => [
+                    'original_image_id' => $image->id,
+                    'created_from' => 'image',
+                    'created_at' => now()->toISOString(),
+                    'original_metadata' => $image->metadata
+                ]
+            ]);
+
+            \Log::info('Card created successfully', [
+                'card_id' => $card->id,
+                'card_data' => $card->toArray(),
+                'original_image_id' => $image->id
+            ]);
+
+            // Return JSON response with card data for animation
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'card' => $card,
+                    'message' => 'Card created successfully!'
+                ]);
+            }
+
+            return redirect()->route('cards.index')
+                ->with('success', 'Card created successfully!')
+                ->with('last_card', $card);
+
+        } catch (\Exception $e) {
+            \Log::error('Validation or pre-creation check failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+                'user_id' => auth()->id()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+
+            return back()
+                ->withInput()
+                ->withErrors(['error' => $e->getMessage()]);
+        }
     }
 
     /**

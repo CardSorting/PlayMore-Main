@@ -12,10 +12,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('image_url');
-            $table->text('prompt');
-            $table->string('aspect_ratio')->default('1:1');
-            $table->string('process_mode')->default('relax');
-            $table->string('task_id');
+            $table->text('prompt')->nullable();
+            $table->string('aspect_ratio')->nullable()->default('1:1');
+            $table->string('process_mode')->nullable()->default('relax');
+            $table->string('task_id')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
         });

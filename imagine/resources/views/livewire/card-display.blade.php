@@ -1,15 +1,15 @@
 <div class="relative group" wire:key="card-{{ $card['name'] }}" role="article" aria-label="Magic Card: {{ $card['name'] }}">
-    <div class="bg-white overflow-hidden shadow-xl rounded-lg p-4 transform transition-all duration-700 ease-out
+    <div class="mtg-card bg-white overflow-hidden shadow-xl rounded-lg p-4 transform transition-all duration-700 ease-out
                 {{ $showFlipAnimation ? 'rotate-y-180 scale-105' : '' }} 
                 hover:shadow-[0_0_40px_rgba(255,215,0,0.4)]
                 {{ $card['rarity'] === 'Mythic Rare' ? 'mythic-rare-card' : '' }}
                 {{ $card['rarity'] === 'Rare' ? 'rare-card' : '' }}"
+         data-rarity="{{ $card['rarity'] }}"
          style="transform-style: preserve-3d; perspective: 1000px;">
         
         <!-- Front of Card -->
-        <div class="mtg-card w-full aspect-[2.5/3.5] relative rounded-lg overflow-hidden transition-all duration-500
+        <div class="w-full aspect-[2.5/3.5] relative rounded-lg overflow-hidden transition-all duration-500
                     {{ $showFlipAnimation ? 'opacity-0 rotate-y-180' : 'opacity-100' }}"
-             data-rarity="{{ $card['rarity'] }}"
              style="backface-visibility: hidden;">
             
             <!-- Enhanced Holographic Overlay -->
@@ -18,27 +18,28 @@
                         {{ $card['rarity'] === 'Rare' ? 'rare-holographic' : '' }}">
             </div>
             
-            <div class="card-frame h-full p-3 flex flex-col bg-gradient-to-b from-[#f8f8f8] to-[#e8e8e8] border border-gray-300">
-                <!-- Enhanced Card Header -->
-                <div class="card-header flex justify-between items-center p-2 rounded-lg mb-1 shadow-sm border border-gray-200
-                            {{ $card['rarity'] === 'Mythic Rare' ? 'bg-gradient-to-r from-orange-100 via-amber-200 to-orange-100' : '' }}
-                            {{ $card['rarity'] === 'Rare' ? 'bg-gradient-to-r from-yellow-100 via-amber-100 to-yellow-100' : '' }}
-                            {{ $card['rarity'] === 'Uncommon' ? 'bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200' : '' }}
-                            {{ $card['rarity'] === 'Common' ? 'bg-gradient-to-r from-[#e9e5cd] to-[#f5f1e6]' : '' }}">
-                    <h2 class="card-name text-lg font-bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+            <div class="card-frame h-full flex flex-col bg-[#f8e7c9] border-8 border-[#171314] rounded-lg overflow-hidden relative">
+    <!-- Card Frame Texture -->
+    <div class="absolute inset-0 mix-blend-overlay opacity-30 pointer-events-none" style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiMyOTI1MjQiIHN0cm9rZS1vcGFjaXR5PSIwLjA1Ij48L3BhdGg+Cjwvc3ZnPg==');"></div>
+                <!-- Title Bar with Enhanced Styling -->
+                <div class="card-title-bar relative flex justify-between items-center px-3 py-2 bg-[#171314] text-[#d3ced9]">
+                    <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                    <h2 class="card-name text-base font-bold font-matrix tracking-wide">
                         {{ $card['name'] }}
                     </h2>
                     <div class="mana-cost flex space-x-1">
                         @if(isset($card['mana_cost']))
                             @foreach(explode(',', $card['mana_cost']) as $symbol)
-                                <div class="mana-symbol rounded-full flex justify-center items-center text-xs font-bold w-6 h-6 shadow-lg transform hover:scale-110 transition-transform duration-200
-                                    @if(strtolower($symbol) == 'w') bg-gradient-to-br from-yellow-100 to-yellow-300 text-black border-2 border-yellow-400
-                                    @elseif(strtolower($symbol) == 'u') bg-gradient-to-br from-blue-400 to-blue-600 text-white border-2 border-blue-300
-                                    @elseif(strtolower($symbol) == 'b') bg-gradient-to-br from-gray-800 to-black text-white border-2 border-gray-600
-                                    @elseif(strtolower($symbol) == 'r') bg-gradient-to-br from-red-400 to-red-600 text-white border-2 border-red-300
-                                    @elseif(strtolower($symbol) == 'g') bg-gradient-to-br from-green-400 to-green-600 text-white border-2 border-green-300
-                                    @else bg-gradient-to-br from-gray-300 to-gray-500 text-black border-2 border-gray-400
+                                <div class="mana-symbol rounded-full flex justify-center items-center text-xs font-bold w-5 h-5 transform transition-transform duration-200 relative
+                                    @if(strtolower($symbol) == 'w') bg-[#f8e7c9] text-black border border-black
+                                    @elseif(strtolower($symbol) == 'u') bg-[#f8e7c9] text-black border border-black
+                                    @elseif(strtolower($symbol) == 'b') bg-[#f8e7c9] text-black border border-black
+                                    @elseif(strtolower($symbol) == 'r') bg-[#f8e7c9] text-black border border-black
+                                    @elseif(strtolower($symbol) == 'g') bg-[#f8e7c9] text-black border border-black
+                                    @else bg-[#f8e7c9] text-black border border-black
                                     @endif">
+                                    <div class="absolute inset-0 rounded-full bg-white opacity-20 mix-blend-overlay"></div>
                                     {{ $symbol }}
                                 </div>
                             @endforeach
@@ -46,11 +47,12 @@
                     </div>
                 </div>
 
-                <!-- Enhanced Card Image with Advanced Hover Effect -->
-                <div class="relative rounded-lg overflow-hidden mb-1 shadow-lg group">
+                <!-- Art Box -->
+                <div class="relative mx-2 mt-2 mb-2 overflow-hidden group h-[45%]">
+                    <div class="absolute inset-0 border border-[#171314] z-20 pointer-events-none"></div>
                     <img src="{{ $card['image_url'] }}" 
                          alt="{{ $card['name'] }}" 
-                         class="w-full h-[140px] object-cover object-center transform transition-all duration-700 ease-out
+                         class="w-full h-[180px] object-cover object-center transform transition-all duration-700 ease-out
                                 group-hover:scale-110 group-hover:filter group-hover:brightness-110"
                          loading="lazy">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
@@ -59,41 +61,52 @@
                     @endif
                 </div>
 
-                <!-- Card Type -->
-                <div class="card-type bg-gradient-to-r from-[#e9e5cd] to-[#f5f1e6] p-1.5 text-xs border border-gray-200 rounded-md mb-1 font-semibold shadow-sm">
+                <!-- Type Line with Enhanced Border -->
+                <div class="card-type relative mx-2 mb-2">
+                    <div class="absolute inset-0 bg-[#171314]"></div>
+                    <div class="relative px-3 py-1 text-sm font-matrix bg-[#f8e7c9] text-[#171314] tracking-wide border-t border-b border-[#171314]">
                     {{ $card['card_type'] }}
                 </div>
 
-                <!-- Card Text -->
-                <div class="card-text bg-[#f5f1e6] rounded-lg flex-grow overflow-y-auto p-2 shadow-inner border border-gray-200 text-xs">
-                    <p class="abilities-text mb-2">{{ $card['abilities'] }}</p>
-                    <div class="divider h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-1"></div>
-                    <p class="flavor-text mt-1 italic text-gray-700" style="font-family: 'Crimson Text', serif;">
-                        {{ $card['flavor_text'] }}
-                    </p>
+                <!-- Text Box -->
+                <div class="card-text relative mx-2 h-[30%] bg-[#f8e7c9] overflow-hidden border border-[#171314] text-[#171314]">
+                    <div class="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/5"></div>
+                    <div class="absolute inset-0 border border-white/10"></div>
+                    <div class="relative p-4 flex flex-col h-full">
+                        <div class="flex-grow overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-[#171314]/20 scrollbar-track-transparent">
+                            <p class="abilities-text text-sm font-matrix leading-6 text-[#171314]">{{ $card['abilities'] }}</p>
+                            <div class="divider h-px bg-gradient-to-r from-transparent via-[#171314]/20 to-transparent my-2"></div>
+                            <p class="flavor-text italic text-sm font-mplantin leading-6 text-[#171314]/90">{{ $card['flavor_text'] }}</p>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Footer -->
-                <div class="card-footer flex justify-between items-center mt-1 bg-gradient-to-r from-gray-800 to-gray-700 p-1.5 rounded-md text-white text-xs shadow-lg">
-                    <div class="flex items-center space-x-2">
-                        <span class="rarity-indicator w-2 h-2 rounded-full
-                            @if($card['rarity'] == 'Mythic Rare') bg-orange-400
-                            @elseif($card['rarity'] == 'Rare') bg-yellow-300
-                            @elseif($card['rarity'] == 'Uncommon') bg-gray-400
-                            @else bg-gray-600 @endif">
-                        </span>
-                        <span class="rarity-details font-medium tracking-wide">
-                            {{ $card['rarity'] }}
-                        </span>
+                <!-- Info Line -->
+                <div class="card-footer relative flex justify-between items-center mt-2 mx-2 mb-2 px-3 py-1.5 bg-[#171314] text-[#d3ced9] text-xs font-matrix tracking-wide">
+                    <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                    <div class="relative flex justify-between items-center w-full z-10">
+                        <div class="flex items-center space-x-2">
+                            <span class="rarity-symbol text-xs
+                                @if($card['rarity'] == 'Mythic Rare') text-orange-400
+                                @elseif($card['rarity'] == 'Rare') text-yellow-300
+                                @elseif($card['rarity'] == 'Uncommon') text-gray-400
+                                @else text-gray-600 @endif">
+                                @if($card['rarity'] == 'Mythic Rare') M
+                                @elseif($card['rarity'] == 'Rare') R
+                                @elseif($card['rarity'] == 'Uncommon') U
+                                @else C @endif
+                            </span>
+                            <span class="rarity-details font-medium tracking-wide">{{ $card['rarity'] }}</span>
+                        </div>
+                        @if($card['power_toughness'])
+                            <span class="power-toughness font-bold">
+                                {{ $card['power_toughness'] }}
+                            </span>
+                        @endif
                     </div>
-                    @if($card['power_toughness'])
-                        <span class="power-toughness bg-gray-900 px-3 py-1 rounded-full font-bold shadow-inner">
-                            {{ $card['power_toughness'] }}
-                        </span>
-                    @endif
                 </div>
             </div>
-        </div>
 
         <!-- Back of Card -->
         <div class="absolute inset-0 w-full aspect-[2.5/3.5] rounded-lg overflow-hidden transition-all duration-500

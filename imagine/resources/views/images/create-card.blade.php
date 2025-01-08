@@ -49,49 +49,55 @@
 
                 <!-- Form Container -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <form method="POST" action="{{ route('images.store-card') }}" class="space-y-6">
+                    @if($cardExists)
+                        <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                            <p class="font-medium">Card Already Exists</p>
+                            <p class="mt-1 text-sm">You have already created a card for this image. Each image can only be used for one card.</p>
+                        </div>
+                    @endif
+                    <form method="POST" action="{{ route('images.store-card') }}" class="space-y-6" {!! $cardExists ? 'onsubmit="return false;"' : '' !!}>
                     @csrf
                     <input type="hidden" name="image_url" value="{{ $image->image_url }}">
                     
                     <!-- Card Name -->
                     <div>
                         <x-input-label for="name" value="Card Name" />
-                        <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" required />
+                        <x-text-input id="name" name="name" type="text" class="mt-1 block w-full {{ $cardExists ? 'opacity-50 cursor-not-allowed' : '' }}" required {{ $cardExists ? 'disabled' : '' }} />
                         <x-input-error :messages="$errors->get('name')" class="mt-2" />
                     </div>
 
                     <!-- Mana Cost -->
                     <div>
                         <x-input-label for="mana_cost" value="Mana Cost (e.g., 2RG for 2 colorless, 1 red, 1 green)" />
-                        <x-text-input id="mana_cost" name="mana_cost" type="text" class="mt-1 block w-full" required />
+                        <x-text-input id="mana_cost" name="mana_cost" type="text" class="mt-1 block w-full {{ $cardExists ? 'opacity-50 cursor-not-allowed' : '' }}" required {{ $cardExists ? 'disabled' : '' }} />
                         <x-input-error :messages="$errors->get('mana_cost')" class="mt-2" />
                     </div>
 
                     <!-- Card Type -->
                     <div>
                         <x-input-label for="card_type" value="Card Type" />
-                        <x-text-input id="card_type" name="card_type" type="text" class="mt-1 block w-full" required placeholder="e.g., Creature - Dragon" />
+                        <x-text-input id="card_type" name="card_type" type="text" class="mt-1 block w-full {{ $cardExists ? 'opacity-50 cursor-not-allowed' : '' }}" required placeholder="e.g., Creature - Dragon" {{ $cardExists ? 'disabled' : '' }} />
                         <x-input-error :messages="$errors->get('card_type')" class="mt-2" />
                     </div>
 
                     <!-- Card Text/Abilities -->
                     <div>
                         <x-input-label for="abilities" value="Card Text/Abilities" />
-                        <textarea id="abilities" name="abilities" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required></textarea>
+                        <textarea id="abilities" name="abilities" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 {{ $cardExists ? 'opacity-50 cursor-not-allowed' : '' }}" required {{ $cardExists ? 'disabled' : '' }}></textarea>
                         <x-input-error :messages="$errors->get('abilities')" class="mt-2" />
                     </div>
 
                     <!-- Flavor Text -->
                     <div>
                         <x-input-label for="flavor_text" value="Flavor Text (optional)" />
-                        <textarea id="flavor_text" name="flavor_text" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></textarea>
+                        <textarea id="flavor_text" name="flavor_text" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 {{ $cardExists ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $cardExists ? 'disabled' : '' }}></textarea>
                         <x-input-error :messages="$errors->get('flavor_text')" class="mt-2" />
                     </div>
 
                     <!-- Power/Toughness (for creatures) -->
                     <div>
                         <x-input-label for="power_toughness" value="Power/Toughness (for creatures, e.g. 3/4)" />
-                        <x-text-input id="power_toughness" name="power_toughness" type="text" class="mt-1 block w-full" />
+                        <x-text-input id="power_toughness" name="power_toughness" type="text" class="mt-1 block w-full {{ $cardExists ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $cardExists ? 'disabled' : '' }} />
                         <x-input-error :messages="$errors->get('power_toughness')" class="mt-2" />
                     </div>
 
@@ -106,10 +112,16 @@
                         </ul>
                     </div>
 
-                    <div class="flex justify-end mt-6 [&>*]:!text-white [&>*]:!bg-gray-800 [&>*]:hover:!bg-gray-700">
-                        <x-primary-button>
-                            {{ __('Create Card') }}
-                        </x-primary-button>
+                    <div class="flex justify-end mt-6">
+                        @if($cardExists)
+                            <x-primary-button disabled class="opacity-50 cursor-not-allowed bg-gray-400">
+                                {{ __('Card Already Created') }}
+                            </x-primary-button>
+                        @else
+                            <x-primary-button class="!text-white !bg-gray-800 hover:!bg-gray-700">
+                                {{ __('Create Card') }}
+                            </x-primary-button>
+                        @endif
                     </div>
                 </form>
             </div>
@@ -236,54 +248,40 @@
                 }
             });
 
-            // Add live validation for card name
-            const nameInput = document.getElementById('name');
-            nameInput.addEventListener('input', async () => {
-                const name = nameInput.value;
-                if (name) {
-                    const cards = JSON.parse(sessionStorage.getItem('cards') || '[]');
-                    const isDuplicate = cards.some(card => card.name.toLowerCase() === name.toLowerCase());
-                    
-                    const errorElement = document.querySelector('[data-error-for="name"]');
-                    if (isDuplicate) {
-                        nameInput.classList.add('border-red-500');
-                        if (!errorElement) {
-                            const error = document.createElement('p');
-                            error.className = 'mt-2 text-sm text-red-600';
-                            error.setAttribute('data-error-for', 'name');
-                            error.textContent = 'A card with this name already exists in your collection.';
-                            nameInput.parentElement.appendChild(error);
-                        }
-                    } else {
-                        nameInput.classList.remove('border-red-500');
-                        if (errorElement) {
-                            errorElement.remove();
-                        }
-                    }
-                }
-            });
+            // Check for existing card with same image URL
+            const imageUrl = '{{ $image->image_url }}';
+            const cards = JSON.parse(sessionStorage.getItem('cards') || '[]');
+            const existingCard = cards.find(card => card.image_url === imageUrl);
+            
+            if (existingCard) {
+                const form = document.querySelector('form');
+                const submitButton = form.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded';
+                errorDiv.textContent = 'You have already created a card for this image.';
+                form.insertBefore(errorDiv, submitButton.parentElement);
+            }
 
             // Store cards in session storage for validation
             const response = await fetch('{{ route("images.gallery") }}');
             const html = await response.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
-            const cards = Array.from(doc.querySelectorAll('[data-name]')).map(el => ({
-                name: el.getAttribute('data-name')
+            const cards = Array.from(doc.querySelectorAll('[data-card-container]')).map(el => ({
+                image_url: el.getAttribute('data-image-url')
             }));
             sessionStorage.setItem('cards', JSON.stringify(cards));
 
             // Add error handling for validation response
             if (!response.ok) {
                 const errorData = await response.json();
-                if (errorData.errors && errorData.errors.name) {
-                    const nameInput = document.getElementById('name');
-                    nameInput.classList.add('border-red-500');
-                    const error = document.createElement('p');
-                    error.className = 'mt-2 text-sm text-red-600';
-                    error.setAttribute('data-error-for', 'name');
-                    error.textContent = errorData.errors.name[0];
-                    nameInput.parentElement.appendChild(error);
+                if (errorData.errors && errorData.errors.image_url) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded';
+                    errorDiv.textContent = errorData.errors.image_url[0];
+                    form.insertBefore(errorDiv, submitButton.parentElement);
                 }
                 submitButton.disabled = false;
                 submitButton.innerHTML = 'Create Card';

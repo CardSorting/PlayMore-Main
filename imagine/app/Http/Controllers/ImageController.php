@@ -15,8 +15,11 @@ class ImageController extends Controller
     {
         \Validator::extend('unique_card', function ($attribute, $value, $parameters, $validator) {
             $cards = collect(session('cards', []));
-            return !$cards->contains('name', $value);
-        }, 'You already have a card with this name in your collection.');
+            $data = $validator->getData();
+            return !$cards->contains(function ($card) use ($data) {
+                return $card['image_url'] === $data['image_url'];
+            });
+        }, 'You have already created a card for this image.');
     }
 
     public function index()
@@ -60,19 +63,29 @@ class ImageController extends Controller
     public function createCard($id)
     {
         $image = auth()->user()->galleries()->findOrFail($id);
-        return view('images.create-card', compact('image'));
+        
+        // Check if a card already exists for this image
+        $cards = collect(session('cards', []));
+        $cardExists = $cards->contains(function ($card) use ($image) {
+            return $card['image_url'] === $image->image_url;
+        });
+        
+        return view('images.create-card', [
+            'image' => $image,
+            'cardExists' => $cardExists
+        ]);
     }
 
     public function storeCard(Request $request)
     {
         $validatedData = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique_card'],
+            'name' => ['required', 'string', 'max:255'],
             'mana_cost' => ['required', 'string', 'max:50'],
             'card_type' => ['required', 'string', 'max:255'],
             'abilities' => ['required', 'string'],
             'flavor_text' => ['nullable', 'string'],
             'power_toughness' => ['nullable', 'string', 'max:10'],
-            'image_url' => ['required', 'url']
+            'image_url' => ['required', 'url', 'unique_card']
         ]);
 
         // Randomly select rarity with weighted probabilities

@@ -17,8 +17,21 @@ class ImageController extends Controller
     {
         $images = auth()->user()->galleries()->paginate(6);
         
-        // Manually paginate the cards collection
-        $cards = collect(session('cards', []));
+        // Manually paginate the cards collection and convert to array format
+        $cards = collect(session('cards', []))->map(function($card) {
+            // Ensure all required fields are present
+            return [
+                'name' => $card['name'] ?? 'Unnamed Card',
+                'mana_cost' => $card['mana_cost'] ?? '',
+                'card_type' => $card['card_type'] ?? 'Unknown Type',
+                'abilities' => $card['abilities'] ?? 'No abilities',
+                'flavor_text' => $card['flavor_text'] ?? '',
+                'power_toughness' => $card['power_toughness'] ?? null,
+                'rarity' => $card['rarity'] ?? 'Common',
+                'image_url' => $card['image_url'] ?? '/static/images/placeholder.png',
+            ];
+        });
+        
         $page = request()->get('page', 1);
         $perPage = 6;
         

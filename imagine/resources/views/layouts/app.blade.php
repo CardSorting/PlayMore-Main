@@ -13,6 +13,9 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        
+        <!-- Livewire Styles -->
+        @livewireStyles
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
@@ -32,5 +35,18 @@
                 {{ $slot }}
             </main>
         </div>
+
+        <!-- Livewire Scripts -->
+        @livewireScripts
+        
+        <!-- Initialize Livewire -->
+        <script>
+            window.livewire.on('cardUpdated', () => {
+                // Reinitialize 3D effects after Livewire updates
+                if (typeof initializeCardEffects === 'function') {
+                    initializeCardEffects();
+                }
+            });
+        </script>
     </body>
 </html>

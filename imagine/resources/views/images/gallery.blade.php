@@ -78,11 +78,11 @@
                         </div>
                     </div>
                 @else
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="grid grid-cols-3 gap-4">
                     @foreach($images as $image)
-                        <div class="space-y-4">
+                        <div>
                             <!-- Image Container -->
-                            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4">
+                            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                                 <div class="image-container relative h-64 w-full cursor-pointer rounded-lg overflow-hidden" 
                                      onclick="showDetails('{{ $image->prompt }}', '{{ $image->image_url }}', '{{ $image->aspect_ratio }}', '{{ $image->process_mode }}', '{{ $image->task_id }}')"
                                      role="button"
@@ -122,18 +122,18 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- Actions Container -->
-                            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4">
-                                <a href="{{ route('images.create-card', $image->id) }}"
-                                   class="flex items-center justify-center px-6 py-2.5 bg-purple-500 text-white font-medium rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                   aria-label="Create card from this image"
-                                >
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                    </svg>
-                                    <span>Create Card</span>
-                                </a>
-                            </div>
+                                <!-- Create Card Button -->
+                                <div class="p-2 bg-gray-50 border-t">
+                                    <a href="{{ route('images.create-card', $image->id) }}"
+                                       class="flex items-center justify-center px-3 py-1.5 bg-purple-500 text-white text-sm font-medium rounded hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                                       aria-label="Create card from this image"
+                                    >
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        </svg>
+                                        <span>Create Card</span>
+                                    </a>
+                                </div>
                         </div>
                     @endforeach
                     </div>
@@ -151,7 +151,7 @@
                  aria-labelledby="cards-tab-button"
                  tabindex="0">
                 @if(isset($cards) && $cards->isNotEmpty())
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="grid grid-cols-3 gap-4">
                         @foreach($cards as $card)
                             <div>
                                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4">

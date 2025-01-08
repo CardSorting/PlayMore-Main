@@ -47,9 +47,8 @@
                         after:pointer-events-none after:opacity-50">
                 
                 <!-- Grid View -->
-                <div class="max-w-[1200px] mx-auto px-8">
-                    <div id="gridView" class="grid grid-cols-3 gap-8 relative opacity-0" 
-                         style="grid-auto-rows: 1fr;"
+                <div class="w-full">
+                    <div id="gridView" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 relative opacity-0" 
                          x-data="{ hoveredCard: null }">
                         @foreach($cards as $card)
                             <x-card-grid-item :card="$card" />
@@ -176,7 +175,25 @@
 
     #gridView > * {
         width: 100%;
-        height: 100%;
+        min-height: 400px;
+    }
+
+    @media (max-width: 640px) {
+        #gridView {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (min-width: 641px) and (max-width: 1024px) {
+        #gridView {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (min-width: 1025px) {
+        #gridView {
+            grid-template-columns: repeat(3, 1fr);
+        }
     }
 
     .card-container {

@@ -1,5 +1,5 @@
-<div class="relative group" wire:key="card-{{ $card['name'] }}" role="article" aria-label="Magic Card: {{ $card['name'] }}">
-    <div class="mtg-card bg-white overflow-hidden shadow-xl rounded-lg p-4 transform transition-all duration-700 ease-out
+<div class="relative group h-full" wire:key="card-{{ $card['name'] }}" role="article" aria-label="Magic Card: {{ $card['name'] }}">
+    <div class="mtg-card h-full bg-white overflow-hidden shadow-xl rounded-lg p-4 transform transition-all duration-700 ease-out
                 {{ $showFlipAnimation ? 'rotate-y-180 scale-105' : '' }} 
                 hover:shadow-[0_0_40px_rgba(255,215,0,0.4)]
                 {{ $this->getRarityClasses() }}"
@@ -7,14 +7,14 @@
          style="transform-style: preserve-3d; perspective: 1000px;">
         
         <!-- Front of Card -->
-        <div class="w-full aspect-[2.5/3.5] relative rounded-lg overflow-hidden transition-all duration-500
+        <div class="w-full h-full relative rounded-lg overflow-hidden transition-all duration-500
                     {{ $showFlipAnimation ? 'opacity-0 rotate-y-180' : 'opacity-100' }}"
              style="backface-visibility: hidden;">
             
-            
             <div class="card-frame h-full flex flex-col bg-[#f8e7c9] border-8 border-[#171314] rounded-lg overflow-hidden relative">
-    <!-- Card Frame Texture -->
-    <div class="absolute inset-0 mix-blend-overlay opacity-30 pointer-events-none" style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiMyOTI1MjQiIHN0cm9rZS1vcGFjaXR5PSIwLjA1Ij48L3BhdGg+Cjwvc3ZnPg==');"></div>
+                <!-- Card Frame Texture -->
+                <div class="absolute inset-0 mix-blend-overlay opacity-30 pointer-events-none" style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIj48L3JlY3Q+CjxwYXRoIGQ9Ik0wIDVMNSAwWk02IDRMNCA2Wk0tMSAxTDEgLTFaIiBzdHJva2U9IiMyOTI1MjQiIHN0cm9rZS1vcGFjaXR5PSIwLjA1Ij48L3BhdGg+Cjwvc3ZnPg==');"></div>
+                
                 <!-- Title Bar with Enhanced Styling -->
                 <div class="card-title-bar relative flex justify-between items-center px-3 py-2 bg-[#171314] text-[#d3ced9]">
                     <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent"></div>
@@ -42,11 +42,11 @@
                 </div>
 
                 <!-- Art Box -->
-                <div class="relative mx-2 mt-2 mb-2 overflow-hidden group h-[45%]">
+                <div class="relative mx-2 mt-2 mb-2 overflow-hidden group h-[180px]">
                     <div class="absolute inset-0 border border-[#171314] z-20 pointer-events-none"></div>
                     <img src="{{ $card['image_url'] }}" 
                          alt="{{ $card['name'] }}" 
-                         class="w-full h-[180px] object-cover object-center transform transition-all duration-700 ease-out
+                         class="w-full h-full object-contain object-center transform transition-all duration-700 ease-out
                                 group-hover:scale-110 group-hover:filter group-hover:brightness-110"
                          loading="lazy">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
@@ -59,15 +59,16 @@
                 <div class="card-type relative mx-2 mb-2">
                     <div class="absolute inset-0 bg-[#171314]"></div>
                     <div class="relative px-3 py-1 text-sm font-matrix bg-[#f8e7c9] text-[#171314] tracking-wide border-t border-b border-[#171314]">
-                    {{ $card['card_type'] }}
+                        {{ $card['card_type'] }}
+                    </div>
                 </div>
 
                 <!-- Text Box -->
-                <div class="card-text relative mx-2 h-[30%] bg-[#f8e7c9] overflow-hidden border border-[#171314] text-[#171314]">
+                <div class="card-text relative mx-2 bg-[#f8e7c9] border border-[#171314] text-[#171314] min-h-[120px] flex-grow">
                     <div class="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/5"></div>
                     <div class="absolute inset-0 border border-white/10"></div>
-                    <div class="relative p-4 flex flex-col h-full">
-                        <div class="flex-grow overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-[#171314]/20 scrollbar-track-transparent">
+                    <div class="relative p-4">
+                        <div class="space-y-2">
                             <p class="abilities-text text-sm font-matrix leading-6 text-[#171314]">{{ $card['abilities'] }}</p>
                             <div class="divider h-px bg-gradient-to-r from-transparent via-[#171314]/20 to-transparent my-2"></div>
                             <p class="flavor-text italic text-sm font-mplantin leading-6 text-[#171314]/90">{{ $card['flavor_text'] }}</p>
@@ -101,9 +102,10 @@
                     </div>
                 </div>
             </div>
+        </div>
 
         <!-- Back of Card -->
-        <div class="absolute inset-0 w-full aspect-[2.5/3.5] rounded-lg overflow-hidden transition-all duration-500
+        <div class="absolute inset-0 w-full h-full rounded-lg overflow-hidden transition-all duration-500
                     {{ $showFlipAnimation ? 'opacity-100 rotate-y-0' : 'opacity-0 rotate-y-180' }}"
              style="backface-visibility: hidden;">
             <div class="card-back h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 p-0.5">

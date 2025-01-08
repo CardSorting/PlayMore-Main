@@ -8,6 +8,17 @@ use Illuminate\Support\Facades\Http;
 
 class ImageController extends Controller
 {
+    /**
+     * Custom validation rule for unique cards
+     */
+    public function __construct()
+    {
+        \Validator::extend('unique_card', function ($attribute, $value, $parameters, $validator) {
+            $cards = collect(session('cards', []));
+            return !$cards->contains('name', $value);
+        }, 'You already have a card with this name in your collection.');
+    }
+
     public function index()
     {
         return view('images.create');
@@ -54,16 +65,35 @@ class ImageController extends Controller
 
     public function storeCard(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'mana_cost' => 'required|string|max:50',
-            'card_type' => 'required|string|max:255',
-            'abilities' => 'required|string',
-            'flavor_text' => 'nullable|string',
-            'power_toughness' => 'nullable|string|max:10',
-            'rarity' => 'required|string|in:Common,Uncommon,Rare,Mythic Rare',
-            'image_url' => 'required|url'
+        $validatedData = $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique_card'],
+            'mana_cost' => ['required', 'string', 'max:50'],
+            'card_type' => ['required', 'string', 'max:255'],
+            'abilities' => ['required', 'string'],
+            'flavor_text' => ['nullable', 'string'],
+            'power_toughness' => ['nullable', 'string', 'max:10'],
+            'image_url' => ['required', 'url']
         ]);
+
+        // Randomly select rarity with weighted probabilities
+        $rarities = [
+            'Common' => 50,      // 50% chance
+            'Uncommon' => 30,    // 30% chance
+            'Rare' => 15,        // 15% chance
+            'Mythic Rare' => 5   // 5% chance
+        ];
+        
+        $total = array_sum($rarities);
+        $roll = rand(1, $total);
+        $selectedRarity = 'Common';
+        
+        foreach ($rarities as $rarity => $weight) {
+            if ($roll <= $weight) {
+                $selectedRarity = $rarity;
+                break;
+            }
+            $roll -= $weight;
+        }
 
         // Store card in session for now (you might want to create a proper cards table later)
         // Format mana cost into comma-separated list
@@ -76,7 +106,7 @@ class ImageController extends Controller
             'abilities' => $request->abilities,
             'flavor_text' => $request->flavor_text,
             'power_toughness' => $request->power_toughness,
-            'rarity' => $request->rarity,
+            'rarity' => $selectedRarity,
             'image_url' => $request->image_url,
         ];
         
@@ -84,8 +114,18 @@ class ImageController extends Controller
         $cards->push($cardData);
         session(['cards' => $cards->all()]);
 
+        // Return JSON response with card data for animation
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'card' => $cardData,
+                'message' => 'Card created successfully!'
+            ]);
+        }
+
         return redirect()->route('images.gallery')
-            ->with('success', 'Card created successfully!');
+            ->with('success', 'Card created successfully!')
+            ->with('last_card', $cardData);
     }
 
     public function generate(Request $request)

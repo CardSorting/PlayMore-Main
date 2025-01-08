@@ -37,11 +37,11 @@
                                     <p class="flavor-text mt-2 italic text-black">No flavor text</p>
                                 </div>
 
-                                <!-- Footer: Rarity and Power/Toughness -->
-                                <div class="card-footer flex justify-between items-center text-white text-xs mt-1 bg-black bg-opacity-50 p-2 rounded-b-md">
-                                    <span class="rarity-details">Common</span>
-                                    <span class="power-toughness">N/A</span>
-                                </div>
+                <!-- Footer: Rarity and Power/Toughness -->
+                <div class="card-footer flex justify-between items-center text-white text-xs mt-1 bg-black bg-opacity-50 p-2 rounded-b-md">
+                    <span class="rarity-details transition-all duration-500">???</span>
+                    <span class="power-toughness">N/A</span>
+                </div>
                             </div>
                         </div>
                     </div>
@@ -95,16 +95,15 @@
                         <x-input-error :messages="$errors->get('power_toughness')" class="mt-2" />
                     </div>
 
-                    <!-- Rarity -->
-                    <div>
-                        <x-input-label for="rarity" value="Rarity" />
-                        <select id="rarity" name="rarity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                            <option value="Common">Common</option>
-                            <option value="Uncommon">Uncommon</option>
-                            <option value="Rare">Rare</option>
-                            <option value="Mythic Rare">Mythic Rare</option>
-                        </select>
-                        <x-input-error :messages="$errors->get('rarity')" class="mt-2" />
+                    <!-- Rarity Info -->
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Card rarity will be randomly assigned upon creation with the following probabilities:</p>
+                        <ul class="mt-2 text-sm text-gray-600 list-disc list-inside">
+                            <li>Common: 50%</li>
+                            <li>Uncommon: 30%</li>
+                            <li>Rare: 15%</li>
+                            <li>Mythic Rare: 5%</li>
+                        </ul>
                     </div>
 
                     <div class="flex justify-end mt-6 [&>*]:!text-white [&>*]:!bg-gray-800 [&>*]:hover:!bg-gray-700">
@@ -117,7 +116,181 @@
         </div>
     </div>
 
+    <style>
+        @keyframes flipInY {
+            from {
+                transform: perspective(400px) rotateY(90deg);
+                animation-timing-function: ease-in;
+                opacity: 0;
+            }
+            40% {
+                transform: perspective(400px) rotateY(-20deg);
+                animation-timing-function: ease-in;
+            }
+            60% {
+                transform: perspective(400px) rotateY(10deg);
+                opacity: 1;
+            }
+            80% {
+                transform: perspective(400px) rotateY(-5deg);
+            }
+            to {
+                transform: perspective(400px);
+            }
+        }
+
+        @keyframes glowPulse {
+            0% { box-shadow: 0 0 5px var(--glow-color); }
+            50% { box-shadow: 0 0 20px var(--glow-color); }
+            100% { box-shadow: 0 0 5px var(--glow-color); }
+        }
+
+        .rarity-reveal {
+            animation: flipInY 1s ease-out;
+        }
+
+        .rarity-common {
+            --glow-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .rarity-uncommon {
+            --glow-color: rgba(192, 192, 192, 0.7);
+            color: #c0c0c0 !important;
+        }
+
+        .rarity-rare {
+            --glow-color: rgba(255, 215, 0, 0.7);
+            color: #ffd700 !important;
+        }
+
+        .rarity-mythic {
+            --glow-color: rgba(255, 69, 0, 0.7);
+            color: #ff4500 !important;
+        }
+
+        .glow-effect {
+            animation: glowPulse 2s infinite;
+        }
+
+        .card-container-reveal {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+    </style>
+
     <script>
+        // Form submission and animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form');
+            const cardContainer = document.getElementById('card-container');
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const submitButton = form.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Creating...</span>';
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                        },
+                        body: new FormData(form)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        // Trigger rarity reveal animation
+                        cardContainer.classList.add('card-container-reveal');
+                        
+                        // Add flip animation
+                        setTimeout(() => {
+                            const raritySpan = document.querySelector('.rarity-details');
+                            raritySpan.textContent = data.card.rarity;
+                            raritySpan.classList.add('rarity-reveal');
+                            
+                            // Add rarity-specific styling
+                            const rarityClass = `rarity-${data.card.rarity.toLowerCase().replace(' ', '-')}`;
+                            cardContainer.classList.add(rarityClass, 'glow-effect');
+                            
+                            // Redirect after animation
+                            setTimeout(() => {
+                                window.location.href = '{{ route('images.gallery') }}';
+                            }, 2000);
+                        }, 500);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Create Card';
+                    
+                    // Show error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded';
+                    errorDiv.textContent = 'An error occurred while creating the card. Please try again.';
+                    form.insertBefore(errorDiv, submitButton.parentElement);
+                }
+            });
+
+            // Add live validation for card name
+            const nameInput = document.getElementById('name');
+            nameInput.addEventListener('input', async () => {
+                const name = nameInput.value;
+                if (name) {
+                    const cards = JSON.parse(sessionStorage.getItem('cards') || '[]');
+                    const isDuplicate = cards.some(card => card.name.toLowerCase() === name.toLowerCase());
+                    
+                    const errorElement = document.querySelector('[data-error-for="name"]');
+                    if (isDuplicate) {
+                        nameInput.classList.add('border-red-500');
+                        if (!errorElement) {
+                            const error = document.createElement('p');
+                            error.className = 'mt-2 text-sm text-red-600';
+                            error.setAttribute('data-error-for', 'name');
+                            error.textContent = 'A card with this name already exists in your collection.';
+                            nameInput.parentElement.appendChild(error);
+                        }
+                    } else {
+                        nameInput.classList.remove('border-red-500');
+                        if (errorElement) {
+                            errorElement.remove();
+                        }
+                    }
+                }
+            });
+
+            // Store cards in session storage for validation
+            const response = await fetch('{{ route("images.gallery") }}');
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const cards = Array.from(doc.querySelectorAll('[data-name]')).map(el => ({
+                name: el.getAttribute('data-name')
+            }));
+            sessionStorage.setItem('cards', JSON.stringify(cards));
+
+            // Add error handling for validation response
+            if (!response.ok) {
+                const errorData = await response.json();
+                if (errorData.errors && errorData.errors.name) {
+                    const nameInput = document.getElementById('name');
+                    nameInput.classList.add('border-red-500');
+                    const error = document.createElement('p');
+                    error.className = 'mt-2 text-sm text-red-600';
+                    error.setAttribute('data-error-for', 'name');
+                    error.textContent = errorData.errors.name[0];
+                    nameInput.parentElement.appendChild(error);
+                }
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Create Card';
+                return;
+            }
+        });
+
         // Live preview updates
         document.addEventListener('DOMContentLoaded', () => {
             const updatePreview = () => {
@@ -127,8 +300,6 @@
                 const abilities = document.getElementById('abilities').value || 'No abilities';
                 const flavorText = document.getElementById('flavor_text').value;
                 const powerToughness = document.getElementById('power_toughness').value || 'N/A';
-                const rarity = document.getElementById('rarity').value || 'Common';
-
                 // Update card name with preserved class
                 const cardNameEl = document.querySelector('.card-name');
                 cardNameEl.textContent = name;
@@ -164,8 +335,8 @@
                 flavorTextEl.textContent = flavorText || 'No flavor text';
                 flavorTextEl.className = 'flavor-text mt-2 italic text-black';
 
-                // Update footer
-                document.querySelector('.rarity-details').textContent = rarity;
+                // Update footer (only power/toughness since rarity is random)
+                document.querySelector('.rarity-details').textContent = '???';
                 document.querySelector('.power-toughness').textContent = powerToughness;
             };
 

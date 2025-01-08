@@ -57,5 +57,24 @@
     </div>
 
     @stack('scripts')
+    
+    <!-- Card 3D Effect -->
+    <script src="{{ asset('js/mtg-card-3d-effect.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const initializeCardEffects = () => {
+                document.querySelectorAll('.mtg-card').forEach(card => {
+                    new MTGCard3DTiltEffect(card);
+                });
+            };
+
+            // Initialize on page load
+            initializeCardEffects();
+
+            // Re-initialize when Livewire updates the DOM
+            document.addEventListener('livewire:load', initializeCardEffects);
+            document.addEventListener('livewire:update', initializeCardEffects);
+        });
+    </script>
 </body>
 </html>

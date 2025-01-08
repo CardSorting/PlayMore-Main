@@ -53,12 +53,15 @@ class CardDisplay extends Component
     public function getRarityClasses()
     {
         if ($this->isMythicRare()) {
-            return 'mythic-rare-card mythic-holographic';
+            return 'mythic-rare-card mythic-holographic hover:scale-105';
         }
         if ($this->isRare()) {
-            return 'rare-card rare-holographic';
+            return 'rare-card rare-holographic hover:scale-104';
         }
-        return '';
+        if ($this->isUncommon()) {
+            return 'uncommon-card uncommon-holographic hover:scale-103';
+        }
+        return 'common-card hover:scale-102';
     }
 
     public function toggleDetails()

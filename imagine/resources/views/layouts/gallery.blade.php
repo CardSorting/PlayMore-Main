@@ -13,20 +13,19 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Livewire Styles -->
+    @livewireStyles
 
     <!-- Third-party Libraries -->
-    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- Card Effects -->
     <script src="{{ asset('js/mtg-card-3d-effect.js') }}"></script>
 
-    <!-- Gallery Services (order matters) -->
-    <script src="{{ asset('js/services/masonry-service.js') }}"></script>
+    <!-- Gallery Services -->
     <script src="{{ asset('js/services/filter-service.js') }}"></script>
     <script src="{{ asset('js/services/sort-service.js') }}"></script>
-    <script src="{{ asset('js/services/view-service.js') }}"></script>
-    <script src="{{ asset('js/services/gallery-service.js') }}"></script>
 
     <!-- Custom Styles -->
     <style>
@@ -54,13 +53,10 @@
             @apply bg-gray-100;
         }
 
-        /* Masonry transitions */
-        .cards-masonry {
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        .cards-masonry .card-item {
+        /* Card transitions */
+        .card-item {
             transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            opacity: 0;
         }
 
         /* Modal transitions */
@@ -110,12 +106,29 @@
 
     <!-- Scripts -->
     @stack('scripts')
+    
+    <!-- Livewire Scripts -->
+    @livewireScripts
 
     <script>
-        // Initialize gallery when all scripts are loaded
-        window.addEventListener('gallery:ready', () => {
-            // Additional initialization if needed
-            console.log('Gallery initialized');
+        // Initialize gallery after Livewire components are loaded
+        document.addEventListener('livewire:load', function () {
+            // Show cards with a staggered animation
+            const cardItems = document.querySelectorAll('.card-item');
+            cardItems.forEach((item, index) => {
+                setTimeout(() => {
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Initialize 3D effects after cards are visible
+            setTimeout(() => {
+                const cards = document.querySelectorAll('.card-container');
+                cards.forEach(card => {
+                    new MTGCard3DTiltEffect(card);
+                });
+            }, cardItems.length * 100 + 500);
         });
     </script>
 </body>

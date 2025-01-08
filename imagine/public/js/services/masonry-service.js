@@ -5,20 +5,31 @@ class MasonryService {
         this.options = {
             itemSelector: '.card-item',
             columnWidth: '.grid-sizer',
-            percentPosition: false,
+            percentPosition: true,
             transitionDuration: '0.3s',
-            gutter: 24 // matches gap-6 (1.5rem = 24px)
+            gutter: 0,
+            horizontalOrder: true,
+            initLayout: true
         };
     }
 
     initialize() {
         if (!this.grid) return;
-        
-        this.instance = new Masonry(this.grid, this.options);
-        this.grid.style.opacity = '1';
-        
-        // Initialize 3D effects for cards after masonry layout
-        this.initializeCardEffects();
+
+        // Wait for images to load
+        imagesLoaded(this.grid, () => {
+            this.instance = new Masonry(this.grid, this.options);
+            
+            // Show grid after layout is complete
+            this.grid.style.opacity = '1';
+            
+            // Layout again after a short delay to ensure proper positioning
+            setTimeout(() => {
+                this.layout();
+                // Initialize 3D effects for cards after layout is complete
+                this.initializeCardEffects();
+            }, 100);
+        });
     }
 
     layout() {

@@ -70,11 +70,10 @@
                                             after:pointer-events-none after:opacity-50">
                                     
                                     <!-- Grid View -->
-                                    <div id="gridView" class="cards-masonry relative max-w-6xl mx-auto opacity-0" 
-                                         style="transition: all 0.5s ease-out;"
-                                         x-data="{ hoveredCard: null }">
-                                        <!-- Grid sizer for masonry -->
-                                        <div class="grid-sizer w-1/3"></div>
+                                    <div class="max-w-[1200px] mx-auto px-8">
+                                        <div id="gridView" class="grid grid-cols-3 gap-8 relative opacity-0" 
+                                             style="grid-auto-rows: 1fr;"
+                                             x-data="{ hoveredCard: null }">
                                         @foreach($cards as $card)
                                             <x-card-grid-item :card="$card" />
                                         @endforeach
@@ -149,30 +148,43 @@
         font-family: 'MPlantin', ui-serif, Georgia, Cambria, serif;
     }
 
-    /* Grid Layout */
-    #gridView .card-item {
-        width: 100%;
-        padding: 12px;
+    /* Card Container */
+    .card-container {
+        height: 100%;
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
+    }
+
+    /* Card Item */
+    .card-item {
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.5s ease-out;
+    }
+
+    .card-item.visible {
+        transform: translateY(0);
+        opacity: 1;
     }
 
     #listView .card-item {
         width: 100%;
-        padding: 12px;
         margin-bottom: 8px;
     }
 
-    @media (min-width: 640px) {
-        #gridView .grid-sizer,
-        #gridView .card-item {
-            width: 50%;
-        }
+    /* Grid Layout */
+    #gridView {
+        display: grid;
+        width: 100%;
     }
 
-    @media (min-width: 1024px) {
-        #gridView .grid-sizer,
-        #gridView .card-item {
-            width: 33.333%;
-        }
+    #gridView > * {
+        width: 100%;
+        height: 100%;
+    }
+
+    .card-container {
+        aspect-ratio: 2.5/3.5;
     }
 
     /* Animations */
@@ -197,16 +209,6 @@
         to { transform: rotate(360deg); }
     }
 
-    .card-item {
-        animation-fill-mode: both;
-        animation-play-state: paused;
-    }
-
-    #gridView {
-        perspective: 2000px;
-        margin: -12px;
-    }
-
     /* Card Frame Elements */
     .card-frame {
         background-color: #f4e6c7;
@@ -218,7 +220,6 @@
         flex-direction: column;
     }
 
-    /* Enhanced Card Layout */
     .card-header {
         flex: 0 0 auto;
         height: 12%;
@@ -259,7 +260,29 @@
         background-color: #171314;
     }
 
-    /* Scrollbar Styling */
+    /* Text Styling */
+    .abilities-text {
+        font-family: 'Matrix', ui-serif, Georgia, Cambria, serif;
+        line-height: 1.5;
+        color: #171314;
+    }
+
+    .flavor-text {
+        font-family: 'MPlantin', ui-serif, Georgia, Cambria, serif;
+        font-style: italic;
+        line-height: 1.5;
+        color: rgba(23, 19, 20, 0.9);
+    }
+
+    .card-name {
+        font-family: 'Beleren', ui-serif, Georgia, Cambria, serif;
+        font-weight: bold;
+        letter-spacing: 0.05em;
+        color: #e6e3de;
+        text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Scrollbar */
     .scrollbar-thin::-webkit-scrollbar {
         width: 4px;
     }
@@ -275,56 +298,6 @@
 
     .scrollbar-thin::-webkit-scrollbar-thumb:hover {
         background: rgba(23, 19, 20, 0.3);
-    }
-
-    /* Enhanced Text Styling */
-    .abilities-text {
-        font-family: 'Matrix', ui-serif, Georgia, Cambria, serif;
-        line-height: 1.5;
-        color: #171314;
-    }
-
-    .flavor-text {
-        font-family: 'MPlantin', ui-serif, Georgia, Cambria, serif;
-        font-style: italic;
-        line-height: 1.5;
-        color: rgba(23, 19, 20, 0.9);
-    }
-
-    /* Card Name Styling */
-    .card-name {
-        font-family: 'Beleren', ui-serif, Georgia, Cambria, serif;
-        font-weight: bold;
-        letter-spacing: 0.05em;
-        color: #e6e3de;
-        text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
-    }
-
-
-    /* Grid Layout Refinements */
-    .grid-sizer,
-    .card-item {
-        width: 100%;
-        padding: 16px;
-    }
-
-    @media (min-width: 640px) {
-        .grid-sizer,
-        .card-item {
-            width: 50%;
-        }
-    }
-
-    @media (min-width: 1024px) {
-        .grid-sizer,
-        .card-item {
-            width: 33.333%;
-        }
-    }
-
-    #gridView {
-        perspective: 2000px;
-        margin: -16px;
     }
 
     /* Enhanced Type Border */
@@ -346,78 +319,44 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Initialize services
-        const masonryService = new MasonryService();
-        const sortService = new SortService();
-        const viewService = new ViewService();
+        // Initialize view switching
+        const viewButtons = document.querySelectorAll('.view-btn');
+        const gridView = document.getElementById('gridView');
+        const listView = document.getElementById('listView');
+        let currentView = 'grid';
 
-        // Initialize masonry layout
-        masonryService.initialize();
-
-        // Initialize sort service
-        sortService.initialize(masonryService);
-
-        // Initialize filter service
-        const filterService = new FilterService();
-        filterService.initialize(masonryService);
-
-        // Initialize view service
-        viewService.initialize(masonryService, filterService);
-        
-        // Load saved view preference
-        viewService.loadViewPreference();
-        
-        // Set initial active state on view buttons
-        const currentView = viewService.getCurrentView();
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            const isActive = btn.getAttribute('data-view') === currentView;
-            btn.classList.toggle('active', isActive);
-            btn.classList.toggle('bg-gray-100', isActive);
-        });
-        
-        // Set up sort direction button
-        const sortDirectionBtn = document.getElementById('sortDirection');
-        if (sortDirectionBtn) {
-            sortDirectionBtn.addEventListener('click', () => {
-                sortService.toggleDirection();
+        // Function to switch views
+        const switchView = (view) => {
+            currentView = view;
+            
+            // Update button states
+            viewButtons.forEach(btn => {
+                const isActive = btn.getAttribute('data-view') === view;
+                btn.classList.toggle('active', isActive);
+                btn.classList.toggle('bg-gray-100', isActive);
             });
-        }
 
-        // Set up sort select
-        const sortSelect = document.querySelector('[data-sort-control]');
-        if (sortSelect) {
-            sortSelect.addEventListener('change', (e) => {
-                sortService.setField(e.target.value);
-            });
-        }
-
-        // Initialize 3D effect for cards
-        const initializeCardEffects = () => {
-            const cards = document.querySelectorAll('.card-container');
-            cards.forEach(card => {
-                new MTGCard3DTiltEffect(card);
-            });
-        };
-
-        // Show initial view
-        const showInitialView = () => {
-            const currentView = viewService.getCurrentView();
-            const gridView = document.getElementById('gridView');
-            const listView = document.getElementById('listView');
-
-            if (currentView === 'grid') {
+            if (view === 'grid') {
                 gridView.style.opacity = '1';
+                gridView.classList.remove('hidden');
                 listView.classList.add('hidden');
                 // Show and animate grid cards with stagger
                 const cardItems = gridView.querySelectorAll('.card-item');
                 cardItems.forEach((card, index) => {
-                    card.style.animationDelay = `${index * 100}ms`;
-                    card.style.animationPlayState = 'running';
+                    setTimeout(() => {
+                        card.classList.add('visible');
+                    }, index * 100);
                 });
                 // Initialize 3D effects after cards are visible
-                setTimeout(initializeCardEffects, cardItems.length * 100 + 500);
+                setTimeout(() => {
+                    const cards = document.querySelectorAll('.card-container');
+                    cards.forEach(card => {
+                        new MTGCard3DTiltEffect(card);
+                    });
+                }, 500);
             } else {
                 listView.style.opacity = '1';
+                listView.classList.remove('hidden');
                 gridView.classList.add('hidden');
                 // Show list items
                 const listItems = listView.querySelectorAll('.card-item');
@@ -427,8 +366,16 @@
             }
         };
 
-        // Show initial view after a short delay to ensure transitions work
-        setTimeout(showInitialView, 150);
+        // Set up view button listeners
+        viewButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const view = btn.getAttribute('data-view');
+                switchView(view);
+            });
+        });
+
+        // Show initial view after a short delay
+        setTimeout(() => switchView('grid'), 150);
     });
 </script>
 @endpush

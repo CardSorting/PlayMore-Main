@@ -78,7 +78,7 @@
                         </div>
                     </div>
                 @else
-                    <div class="grid grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($images as $image)
                         <div>
                             <!-- Image Container -->
@@ -125,7 +125,7 @@
                                 <!-- Create Card Button -->
                                 <div class="p-2 bg-gray-50 border-t">
                                     <a href="{{ route('images.create-card', $image->id) }}"
-                                       class="flex items-center justify-center px-3 py-1.5 bg-purple-500 text-white text-sm font-medium rounded hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                                       class="flex items-center justify-center px-3 py-1.5 bg-purple-500 text-black text-sm font-medium rounded hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
                                        aria-label="Create card from this image"
                                     >
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,7 +151,7 @@
                  aria-labelledby="cards-tab-button"
                  tabindex="0">
                 @if(isset($cards) && $cards->isNotEmpty())
-                    <div class="grid grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         @foreach($cards as $card)
                             <div>
                                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4">

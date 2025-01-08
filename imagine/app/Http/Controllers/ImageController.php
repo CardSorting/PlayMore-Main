@@ -15,12 +15,12 @@ class ImageController extends Controller
 
     public function gallery()
     {
-        $images = auth()->user()->galleries()->paginate(12);
+        $images = auth()->user()->galleries()->paginate(6);
         
         // Manually paginate the cards collection
         $cards = collect(session('cards', []));
         $page = request()->get('page', 1);
-        $perPage = 12;
+        $perPage = 6;
         
         $cards = new \Illuminate\Pagination\LengthAwarePaginator(
             $cards->forPage($page, $perPage),
@@ -53,7 +53,23 @@ class ImageController extends Controller
         ]);
 
         // Store card in session for now (you might want to create a proper cards table later)
-        session()->push('cards', $request->all());
+        // Format mana cost into comma-separated list
+        $manaCost = implode(',', str_split($request->mana_cost));
+        
+        $cardData = [
+            'name' => $request->name,
+            'mana_cost' => $manaCost,
+            'card_type' => $request->card_type,
+            'abilities' => $request->abilities,
+            'flavor_text' => $request->flavor_text,
+            'power_toughness' => $request->power_toughness,
+            'rarity' => $request->rarity,
+            'image_url' => $request->image_url,
+        ];
+        
+        $cards = collect(session('cards', []));
+        $cards->push($cardData);
+        session(['cards' => $cards->all()]);
 
         return redirect()->route('images.gallery')
             ->with('success', 'Card created successfully!');

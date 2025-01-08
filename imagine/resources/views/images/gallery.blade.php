@@ -155,13 +155,71 @@
                         @foreach($cards as $card)
                             <div>
                                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4">
-                                    <div class="aspect-[2.5/3.5] relative rounded-lg overflow-hidden">
-                                        <!-- Card preview will go here once we have the card data structure -->
-                                        <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 text-gray-500">
-                                            <svg class="w-12 h-12 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                            </svg>
-                                            <span class="text-sm font-medium">Card Preview</span>
+                                        <div class="mtg-card w-full aspect-[2.5/3.5] relative rounded-lg overflow-hidden shadow-xl transition-all duration-500 hover:scale-105 hover:shadow-[0_0_30px_rgba(255,215,0,0.3)]" 
+                                             style="transform-style: preserve-3d; perspective: 1000px;"
+                                             data-rarity="{{ $card['rarity'] }}">
+                                        <!-- Holographic Overlay -->
+                                        <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"></div>
+                                        
+                                        <div class="card-frame h-full p-3 flex flex-col bg-gradient-to-b from-[#f8f8f8] to-[#e8e8e8] border border-gray-300">
+                                            <!-- Card Header -->
+                                            <div class="card-header flex justify-between items-center bg-gradient-to-r from-[#e9e5cd] to-[#f5f1e6] p-2 rounded-lg mb-1 shadow-sm border border-gray-200">
+                                                <h2 class="card-name text-lg font-bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                                                    {{ $card['name'] }}
+                                                </h2>
+                                                <div class="mana-cost flex space-x-1">
+                                                    @if(isset($card['mana_cost']))
+                                                        @foreach(explode(',', $card['mana_cost']) as $symbol)
+                                                            <div class="mana-symbol rounded-full flex justify-center items-center text-xs font-bold w-6 h-6 shadow-lg
+                                                                @if(strtolower($symbol) == 'w') bg-gradient-to-br from-yellow-100 to-yellow-300 text-black border-2 border-yellow-400
+                                                                @elseif(strtolower($symbol) == 'u') bg-gradient-to-br from-blue-400 to-blue-600 text-white border-2 border-blue-300
+                                                                @elseif(strtolower($symbol) == 'b') bg-gradient-to-br from-gray-800 to-black text-white border-2 border-gray-600
+                                                                @elseif(strtolower($symbol) == 'r') bg-gradient-to-br from-red-400 to-red-600 text-white border-2 border-red-300
+                                                                @elseif(strtolower($symbol) == 'g') bg-gradient-to-br from-green-400 to-green-600 text-white border-2 border-green-300
+                                                                @else bg-gradient-to-br from-gray-300 to-gray-500 text-black border-2 border-gray-400
+                                                                @endif">
+                                                                {{ $symbol }}
+                                                            </div>
+                                                        @endforeach
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <!-- Card Image -->
+                                            <div class="relative rounded-lg overflow-hidden mb-1 shadow-lg">
+                                                <img src="{{ $card['image_url'] }}" 
+                                                     alt="{{ $card['name'] }}" 
+                                                     class="w-full h-[140px] object-cover object-center transform hover:scale-105 transition-transform duration-500">
+                                                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                                            </div>
+
+                                            <!-- Card Type -->
+                                            <div class="card-type bg-gradient-to-r from-[#e9e5cd] to-[#f5f1e6] p-1.5 text-xs border border-gray-200 rounded-md mb-1 font-semibold shadow-sm">
+                                                {{ $card['card_type'] }}
+                                            </div>
+
+                                            <!-- Card Text -->
+                                            <div class="card-text bg-[#f5f1e6] rounded-lg flex-grow overflow-y-auto p-2 shadow-inner border border-gray-200 text-xs">
+                                                <p class="abilities-text mb-2">{{ $card['abilities'] }}</p>
+                                                <div class="divider h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-1"></div>
+                                                <p class="flavor-text mt-1 italic text-gray-700" style="font-family: 'Crimson Text', serif;">
+                                                    {{ $card['flavor_text'] }}
+                                                </p>
+                                            </div>
+
+                                            <!-- Footer -->
+                                            <div class="card-footer flex justify-between items-center mt-1 bg-gradient-to-r from-gray-800 to-gray-700 p-1.5 rounded-md text-white text-xs shadow-lg">
+                                                <span class="rarity-details font-medium tracking-wide">
+                                                    <span class="@if($card['rarity'] == 'Mythic Rare') text-orange-400 @elseif($card['rarity'] == 'Rare') text-yellow-300 @endif">
+                                                        {{ $card['rarity'] }}
+                                                    </span>
+                                                </span>
+                                                @if(isset($card['power_toughness']))
+                                                    <span class="power-toughness bg-gray-900 px-2 py-0.5 rounded-full font-bold shadow-inner">
+                                                        {{ $card['power_toughness'] }}
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -248,7 +306,20 @@
         }
     </style>
 
+    <!-- Include the 3D effect script -->
+    <script src="{{ asset('js/mtg-card-3d-effect.js') }}"></script>
+    
     <script>
+        // Initialize 3D effects for cards
+        function initializeCardEffects() {
+            const cards = document.querySelectorAll('.mtg-card');
+            cards.forEach(card => {
+                if (card.closest('[data-rarity="Rare"]') || card.closest('[data-rarity="Mythic Rare"]')) {
+                    new MTGCard3DTiltEffect(card);
+                }
+            });
+        }
+
         function switchTab(tabName, updateHistory = true) {
             // Update button states
             document.querySelectorAll('[role="tab"]').forEach(tab => {
@@ -268,6 +339,11 @@
                 content.classList.add('hidden');
             });
             activeContent.classList.remove('hidden');
+            
+            // Reinitialize card effects when switching to cards tab
+            if (tabName === 'cards') {
+                initializeCardEffects();
+            }
 
             // Update URL if needed
             if (updateHistory) {
@@ -278,10 +354,13 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize tab from URL parameter
+            // Initialize tab from URL parameter and setup card effects
             const urlParams = new URLSearchParams(window.location.search);
             const activeTab = urlParams.get('tab') || 'images';
             switchTab(activeTab);
+            
+            // Initialize card effects after DOM is loaded
+            initializeCardEffects();
 
             // Handle browser back/forward
             window.addEventListener('popstate', () => {

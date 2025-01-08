@@ -1,4 +1,4 @@
-<div class="relative group h-full" wire:key="card-{{ $card['name'] }}" role="article" aria-label="Magic Card: {{ $card['name'] }}">
+<div class="relative group h-full" wire:key="card-{{ $card['name'] }}">
     <div class="mtg-card h-full bg-white overflow-hidden shadow-xl rounded-lg p-4 transform transition-all duration-700 ease-out
                 {{ $showFlipAnimation ? 'rotate-y-180 scale-105' : '' }} 
                 hover:shadow-[0_0_40px_rgba(255,215,0,0.4)]

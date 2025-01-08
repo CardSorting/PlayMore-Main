@@ -5,13 +5,15 @@ class MTGCard3DTiltEffect {
 
         this.shine = this.createShineElement();
         this.rainbowShine = this.createRainbowShineElement();
+        this.rarity = this.card.dataset.rarity;
 
         this.settings = {
-            tiltEffectMaxRotation: 15,
-            tiltEffectPerspective: 800,
-            tiltEffectScale: 1.05,
-            shineMovementRange: 100,
-            rainbowShineMovementRange: 50
+            tiltEffectMaxRotation: this.getRarityBasedRotation(),
+            tiltEffectPerspective: 1000,
+            tiltEffectScale: this.getRarityBasedScale(),
+            shineMovementRange: this.getRarityBasedShineRange(),
+            rainbowShineMovementRange: 60,
+            glowIntensity: this.getRarityBasedGlowIntensity()
         };
 
         this.setupEventListeners();
@@ -92,11 +94,56 @@ class MTGCard3DTiltEffect {
         element.style.opacity = '0';
     }
 
+    getRarityBasedRotation() {
+        switch(this.rarity) {
+            case 'Mythic Rare': return 20;
+            case 'Rare': return 15;
+            case 'Uncommon': return 12;
+            default: return 10;
+        }
+    }
+
+    getRarityBasedScale() {
+        switch(this.rarity) {
+            case 'Mythic Rare': return 1.08;
+            case 'Rare': return 1.06;
+            case 'Uncommon': return 1.04;
+            default: return 1.02;
+        }
+    }
+
+    getRarityBasedShineRange() {
+        switch(this.rarity) {
+            case 'Mythic Rare': return 120;
+            case 'Rare': return 100;
+            case 'Uncommon': return 80;
+            default: return 60;
+        }
+    }
+
+    getRarityBasedGlowIntensity() {
+        switch(this.rarity) {
+            case 'Mythic Rare': return '0 0 40px rgba(255,140,0,0.4)';
+            case 'Rare': return '0 0 30px rgba(255,215,0,0.3)';
+            case 'Uncommon': return '0 0 20px rgba(192,192,192,0.2)';
+            default: return 'none';
+        }
+    }
+
     injectStyles() {
         if (!document.getElementById('mtg-card-3d-tilt-effect-styles')) {
             const style = document.createElement('style');
             style.id = 'mtg-card-3d-tilt-effect-styles';
             style.textContent = `
+                @keyframes rotate-slow {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                
+                .animate-rotate-slow {
+                    animation: rotate-slow 8s linear infinite;
+                }
+                
                 .mtg-card {
                     transition: transform 0.1s ease-out;
                     transform-style: preserve-3d;
@@ -132,26 +179,68 @@ class MTGCard3DTiltEffect {
                     overflow: hidden;
                     pointer-events: none;
                 }
+                .mythic-holographic {
+                    background: linear-gradient(125deg, 
+                        rgba(255,0,0,0.3),
+                        rgba(255,165,0,0.3),
+                        rgba(255,255,0,0.3),
+                        rgba(0,255,0,0.3),
+                        rgba(0,0,255,0.3),
+                        rgba(75,0,130,0.3),
+                        rgba(238,130,238,0.3)
+                    );
+                    animation: holographic 3s linear infinite;
+                }
+
+                .rare-holographic {
+                    background: linear-gradient(125deg,
+                        rgba(255,215,0,0.2),
+                        rgba(255,255,255,0.3),
+                        rgba(255,215,0,0.2)
+                    );
+                    animation: holographic 2s linear infinite;
+                }
+
                 .rainbow-shine-effect {
                     position: absolute;
                     top: -50%;
                     left: -50%;
                     right: -50%;
                     bottom: -50%;
-                    background: radial-gradient(
-                        circle at 50% 50%,
-                        rgba(255, 0, 0, 0.3),
-                        rgba(255, 165, 0, 0.3),
-                        rgba(255, 255, 0, 0.3),
-                        rgba(0, 255, 0, 0.3),
-                        rgba(0, 0, 255, 0.3),
-                        rgba(75, 0, 130, 0.3),
-                        rgba(238, 130, 238, 0.3)
+                    background: conic-gradient(
+                        from 0deg,
+                        rgba(255,0,0,0.3) 0deg,
+                        rgba(255,165,0,0.3) 60deg,
+                        rgba(255,255,0,0.3) 120deg,
+                        rgba(0,255,0,0.3) 180deg,
+                        rgba(0,0,255,0.3) 240deg,
+                        rgba(75,0,130,0.3) 300deg,
+                        rgba(238,130,238,0.3) 360deg
                     );
                     opacity: 0;
                     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
                     mix-blend-mode: color-dodge;
-                    filter: blur(10px);
+                    filter: blur(8px);
+                    animation: rotate-shine 6s linear infinite;
+                }
+
+                @keyframes holographic {
+                    0% { filter: hue-rotate(0deg) brightness(1); }
+                    50% { filter: hue-rotate(180deg) brightness(1.2); }
+                    100% { filter: hue-rotate(360deg) brightness(1); }
+                }
+
+                @keyframes rotate-shine {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+
+                .mythic-rare-card {
+                    box-shadow: ${this.getRarityBasedGlowIntensity()};
+                }
+
+                .rare-card {
+                    box-shadow: ${this.getRarityBasedGlowIntensity()};
                 }
             `;
             document.head.appendChild(style);

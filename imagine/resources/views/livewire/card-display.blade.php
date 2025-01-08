@@ -1,20 +1,30 @@
-<div class="relative group" wire:key="card-{{ $card['name'] }}">
-    <div class="bg-white overflow-hidden shadow-xl rounded-lg p-4 transform transition-all duration-500 
-                {{ $showFlipAnimation ? 'rotate-y-180' : '' }} 
-                hover:shadow-[0_0_30px_rgba(255,215,0,0.3)]"
+<div class="relative group" wire:key="card-{{ $card['name'] }}" role="article" aria-label="Magic Card: {{ $card['name'] }}">
+    <div class="bg-white overflow-hidden shadow-xl rounded-lg p-4 transform transition-all duration-700 ease-out
+                {{ $showFlipAnimation ? 'rotate-y-180 scale-105' : '' }} 
+                hover:shadow-[0_0_40px_rgba(255,215,0,0.4)]
+                {{ $card['rarity'] === 'Mythic Rare' ? 'mythic-rare-card' : '' }}
+                {{ $card['rarity'] === 'Rare' ? 'rare-card' : '' }}"
          style="transform-style: preserve-3d; perspective: 1000px;">
         
         <!-- Front of Card -->
         <div class="mtg-card w-full aspect-[2.5/3.5] relative rounded-lg overflow-hidden transition-all duration-500
-                    {{ $showFlipAnimation ? 'opacity-0' : 'opacity-100' }}"
-             data-rarity="{{ $card['rarity'] }}">
+                    {{ $showFlipAnimation ? 'opacity-0 rotate-y-180' : 'opacity-100' }}"
+             data-rarity="{{ $card['rarity'] }}"
+             style="backface-visibility: hidden;">
             
-            <!-- Holographic Overlay -->
-            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10"></div>
+            <!-- Enhanced Holographic Overlay -->
+            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none z-10
+                        {{ $card['rarity'] === 'Mythic Rare' ? 'mythic-holographic' : '' }}
+                        {{ $card['rarity'] === 'Rare' ? 'rare-holographic' : '' }}">
+            </div>
             
             <div class="card-frame h-full p-3 flex flex-col bg-gradient-to-b from-[#f8f8f8] to-[#e8e8e8] border border-gray-300">
-                <!-- Card Header -->
-                <div class="card-header flex justify-between items-center bg-gradient-to-r from-[#e9e5cd] to-[#f5f1e6] p-2 rounded-lg mb-1 shadow-sm border border-gray-200">
+                <!-- Enhanced Card Header -->
+                <div class="card-header flex justify-between items-center p-2 rounded-lg mb-1 shadow-sm border border-gray-200
+                            {{ $card['rarity'] === 'Mythic Rare' ? 'bg-gradient-to-r from-orange-100 via-amber-200 to-orange-100' : '' }}
+                            {{ $card['rarity'] === 'Rare' ? 'bg-gradient-to-r from-yellow-100 via-amber-100 to-yellow-100' : '' }}
+                            {{ $card['rarity'] === 'Uncommon' ? 'bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200' : '' }}
+                            {{ $card['rarity'] === 'Common' ? 'bg-gradient-to-r from-[#e9e5cd] to-[#f5f1e6]' : '' }}">
                     <h2 class="card-name text-lg font-bold" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
                         {{ $card['name'] }}
                     </h2>
@@ -36,12 +46,17 @@
                     </div>
                 </div>
 
-                <!-- Card Image with Hover Effect -->
+                <!-- Enhanced Card Image with Advanced Hover Effect -->
                 <div class="relative rounded-lg overflow-hidden mb-1 shadow-lg group">
                     <img src="{{ $card['image_url'] }}" 
                          alt="{{ $card['name'] }}" 
-                         class="w-full h-[140px] object-cover object-center transform group-hover:scale-105 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                         class="w-full h-[140px] object-cover object-center transform transition-all duration-700 ease-out
+                                group-hover:scale-110 group-hover:filter group-hover:brightness-110"
+                         loading="lazy">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                    @if($card['rarity'] === 'Mythic Rare' || $card['rarity'] === 'Rare')
+                        <div class="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_0deg,rgba(255,255,255,0.2)_90deg,transparent_180deg)] animate-rotate-slow opacity-0 group-hover:opacity-100"></div>
+                    @endif
                 </div>
 
                 <!-- Card Type -->
@@ -80,15 +95,47 @@
             </div>
         </div>
 
-        <!-- Interactive Controls -->
-        <div class="absolute bottom-0 left-0 right-0 flex justify-center p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <button wire:click="flipCard" 
-                    class="bg-purple-500 text-white px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-purple-600 transition-colors duration-200 flex items-center shadow-lg">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                Flip Card
-            </button>
+        <!-- Back of Card -->
+        <div class="absolute inset-0 w-full aspect-[2.5/3.5] rounded-lg overflow-hidden transition-all duration-500
+                    {{ $showFlipAnimation ? 'opacity-100 rotate-y-0' : 'opacity-0 rotate-y-180' }}"
+             style="backface-visibility: hidden;">
+            <div class="card-back h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 p-0.5">
+                <div class="h-full bg-gradient-to-br from-indigo-800 via-purple-800 to-indigo-800 rounded-lg p-4">
+                    <!-- Decorative Pattern -->
+                    <div class="relative h-full border-4 border-gold-500 rounded-lg overflow-hidden">
+                        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent)]"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-32 h-32 bg-gradient-to-r from-gold-400 via-gold-200 to-gold-400 rounded-full opacity-20"></div>
+                        </div>
+                        <!-- Card Info -->
+                        <div class="relative h-full flex flex-col items-center justify-center text-center p-6 text-gold-200">
+                            <h3 class="text-xl font-bold mb-4">{{ $card['name'] }}</h3>
+                            <p class="text-sm mb-4">{{ $card['card_type'] }}</p>
+                            <p class="text-xs italic">{{ $card['rarity'] }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Menu -->
+        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+            <div class="flex space-x-2">
+                <button wire:click="toggleDetails" 
+                        class="bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200 shadow-lg"
+                        title="View Details">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </button>
+                <button wire:click="flipCard" 
+                        class="bg-purple-600 text-white p-2 rounded-full hover:bg-purple-500 transition-colors duration-200 shadow-lg"
+                        title="Flip Card">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 

@@ -36,18 +36,38 @@ class ViewService {
             btn.classList.toggle('bg-gray-100', isActive);
         });
         
-        // Update view visibility
-        if (view === 'grid') {
-            gridView.classList.remove('hidden');
-            listView.classList.add('hidden');
-            // Reinitialize masonry layout
-            if (this.masonryService) {
-                this.masonryService.layout();
+        // First set opacity to 0 for smooth transition
+        gridView.style.opacity = '0';
+        listView.style.opacity = '0';
+
+        // Short delay to ensure opacity transition is visible
+        setTimeout(() => {
+            if (view === 'grid') {
+                // Show grid view
+                gridView.classList.remove('hidden');
+                listView.classList.add('hidden');
+                // Update card item display for grid view
+                document.querySelectorAll('.card-item').forEach(item => {
+                    item.style.display = 'block';
+                });
+                // Reinitialize masonry layout
+                if (this.masonryService) {
+                    this.masonryService.layout();
+                }
+                // Fade in grid view
+                gridView.style.opacity = '1';
+            } else {
+                // Show list view
+                gridView.classList.add('hidden');
+                listView.classList.remove('hidden');
+                // Update card item display for list view
+                document.querySelectorAll('.card-item').forEach(item => {
+                    item.style.display = 'flex';
+                });
+                // Fade in list view
+                listView.style.opacity = '1';
             }
-        } else {
-            gridView.classList.add('hidden');
-            listView.classList.remove('hidden');
-        }
+        }, 150);
 
         // Update filter service view state
         if (this.filterService) {

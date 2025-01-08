@@ -1,9 +1,9 @@
-<div class="card-item bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
+<div class="card-item bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 flex-1"
      data-rarity="{{ strtolower(str_replace(' ', '-', $card['rarity'])) }}"
      data-type="{{ strtolower(str_replace(' ', '-', $card['card_type'])) }}"
      data-name="{{ strtolower($card['name']) }}">
-    <div class="flex items-center p-4">
-        <div class="w-20 h-20 rounded-lg overflow-hidden mr-6">
+    <div class="flex items-center p-4 w-full">
+        <div class="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden mr-6">
             <img src="{{ $card['image_url'] }}" 
                  alt="{{ $card['name'] }}"
                  class="w-full h-full object-cover">

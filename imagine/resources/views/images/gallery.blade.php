@@ -70,8 +70,8 @@
                                             after:pointer-events-none after:opacity-50">
                                     
                                     <!-- Grid View -->
-                                    <div id="gridView" class="cards-masonry relative max-w-6xl mx-auto" 
-                                         style="opacity: 0; transition: all 0.5s ease-out;"
+                                    <div id="gridView" class="cards-masonry relative max-w-6xl mx-auto opacity-0" 
+                                         style="transition: all 0.5s ease-out;"
                                          x-data="{ hoveredCard: null }">
                                         <!-- Grid sizer for masonry -->
                                         <div class="grid-sizer w-1/3"></div>
@@ -81,10 +81,10 @@
                                     </div>
 
                                     <!-- List View -->
-                                    <div id="listView" class="hidden">
-                                        <div class="space-y-4">
+                                    <div id="listView" class="hidden max-w-6xl mx-auto opacity-0" style="transition: all 0.5s ease-out">
+                                        <div class="space-y-4 flex flex-col w-full">
                                             @foreach($cards as $card)
-                                                <x-card-list-item :card="$card" />
+                                                <x-card-list-item :card="$card" class="w-full" />
                                             @endforeach
                                         </div>
                                     </div>
@@ -150,22 +150,27 @@
     }
 
     /* Grid Layout */
-    .grid-sizer,
-    .card-item {
+    #gridView .card-item {
         width: 100%;
         padding: 12px;
     }
 
+    #listView .card-item {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+
     @media (min-width: 640px) {
-        .grid-sizer,
-        .card-item {
+        #gridView .grid-sizer,
+        #gridView .card-item {
             width: 50%;
         }
     }
 
     @media (min-width: 1024px) {
-        .grid-sizer,
-        .card-item {
+        #gridView .grid-sizer,
+        #gridView .card-item {
             width: 33.333%;
         }
     }
@@ -352,8 +357,23 @@
         // Initialize sort service
         sortService.initialize(masonryService);
 
+        // Initialize filter service
+        const filterService = new FilterService();
+        filterService.initialize(masonryService);
+
         // Initialize view service
-        viewService.initialize(masonryService);
+        viewService.initialize(masonryService, filterService);
+        
+        // Load saved view preference
+        viewService.loadViewPreference();
+        
+        // Set initial active state on view buttons
+        const currentView = viewService.getCurrentView();
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            const isActive = btn.getAttribute('data-view') === currentView;
+            btn.classList.toggle('active', isActive);
+            btn.classList.toggle('bg-gray-100', isActive);
+        });
         
         // Set up sort direction button
         const sortDirectionBtn = document.getElementById('sortDirection');
@@ -379,19 +399,36 @@
             });
         };
 
-        // Show and animate cards with stagger
-        const cardsContainer = document.querySelector('.cards-masonry');
-        if (cardsContainer) {
-            cardsContainer.style.opacity = '1';
-            const cardItems = cardsContainer.querySelectorAll('.card-item');
-            cardItems.forEach((card, index) => {
-                card.style.animationDelay = `${index * 100}ms`;
-                card.style.animationPlayState = 'running';
-            });
+        // Show initial view
+        const showInitialView = () => {
+            const currentView = viewService.getCurrentView();
+            const gridView = document.getElementById('gridView');
+            const listView = document.getElementById('listView');
 
-            // Initialize 3D effects after cards are visible
-            setTimeout(initializeCardEffects, cardItems.length * 100 + 500);
-        }
+            if (currentView === 'grid') {
+                gridView.style.opacity = '1';
+                listView.classList.add('hidden');
+                // Show and animate grid cards with stagger
+                const cardItems = gridView.querySelectorAll('.card-item');
+                cardItems.forEach((card, index) => {
+                    card.style.animationDelay = `${index * 100}ms`;
+                    card.style.animationPlayState = 'running';
+                });
+                // Initialize 3D effects after cards are visible
+                setTimeout(initializeCardEffects, cardItems.length * 100 + 500);
+            } else {
+                listView.style.opacity = '1';
+                gridView.classList.add('hidden');
+                // Show list items
+                const listItems = listView.querySelectorAll('.card-item');
+                listItems.forEach(item => {
+                    item.style.display = 'flex';
+                });
+            }
+        };
+
+        // Show initial view after a short delay to ensure transitions work
+        setTimeout(showInitialView, 150);
     });
 </script>
 @endpush

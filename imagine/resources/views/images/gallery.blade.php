@@ -47,6 +47,20 @@
                                     </div>
                                 </div>
 
+                                <!-- View Controls -->
+                                <div class="flex justify-end mb-4 space-x-2">
+                                    <button class="view-btn p-2 rounded-lg hover:bg-gray-100 transition-colors" data-view="grid">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                        </svg>
+                                    </button>
+                                    <button class="view-btn p-2 rounded-lg hover:bg-gray-100 transition-colors" data-view="list">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+
                                 <!-- Card Views Container -->
                                 <div class="relative bg-gradient-to-br from-gray-50 via-white to-gray-50 p-6 rounded-xl
                                             shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]
@@ -54,8 +68,9 @@
                                             before:pointer-events-none before:opacity-70
                                             after:absolute after:inset-0 after:bg-[radial-gradient(circle_at_50%_100%,rgba(0,0,0,0.05),transparent_50%)]
                                             after:pointer-events-none after:opacity-50">
-                                    <!-- Cards Grid -->
-                                    <div class="cards-masonry relative max-w-6xl mx-auto" 
+                                    
+                                    <!-- Grid View -->
+                                    <div id="gridView" class="cards-masonry relative max-w-6xl mx-auto" 
                                          style="opacity: 0; transition: all 0.5s ease-out;"
                                          x-data="{ hoveredCard: null }">
                                         <!-- Grid sizer for masonry -->
@@ -63,6 +78,15 @@
                                         @foreach($cards as $card)
                                             <x-card-grid-item :card="$card" />
                                         @endforeach
+                                    </div>
+
+                                    <!-- List View -->
+                                    <div id="listView" class="hidden">
+                                        <div class="space-y-4">
+                                            @foreach($cards as $card)
+                                                <x-card-list-item :card="$card" />
+                                            @endforeach
+                                        </div>
                                     </div>
                                 </div>
 
@@ -320,12 +344,16 @@
         // Initialize services
         const masonryService = new MasonryService();
         const sortService = new SortService();
+        const viewService = new ViewService();
 
         // Initialize masonry layout
         masonryService.initialize();
 
         // Initialize sort service
         sortService.initialize(masonryService);
+
+        // Initialize view service
+        viewService.initialize(masonryService);
         
         // Set up sort direction button
         const sortDirectionBtn = document.getElementById('sortDirection');

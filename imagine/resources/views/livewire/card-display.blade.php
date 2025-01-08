@@ -129,15 +129,13 @@
         <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
             <div class="flex space-x-2">
                 <button wire:click="toggleDetails" 
-                        class="bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200 shadow-lg"
-                        title="View Details">
+                        class="bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200 shadow-lg">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </button>
                 <button wire:click="flipCard" 
-                        class="bg-purple-600 text-white p-2 rounded-full hover:bg-purple-500 transition-colors duration-200 shadow-lg"
-                        title="Flip Card">
+                        class="bg-purple-600 text-white p-2 rounded-full hover:bg-purple-500 transition-colors duration-200 shadow-lg">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>

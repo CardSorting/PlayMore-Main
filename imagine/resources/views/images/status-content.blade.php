@@ -71,17 +71,9 @@
                                             class="opacity-0 w-full h-full object-cover"
                                         >
                                         
-                                        <!-- Download Button Overlay -->
+                                        <!-- Info Overlay -->
                                         <div class="absolute inset-0 z-20 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                            <a 
-                                                href="{{ $imageUrl }}" 
-                                                download 
-                                                target="_blank"
-                                                class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
-                                                onclick="event.stopPropagation()"
-                                            >
-                                                Download
-                                            </a>
+                                            <p class="text-white text-sm">Click to view details</p>
                                         </div>
                                     </div>
                                 </div>

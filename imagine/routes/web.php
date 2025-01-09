@@ -30,7 +30,8 @@ Route::get('/pricing', [HomeController::class, 'pricing'])->name('pricing');
 // Authentication Routes
 require __DIR__.'/auth.php';
 
-// Marketplace Routes are now in routes/marketplace.php
+// Marketplace Routes
+require __DIR__.'/marketplace.php';
 
 // Other Authenticated Routes
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -3,31 +3,13 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Cache\RateLimiter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Cache\RateLimiting\Limit;
 use Symfony\Component\HttpFoundation\Response;
 
 class MarketplaceRateLimiter
 {
-    /**
-     * The rate limiter instance.
-     *
-     * @var \Illuminate\Cache\RateLimiter
-     */
-    protected $limiter;
-
-    /**
-     * Create a new middleware instance.
-     *
-     * @param  \Illuminate\Cache\RateLimiter  $limiter
-     * @return void
-     */
-    public function __construct(RateLimiter $limiter)
-    {
-        $this->limiter = $limiter;
-    }
-
     /**
      * Handle an incoming request.
      *
@@ -35,26 +17,22 @@ class MarketplaceRateLimiter
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next): Response 
     {
-        $redis = Redis::connection('rate_limit');
         $key = 'marketplace:' . $request->ip();
         
-        // Get current hits for this IP
-        $hits = (int) $redis->get($key) ?: 0;
+        $limiter = RateLimiter::for($key, function () {
+            return Limit::perMinute(120);
+        });
         
-        // Allow 60 requests per minute
-        if ($hits >= 60) {
+        if ($limiter->tooManyAttempts($key, 120)) {
             return response()->json([
                 'message' => 'Too many requests. Please try again later.',
-                'retry_after' => $redis->ttl($key)
+                'retry_after' => $limiter->availableIn($key)
             ], 429);
         }
         
-        // Increment hits and set expiry if not set
-        $redis->incr($key);
-        $redis->expire($key, 60);
-        
+        $limiter->hit($key);
         return $next($request);
     }
 }

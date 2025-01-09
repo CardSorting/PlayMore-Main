@@ -5,35 +5,12 @@ namespace App\Services;
 use App\Models\CreditTransaction;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Redis\Connections\Connection;
-use Illuminate\Redis\RedisManager;
 
 class PulseService
 {
-    private const CREDIT_KEY_PREFIX = 'user_credits:';
-    private Connection $redis;
-
-    public function __construct(RedisManager $redis)
-    {
-        $this->redis = $redis->connection();
-    }
-
     public function getCreditBalance(User $user): int
     {
-        try {
-            $balance = $this->redis->get($this->getCreditKey($user->id));
-        
-            if ($balance === null) {
-                // If not in Redis, calculate from transactions and cache it
-                $balance = $this->calculateAndCacheBalance($user);
-            }
-
-            return (int) $balance;
-        } catch (\Exception $e) {
-            Log::error('Redis error: ' . $e->getMessage());
-            // Fallback to calculating from database if Redis fails
-            return $this->calculateBalanceFromDb($user);
-        }
+        return $this->calculateBalanceFromDb($user);
     }
 
     public function addCredits(User $user, int $amount, ?string $description = null, ?string $reference = null): void
@@ -42,37 +19,27 @@ class PulseService
             throw new \InvalidArgumentException('Credit amount must be positive');
         }
 
-        // First create the transaction record in the database
-        $transaction = CreditTransaction::create([
-            'user_id' => $user->id,
-            'amount' => $amount,
-            'type' => 'credit',
-            'description' => $description,
-            'reference' => $reference,
-        ]);
+        try {
+            $transaction = CreditTransaction::create([
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'type' => 'credit',
+                'description' => $description,
+                'reference' => $reference,
+            ]);
 
-        if (!$transaction) {
+            if (!$transaction) {
+                throw new \Exception('Failed to create credit transaction');
+            }
+        } catch (\Exception $e) {
             Log::error('Failed to create credit transaction', [
                 'user_id' => $user->id,
                 'amount' => $amount,
                 'description' => $description,
-                'reference' => $reference
+                'reference' => $reference,
+                'error' => $e->getMessage()
             ]);
-            throw new \Exception('Failed to create credit transaction');
-        }
-
-        // Then try to update Redis, but don't let Redis failures affect the transaction
-        try {
-            $this->redis->incrby($this->getCreditKey($user->id), $amount);
-        } catch (\Exception $e) {
-            Log::error('Redis error in addCredits - credits added to database but Redis update failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'user_id' => $user->id,
-                'amount' => $amount,
-                'transaction_id' => $transaction->id
-            ]);
-            // Redis failed but database transaction succeeded, so we can continue
+            throw $e;
         }
     }
 
@@ -89,7 +56,6 @@ class PulseService
         }
 
         try {
-            // Create transaction record
             CreditTransaction::create([
                 'user_id' => $user->id,
                 'amount' => $amount,
@@ -98,14 +64,17 @@ class PulseService
                 'reference' => $reference,
             ]);
 
-            // Update Redis
-            $this->redis->decrby($this->getCreditKey($user->id), $amount);
+            return true;
         } catch (\Exception $e) {
-            Log::error('Redis error in deductCredits: ' . $e->getMessage());
-            // Continue since the database transaction was successful
+            Log::error('Failed to create debit transaction', [
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'description' => $description,
+                'reference' => $reference,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
         }
-
-        return true;
     }
 
     public function getTransactionHistory(User $user, int $limit = 10)
@@ -127,24 +96,5 @@ class PulseService
             ->sum('amount');
 
         return $credits - $debits;
-    }
-
-    private function calculateAndCacheBalance(User $user): int
-    {
-        $balance = $this->calculateBalanceFromDb($user);
-
-        try {
-            // Cache the balance in Redis
-            $this->redis->set($this->getCreditKey($user->id), $balance);
-        } catch (\Exception $e) {
-            Log::error('Redis error in calculateAndCacheBalance: ' . $e->getMessage());
-        }
-
-        return $balance;
-    }
-
-    private function getCreditKey(int $userId): string
-    {
-        return self::CREDIT_KEY_PREFIX . $userId;
     }
 }

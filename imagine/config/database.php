@@ -148,35 +148,35 @@ return [
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
             'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
-            'ssl' => [
-                'verify_peer' => false,
-                'verify_peer_name' => false,
-                'allow_self_signed' => true
+            'parameters' => [
+                'password' => env('REDIS_PASSWORD'),
+                'scheme' => 'tls'
             ],
+            'context' => [
+                'stream' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                ]
+            ]
         ],
 
         'default' => [
             'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_DB', '0'),
-            'scheme' => 'tls',
+            'read_write_timeout' => 0,
+            'database' => 0
         ],
 
         'cache' => [
             'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_CACHE_DB', '1'),
+            'read_write_timeout' => 0,
+            'database' => 1
         ],
 
         'rate_limit' => [
-            'url' => 'redis://default:tZVtoFHPwDxXEGeHqjYSGagtVODTCwtN@monorail.proxy.rlwy.net:27876',
-            'scheme' => 'tls',
+            'url' => env('REDIS_URL'),
+            'read_write_timeout' => 0,
+            'database' => 0
         ],
 
     ],

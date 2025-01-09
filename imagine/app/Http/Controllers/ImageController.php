@@ -346,9 +346,16 @@ class ImageController extends Controller
                     session()->forget('image_task');
                 }
                 
+                // Get the gallery entry for this task if it exists
+                $gallery = Gallery::where('task_id', $data['task_id'])
+                    ->where('type', 'image')
+                    ->with('user')
+                    ->first();
+
                 return view('images.status', [
                     'data' => $data,
-                    'taskInfo' => $taskInfo
+                    'taskInfo' => $taskInfo,
+                    'gallery' => $gallery
                 ]);
             }
 

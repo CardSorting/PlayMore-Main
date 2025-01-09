@@ -34,6 +34,11 @@ class User extends Authenticatable
         return $this->hasMany(Gallery::class);
     }
 
+    public function packs(): HasMany
+    {
+        return $this->hasMany(Pack::class);
+    }
+
     public function creditTransactions(): HasMany
     {
         return $this->hasMany(CreditTransaction::class);

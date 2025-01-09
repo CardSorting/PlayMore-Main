@@ -63,6 +63,36 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{pack}/seal', 'seal')->name('seal');
     });
 
+    // Marketplace Routes
+    Route::prefix('marketplace')->name('marketplace.')->middleware(['auth', 'verified'])->group(function () {
+        // Browse Marketplace
+        Route::controller(\App\Marketplace\Controllers\Browse\BrowseMarketplaceController::class)
+            ->name('browse.')
+            ->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::post('/packs/{pack}/purchase', 'purchasePack')->name('purchase');
+            });
+
+        // Seller Dashboard
+        Route::controller(\App\Marketplace\Controllers\Seller\SellerDashboardController::class)
+            ->prefix('seller')
+            ->name('seller.')
+            ->group(function () {
+                Route::get('/dashboard', 'index')->name('dashboard');
+                Route::post('/packs/{pack}/list', 'listPack')->name('list');
+                Route::post('/packs/{pack}/unlist', 'unlistPack')->name('unlist');
+                Route::get('/sales', 'salesHistory')->name('sales');
+            });
+
+        // Purchase History
+        Route::controller(\App\Marketplace\Controllers\Purchase\PurchaseHistoryController::class)
+            ->prefix('purchases')
+            ->name('purchase.')
+            ->group(function () {
+                Route::get('/history', 'index')->name('history');
+            });
+    });
+
     // Profile Routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

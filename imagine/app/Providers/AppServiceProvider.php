@@ -4,10 +4,12 @@ namespace App\Providers;
 
 use App\Services\PulseService;
 use App\Services\PayPalService;
+use App\Marketplace\Components\PackCard;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Redis\RedisManager;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Blade;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,6 +32,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register marketplace components
+        Blade::component('marketplace.browse.available-pack-card', \App\Marketplace\Components\Browse\AvailablePackCard::class);
+        Blade::component('marketplace.seller.listed-pack-card', \App\Marketplace\Components\Seller\ListedPackCard::class);
+
         View::composer('layouts.navigation', function ($view) {
             $pulseBalance = 0;
             
@@ -52,6 +58,5 @@ class AppServiceProvider extends ServiceProvider
                 'showPulseButton' => !request()->routeIs('pulse.index'),
             ]);
         });
-
     }
 }

@@ -21,7 +21,37 @@ class PackPolicy
      */
     public function view(User $user, Pack $pack): bool
     {
-        return $user->id === $pack->user_id && !$pack->is_sealed;
+        // Allow viewing if:
+        // 1. User owns the pack and it's not sealed
+        // 2. Pack is listed on marketplace
+        // 3. User owns the pack (even if sealed)
+        return ($user->id === $pack->user_id && !$pack->is_sealed) ||
+               $pack->is_listed ||
+               $user->id === $pack->user_id;
+    }
+
+    /**
+     * Determine whether the user can list the pack on marketplace.
+     */
+    public function listOnMarketplace(User $user, Pack $pack): bool
+    {
+        return $user->id === $pack->user_id && $pack->is_sealed && !$pack->is_listed;
+    }
+
+    /**
+     * Determine whether the user can remove the pack from marketplace.
+     */
+    public function removeFromMarketplace(User $user, Pack $pack): bool
+    {
+        return $user->id === $pack->user_id && $pack->is_listed;
+    }
+
+    /**
+     * Determine whether the user can purchase the pack.
+     */
+    public function purchase(User $user, Pack $pack): bool
+    {
+        return $pack->is_listed && $user->id !== $pack->user_id;
     }
 
     /**
@@ -37,7 +67,7 @@ class PackPolicy
      */
     public function update(User $user, Pack $pack): bool
     {
-        return $user->id === $pack->user_id && !$pack->is_sealed;
+        return $user->id === $pack->user_id && !$pack->is_sealed && !$pack->is_listed;
     }
 
     /**

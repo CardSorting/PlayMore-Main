@@ -21,7 +21,7 @@ class PackPolicy
      */
     public function view(User $user, Pack $pack): bool
     {
-        return $user->id === $pack->user_id;
+        return $user->id === $pack->user_id && !$pack->is_sealed;
     }
 
     /**

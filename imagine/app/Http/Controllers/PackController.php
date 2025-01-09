@@ -50,7 +50,15 @@ class PackController extends Controller
 
     public function show(Pack $pack)
     {
-        $this->authorize('view', $pack);
+        try {
+            $this->authorize('view', $pack);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            if ($pack->is_sealed) {
+                return redirect()->route('packs.index')
+                    ->with('error', 'This pack is sealed and cannot be viewed.');
+            }
+            throw $e;
+        }
         
         $pack->load('cards');
         $availableCards = Gallery::where('user_id', Auth::id())

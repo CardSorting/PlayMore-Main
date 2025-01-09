@@ -33,8 +33,14 @@
                                     @if($pack->is_sealed && $pack->cards->isNotEmpty())
                                         <div class="mb-4">
                                             <div class="pack-card relative aspect-[7/5] rounded-lg overflow-hidden group cursor-pointer">
+                                                <!-- Preview card -->
+                                                <div class="absolute inset-0">
+                                                    <img src="{{ $pack->cards->first()->image_url }}" 
+                                                         alt="Pack preview" 
+                                                         class="w-full h-full object-cover opacity-50 mix-blend-luminosity">
+                                                </div>
                                                 <!-- Base gradient -->
-                                                <div class="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-700 to-purple-900"></div>
+                                                <div class="absolute inset-0 bg-gradient-to-br from-purple-600/80 via-purple-700/85 to-purple-900/95 mix-blend-multiply"></div>
                                                 <!-- Foil pattern -->
                                                 <div class="absolute inset-0 foil-pattern opacity-30"></div>
                                                 <!-- Glow effect -->
@@ -71,9 +77,11 @@
 
                                     <div class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
                                         <span>{{ $pack->cards_count }} / {{ $pack->card_limit }} cards</span>
-                                        <a href="{{ route('packs.show', $pack) }}" class="text-blue-500 hover:text-blue-700">
-                                            View Details →
-                                        </a>
+                                        @if(!$pack->is_sealed)
+                                            <a href="{{ route('packs.show', $pack) }}" class="text-blue-500 hover:text-blue-700">
+                                                View Details →
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach

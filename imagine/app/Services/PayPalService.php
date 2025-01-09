@@ -62,6 +62,7 @@ class PayPalService
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->getAccessToken(),
                 'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
             ])->post("$this->baseUrl/v2/checkout/orders", [
                 'intent' => 'CAPTURE',
                 'purchase_units' => [
@@ -70,20 +71,29 @@ class PayPalService
                             'currency_code' => 'USD',
                             'value' => number_format($price, 2, '.', ''),
                         ],
+                        'description' => 'Purchase ' . $item['id'],
                     ],
+                ],
+                'application_context' => [
+                    'return_url' => route('pulse.index'),
+                    'cancel_url' => route('pulse.index'),
                 ],
             ]);
 
-            if ($response->successful()) {
-                return $response->json();
+            if (!$response->successful()) {
+                Log::error('PayPal create order failed', [
+                    'status' => $response->status(),
+                    'body' => $response->json(),
+                ]);
+                throw new \Exception($response->json()['message'] ?? 'Failed to create PayPal order');
             }
 
-            Log::error('PayPal create order failed', [
-                'status' => $response->status(),
-                'body' => $response->json(),
-            ]);
+            $data = $response->json();
+            if (empty($data['id'])) {
+                throw new \Exception('Invalid order response from PayPal');
+            }
 
-            throw new \Exception('Failed to create PayPal order');
+            return $data;
         } catch (\Exception $e) {
             Log::error('PayPal create order failed: ' . $e->getMessage());
             throw $e;
@@ -96,18 +106,23 @@ class PayPalService
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->getAccessToken(),
                 'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
             ])->post("$this->baseUrl/v2/checkout/orders/$orderId/capture");
 
-            if ($response->successful()) {
-                return $response->json();
+            if (!$response->successful()) {
+                Log::error('PayPal capture order failed', [
+                    'status' => $response->status(),
+                    'body' => $response->json(),
+                ]);
+                throw new \Exception($response->json()['message'] ?? 'Failed to capture PayPal order');
             }
 
-            Log::error('PayPal capture order failed', [
-                'status' => $response->status(),
-                'body' => $response->json(),
-            ]);
+            $data = $response->json();
+            if (empty($data['status'])) {
+                throw new \Exception('Invalid capture response from PayPal');
+            }
 
-            throw new \Exception('Failed to capture PayPal order');
+            return $data;
         } catch (\Exception $e) {
             Log::error('PayPal capture order failed: ' . $e->getMessage());
             throw $e;

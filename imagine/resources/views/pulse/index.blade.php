@@ -34,56 +34,93 @@
                     const buttons = paypal.Buttons({
                         style: {
                             shape: 'pill',
-                            layout: 'horizontal'
+                            layout: 'horizontal',
+                            height: 55
                         },
                         createOrder: async () => {
-                            const response = await fetch('/api/orders', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-                                },
-                                body: JSON.stringify({
-                                    cart: [{
-                                        id: `pulse_${this.selectedAmount}`,
-                                        quantity: 1,
-                                        price: this.selectedPrice
-                                    }]
-                                })
-                            });
+                            try {
+                                const response = await fetch('/api/orders', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                                    },
+                                    body: JSON.stringify({
+                                        cart: [{
+                                            id: `pulse_${this.selectedAmount}`,
+                                            quantity: 1,
+                                            price: this.selectedPrice
+                                        }]
+                                    })
+                                });
 
-                            const data = await response.json();
-                            if (!data.id) throw new Error('Failed to create order');
-                            return data.id;
+                                if (!response.ok) {
+                                    const errorData = await response.json();
+                                    throw new Error(errorData.message || 'Failed to create order');
+                                }
+
+                                const data = await response.json();
+                                if (!data.id) {
+                                    throw new Error('Invalid order response');
+                                }
+
+                                return data.id;
+                            } catch (error) {
+                                console.error('Create order error:', error);
+                                this.showMessage(`Failed to create order: ${error.message}`);
+                                throw error;
+                            }
                         },
                         onApprove: async (data) => {
-                            const response = await fetch(`/api/orders/${data.orderID}/capture`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-                                },
-                                body: JSON.stringify({
-                                    amount: this.selectedAmount
-                                })
-                            });
+                            try {
+                                const response = await fetch(`/api/orders/${data.orderID}/capture`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                                    },
+                                    body: JSON.stringify({
+                                        amount: this.selectedAmount
+                                    })
+                                });
 
-                            const result = await response.json();
-                            if (result.status === 'COMPLETED') {
-                                this.showMessage('Payment successful! Your Pulse has been added.');
-                                setTimeout(() => window.location.reload(), 2000);
+                                if (!response.ok) {
+                                    const errorData = await response.json();
+                                    throw new Error(errorData.message || 'Failed to capture payment');
+                                }
+
+                                const result = await response.json();
+                                if (result.status === 'COMPLETED') {
+                                    this.showMessage('Payment successful! Your Pulse has been added.');
+                                    setTimeout(() => window.location.reload(), 2000);
+                                } else {
+                                    throw new Error(`Payment not completed: ${result.status}`);
+                                }
+                            } catch (error) {
+                                console.error('Capture error:', error);
+                                this.showMessage(`Payment failed: ${error.message}`);
+                                throw error;
                             }
                         },
                         onError: (err) => {
                             console.error('PayPal error:', err);
-                            this.showMessage('Payment failed. Please try again.');
+                            this.showMessage(`Payment error: ${err.message}`);
+                        },
+                        onCancel: () => {
+                            this.showMessage('Payment cancelled. Please try again.');
                         }
                     });
 
+                    if (!buttons.isEligible()) {
+                        throw new Error('PayPal Buttons are not eligible');
+                    }
+
                     await buttons.render('#paypal-button-container');
                 } catch (error) {
-                    console.error('Failed to initialize PayPal:', error);
-                    this.showMessage('Failed to initialize payment system. Please refresh the page.');
+                    console.error('PayPal initialization error:', error);
+                    this.showMessage(`Failed to initialize payment system: ${error.message}`);
                 }
             }
         }"

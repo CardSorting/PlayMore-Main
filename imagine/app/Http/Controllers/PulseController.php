@@ -34,7 +34,7 @@ class PulseController extends Controller
     {
         try {
             // Validate the request
-            $request->validate([
+            $validated = $request->validate([
                 'cart' => 'required|array',
                 'cart.*.id' => 'required|string',
                 'cart.*.quantity' => 'required|integer|min:1',
@@ -42,18 +42,25 @@ class PulseController extends Controller
             ]);
 
             // Create PayPal order with cart data
-            $order = $this->paypalService->createOrder($request->input('cart'));
+            $order = $this->paypalService->createOrder($validated['cart']);
             
-            if (!isset($order['id'])) {
-                throw new \Exception('Invalid order response from PayPal');
-            }
-            
-            return response()->json($order);
+            return response()->json($order, 200, [
+                'Content-Type' => 'application/json'
+            ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['error' => 'Invalid request data: ' . $e->getMessage()], 422);
+            return response()->json([
+                'error' => 'Invalid request data',
+                'details' => $e->errors()
+            ], 422, ['Content-Type' => 'application/json']);
         } catch (\Exception $e) {
-            \Log::error('PayPal create order error: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to create order: ' . $e->getMessage()], 500);
+            \Log::error('PayPal create order error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'error' => 'Failed to create order',
+                'message' => $e->getMessage()
+            ], 500, ['Content-Type' => 'application/json']);
         }
     }
 
@@ -61,37 +68,52 @@ class PulseController extends Controller
     {
         try {
             // Validate the request
-            $request->validate([
+            $validated = $request->validate([
                 'amount' => 'required|integer|min:1'
             ]);
 
-            $pulseAmount = $request->input('amount');
-            
+            // Ensure user is authenticated
+            if (!auth()->check()) {
+                throw new \Exception('User not authenticated');
+            }
+
             // Capture the PayPal order
             $result = $this->paypalService->captureOrder($orderId);
             
-            // Validate the capture response
-            if (!isset($result['status'])) {
-                throw new \Exception('Invalid capture response from PayPal');
-            }
-            
             // If capture successful, add credits to user's account
             if ($result['status'] === 'COMPLETED') {
-                $user = auth()->user();
-                if (!$user) {
-                    throw new \Exception('User not authenticated');
-                }
-                $user->addCredits($pulseAmount, 'PayPal purchase', $orderId);
-            } else {
-                throw new \Exception('Payment not completed: ' . $result['status']);
+                auth()->user()->addCredits(
+                    $validated['amount'],
+                    'PayPal purchase',
+                    $orderId
+                );
+
+                return response()->json([
+                    'status' => 'COMPLETED',
+                    'message' => 'Payment processed successfully'
+                ], 200, ['Content-Type' => 'application/json']);
             }
             
-            return response()->json($result);
+            return response()->json([
+                'status' => $result['status'],
+                'message' => 'Payment not completed'
+            ], 400, ['Content-Type' => 'application/json']);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['error' => 'Invalid request data: ' . $e->getMessage()], 422);
+            return response()->json([
+                'error' => 'Invalid request data',
+                'details' => $e->errors()
+            ], 422, ['Content-Type' => 'application/json']);
         } catch (\Exception $e) {
-            \Log::error('PayPal capture order error: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to capture order: ' . $e->getMessage()], 500);
+            \Log::error('PayPal capture order error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'orderId' => $orderId
+            ]);
+            return response()->json([
+                'error' => 'Failed to capture order',
+                'message' => $e->getMessage()
+            ], 500, ['Content-Type' => 'application/json']);
         }
     }
 }

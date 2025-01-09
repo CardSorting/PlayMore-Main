@@ -116,11 +116,8 @@ class PackController extends Controller
         try {
             DB::beginTransaction();
 
-            // Load cards in random order
-            $cards = $pack->cards()
-                ->select('id', 'name', 'image_url', 'rarity', 'card_type', 'mana_cost', 'power_toughness', 'abilities', 'flavor_text')
-                ->inRandomOrder()
-                ->get();
+            // Load cards
+            $cards = $pack->cards()->get();
 
             // Add cards to user's collection
             foreach ($cards as $card) {
@@ -144,12 +141,13 @@ class PackController extends Controller
                 $card->delete();
             }
 
-            // Mark pack as opened (you might want to add an is_opened column to packs table)
-            $pack->delete(); // Or update status if you prefer to keep record
+            // Delete the pack
+            $pack->delete();
 
             DB::commit();
 
-            return view('dashboard.packs.open', compact('pack', 'cards'));
+            return redirect()->route('cards.index')
+                ->with('success', 'Pack opened successfully! The cards have been added to your collection.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->route('packs.index')

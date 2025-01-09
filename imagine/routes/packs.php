@@ -4,7 +4,7 @@ use App\Http\Controllers\PackController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])
-    ->prefix('dashboard/packs')
+    ->prefix('packs')
     ->name('packs.')
     ->controller(PackController::class)
     ->group(function () {

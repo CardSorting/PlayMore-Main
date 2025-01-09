@@ -4,7 +4,7 @@ use App\Http\Controllers\CardController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])
-    ->prefix('dashboard/cards')
+    ->prefix('cards')
     ->name('cards.')
     ->controller(CardController::class)
     ->group(function () {

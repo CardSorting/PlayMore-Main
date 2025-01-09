@@ -48,15 +48,32 @@
     </div>
 
     @push('scripts')
-    <script src="https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency=USD"></script>
+    <script>
+        // Only load PayPal SDK if not already loaded
+        if (!window.paypal) {
+            const script = document.createElement('script');
+            script.src = "https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency=USD";
+            script.async = true;
+            document.head.appendChild(script);
+        }
+    </script>
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('pulsePayment', () => ({
                 selectedAmount: {{ $defaultOption['amount'] }},
                 selectedPrice: {{ $defaultOption['price'] }},
+                paypalLoaded: false,
                 
                 init() {
-                    this.initPayPalButton();
+                    this.waitForPayPal();
+                },
+
+                waitForPayPal() {
+                    if (window.paypal) {
+                        this.initPayPalButton();
+                    } else {
+                        setTimeout(() => this.waitForPayPal(), 100);
+                    }
                 },
 
                 selectOption(amount, price) {
@@ -69,85 +86,108 @@
 
                 initPayPalButton() {
                     const self = this;
-                    paypal.Buttons({
-                        style: {
-                            shape: "pill",
-                            layout: "horizontal",
-                        },
-                        async createOrder() {
-                            try {
-                                const response = await fetch("/api/orders", {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                        cart: [
-                                            {
-                                                id: `pulse_${self.selectedAmount}`,
-                                                quantity: 1,
-                                                price: self.selectedPrice
-                                            },
-                                        ],
-                                    }),
-                                });
+                    try {
+                        paypal.Buttons({
+                            style: {
+                                shape: "pill",
+                                layout: "horizontal",
+                            },
+                            async createOrder() {
+                                try {
+                                    const response = await fetch("/api/orders", {
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                                        },
+                                        body: JSON.stringify({
+                                            cart: [
+                                                {
+                                                    id: `pulse_${self.selectedAmount}`,
+                                                    quantity: 1,
+                                                    price: self.selectedPrice
+                                                },
+                                            ],
+                                        }),
+                                    });
 
-                                const orderData = await response.json();
+                                    if (!response.ok) {
+                                        const errorData = await response.json();
+                                        throw new Error(errorData.error || 'Failed to create order');
+                                    }
 
-                                if (orderData.id) {
+                                    const orderData = await response.json();
+
+                                    if (!orderData || !orderData.id) {
+                                        throw new Error('Invalid order response from server');
+                                    }
+
                                     return orderData.id;
-                                } else {
-                                    const errorDetail = orderData?.details?.[0];
-                                    const errorMessage = errorDetail
-                                        ? `${errorDetail.issue} ${errorDetail.description} (${orderData.debug_id})`
-                                        : JSON.stringify(orderData);
-
-                                    throw new Error(errorMessage);
+                                } catch (error) {
+                                    console.error('PayPal createOrder error:', error);
+                                    self.showMessage(`Could not initiate PayPal Checkout: ${error.message}`);
+                                    throw error; // Rethrow to prevent PayPal button from proceeding
                                 }
-                            } catch (error) {
-                                console.error(error);
-                                self.showMessage(`Could not initiate PayPal Checkout...<br><br>${error}`);
-                            }
-                        },
-                        async onApprove(data, actions) {
-                            try {
-                                const response = await fetch(`/api/orders/${data.orderID}/capture`, {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                        amount: self.selectedAmount
-                                    }),
-                                });
+                            },
+                            async onApprove(data, actions) {
+                                try {
+                                    const response = await fetch(`/api/orders/${data.orderID}/capture`, {
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                                        },
+                                        body: JSON.stringify({
+                                            amount: self.selectedAmount
+                                        }),
+                                    });
 
-                                const orderData = await response.json();
-                                const errorDetail = orderData?.details?.[0];
+                                    if (!response.ok) {
+                                        const errorData = await response.json();
+                                        throw new Error(errorData.error || 'Failed to capture order');
+                                    }
 
-                                if (errorDetail?.issue === "INSTRUMENT_DECLINED") {
-                                    return actions.restart();
-                                } else if (errorDetail) {
-                                    throw new Error(`${errorDetail.description} (${orderData.debug_id})`);
-                                } else if (!orderData.purchase_units) {
-                                    throw new Error(JSON.stringify(orderData));
-                                } else {
+                                    const orderData = await response.json();
+                                    const errorDetail = orderData?.details?.[0];
+
+                                    if (errorDetail?.issue === "INSTRUMENT_DECLINED") {
+                                        return actions.restart();
+                                    } else if (errorDetail) {
+                                        throw new Error(`${errorDetail.description} (${orderData.debug_id})`);
+                                    } else if (!orderData.purchase_units) {
+                                        throw new Error(JSON.stringify(orderData));
+                                    }
+
                                     const transaction =
                                         orderData?.purchase_units?.[0]?.payments?.captures?.[0] ||
                                         orderData?.purchase_units?.[0]?.payments?.authorizations?.[0];
+
+                                    if (!transaction) {
+                                        throw new Error('Transaction details not found in response');
+                                    }
+
                                     self.showMessage(
                                         `Transaction ${transaction.status}: ${transaction.id}<br><br>Your Pulse has been added to your account!`,
                                     );
                                     // Refresh the page after a successful transaction
                                     setTimeout(() => window.location.reload(), 3000);
+                                } catch (error) {
+                                    console.error('PayPal capture error:', error);
+                                    self.showMessage(
+                                        `Sorry, your transaction could not be processed: ${error.message}`,
+                                    );
+                                    throw error; // Rethrow to prevent PayPal from considering this a success
                                 }
-                            } catch (error) {
-                                console.error(error);
-                                self.showMessage(
-                                    `Sorry, your transaction could not be processed...<br><br>${error}`,
-                                );
+                            },
+                            onError(err) {
+                                console.error('PayPal button error:', err);
+                                self.showMessage(`PayPal encountered an error: ${err.message}`);
                             }
-                        },
-                    }).render("#paypal-button-container");
+                        }).render("#paypal-button-container");
+                    } catch (error) {
+                        console.error('PayPal button initialization error:', error);
+                        self.showMessage(`Failed to initialize PayPal button: ${error.message}`);
+                    }
                 },
 
                 showMessage(message) {

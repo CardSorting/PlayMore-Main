@@ -5,15 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Gallery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class ImageController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         return view('images.create');
     }
 
-    public function gallery()
+    public function gallery(): View
     {
         $images = auth()->user()->galleries()
             ->where('type', 'image')
@@ -23,13 +25,15 @@ class ImageController extends Controller
         return view('images.gallery', compact('images'));
     }
 
-    public function generate(Request $request)
+    public function generate(Request $request): RedirectResponse
     {
         // Check if there's already an active task
         if (session()->has('image_task')) {
             $taskId = session('image_task.task_id');
-            return redirect()->route('images.status', $taskId)
-                ->with('error', 'You already have an image generation in progress. Please wait for it to complete.');
+            return redirect()
+                ->route('images.status', $taskId)
+                ->with('error', 'You already have an image generation in progress. Please wait for it to complete.')
+                ->setStatusCode(409); // Conflict status code
         }
 
         $request->validate([
@@ -64,18 +68,25 @@ class ImageController extends Controller
                     'process_mode' => $request->process_mode ?? 'relax'
                 ]);
                 
-                return redirect()->route('images.status', $taskId)->with('success', 'Image generation started');
+                return redirect()
+                    ->route('images.status', $taskId)
+                    ->with('success', 'Image generation started successfully');
             }
 
-                session()->forget('image_task'); // Clean up session on failure
-                return back()->with('error', 'Failed to start image generation: ' . $response->json('message'));
+            session()->forget('image_task'); // Clean up session on failure
+            $errorMessage = $response->json('message') ?? 'Unknown API error occurred';
+            return back()
+                ->with('error', 'Failed to start image generation: ' . $errorMessage)
+                ->setStatusCode(500);
         } catch (\Exception $e) {
             session()->forget('image_task'); // Clean up session on error
-            return back()->with('error', 'Failed to connect to image generation service: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Failed to connect to image generation service: ' . $e->getMessage())
+                ->setStatusCode(500);
         }
     }
 
-    public function status($taskId)
+    public function status($taskId): View|RedirectResponse
     {
         try {
             $response = Http::withHeaders([
@@ -111,10 +122,14 @@ class ImageController extends Controller
             }
 
             session()->forget('image_task'); // Clean up session on error
-            return back()->with('error', 'Failed to fetch task status');
+            return back()
+                ->with('error', 'Failed to fetch task status: ' . ($response->json('message') ?? 'Unknown error'))
+                ->setStatusCode(500);
         } catch (\Exception $e) {
             session()->forget('image_task'); // Clean up session on error
-            return back()->with('error', 'Failed to connect to image generation service: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Failed to connect to image generation service: ' . $e->getMessage())
+                ->setStatusCode(500);
         }
     }
 }

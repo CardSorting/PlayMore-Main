@@ -83,26 +83,23 @@
                     </div>
                 </form>
 
-                <script>
-                    document.getElementById('generateForm').addEventListener('submit', function(e) {
-                        const button = document.getElementById('generateButton');
-                        const generateIcon = button.querySelector('.generate-icon');
-                        const loadingIcon = button.querySelector('.loading-icon');
-                        const buttonText = button.querySelector('.button-text');
-                        
-                        // Prevent multiple submissions
-                        if (button.disabled) {
-                            e.preventDefault();
-                            return;
-                        }
-                        
-                        // Disable button and show loading state
-                        button.disabled = true;
-                        generateIcon.classList.add('hidden');
-                        loadingIcon.classList.remove('hidden');
-                        buttonText.textContent = 'Generating...';
-                    });
-                </script>
+                <style>
+                    #generateForm.processing {
+                        position: relative;
+                        pointer-events: none;
+                    }
+                    #generateForm.processing::after {
+                        content: '';
+                        position: absolute;
+                        inset: 0;
+                        background: rgba(255, 255, 255, 0.7);
+                        backdrop-filter: blur(2px);
+                        border-radius: 0.375rem;
+                    }
+                </style>
+
+                @vite(['resources/js/app.js'])
+                <script src="{{ asset('js/services/generate-service.js') }}"></script>
             </div>
         </div>
     </div>

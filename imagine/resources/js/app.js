@@ -1,15 +1,18 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
+import { initPayPalButtons } from './components/paypal-buttons';
 
-// Prevent multiple Alpine instances
+// Initialize Alpine.js once
 if (!window.Alpine) {
     window.Alpine = Alpine;
     
-    // Wait for document to be ready
-    document.addEventListener('DOMContentLoaded', () => {
-        // Start Alpine only if not already started
-        if (!document.querySelector('[x-data]')?.__x) {
-            Alpine.start();
-        }
-    });
+    // Start Alpine after DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => Alpine.start());
+    } else {
+        Alpine.start();
+    }
 }
+
+// Expose PayPal buttons globally
+window.initPayPalButtons = initPayPalButtons;

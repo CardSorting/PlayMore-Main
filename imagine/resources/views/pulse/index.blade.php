@@ -3,135 +3,42 @@
         x-data="{
             selectedAmount: {{ $defaultOption['amount'] }},
             selectedPrice: {{ $defaultOption['price'] }},
-            paypalLoaded: false,
             
             init() {
-                // Load PayPal SDK after Alpine is initialized
-                const script = document.createElement('script');
-                script.src = 'https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency=USD';
-                script.async = true;
-                script.onload = () => {
-                    this.paypalLoaded = true;
-                    this.initPayPalButton();
-                };
-                document.body.appendChild(script);
+                this.updatePayPalButtons();
             },
 
             selectOption(amount, price) {
                 this.selectedAmount = amount;
                 this.selectedPrice = price;
-                document.getElementById('paypal-button-container').innerHTML = '';
-                this.initPayPalButton();
+                this.updatePayPalButtons();
             },
 
             showMessage(message) {
                 document.getElementById('result-message').innerHTML = message;
             },
 
-            async initPayPalButton() {
-                if (!this.paypalLoaded || !window.paypal) {
-                    console.warn('PayPal SDK not loaded yet');
-                    return;
-                }
-
+            async updatePayPalButtons() {
                 try {
-                    if (document.getElementById('paypal-button-container').children.length > 0) {
-                        return; // Buttons already rendered
-                    }
-
-                    const buttons = window.paypal.Buttons({
-                        style: {
-                            shape: 'pill',
-                            layout: 'horizontal',
-                            height: 55
+                    // Clear existing buttons
+                    document.getElementById('paypal-button-container').innerHTML = '';
+                    
+                    // Initialize new buttons
+                    window.initPayPalButtons({
+                        clientId: '{{ $paypalClientId }}',
+                        amount: this.selectedAmount,
+                        price: this.selectedPrice,
+                        onSuccess: (message) => {
+                            this.showMessage(message);
+                            setTimeout(() => window.location.reload(), 2000);
                         },
-                        createOrder: async () => {
-                            try {
-                                const response = await fetch('/api/orders', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Accept': 'application/json',
-                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-                                    },
-                                    body: JSON.stringify({
-                                        cart: [{
-                                            id: `pulse_${this.selectedAmount}`,
-                                            quantity: 1,
-                                            price: this.selectedPrice
-                                        }]
-                                    })
-                                });
-
-                                if (!response.ok) {
-                                    const errorData = await response.json();
-                                    throw new Error(errorData.message || 'Failed to create order');
-                                }
-
-                                const data = await response.json();
-                                if (!data.id) {
-                                    throw new Error('Invalid order response');
-                                }
-
-                                return data.id;
-                            } catch (error) {
-                                console.error('Create order error:', error);
-                                this.showMessage(`Failed to create order: ${error.message}`);
-                                throw error;
-                            }
-                        },
-                        onApprove: async (data) => {
-                            try {
-                                const response = await fetch(`/api/orders/${data.orderID}/capture`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Accept': 'application/json',
-                                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-                                    },
-                                    body: JSON.stringify({
-                                        amount: this.selectedAmount
-                                    })
-                                });
-
-                                if (!response.ok) {
-                                    const errorData = await response.json();
-                                    throw new Error(errorData.message || 'Failed to capture payment');
-                                }
-
-                                const result = await response.json();
-                                if (result.status === 'COMPLETED') {
-                                    this.showMessage('Payment successful! Your Pulse has been added.');
-                                    setTimeout(() => window.location.reload(), 2000);
-                                } else {
-                                    throw new Error(`Payment not completed: ${result.status}`);
-                                }
-                            } catch (error) {
-                                console.error('Capture error:', error);
-                                this.showMessage(`Payment failed: ${error.message}`);
-                                throw error;
-                            }
-                        },
-                        onError: (err) => {
-                            console.error('PayPal error:', err);
-                            this.showMessage(`Payment error: ${err.message}`);
-                        },
-                        onCancel: () => {
-                            this.showMessage('Payment cancelled. Please try again.');
+                        onError: (message) => {
+                            this.showMessage(message);
                         }
                     });
-
-                    if (buttons.isEligible && !buttons.isEligible()) {
-                        throw new Error('PayPal Buttons are not eligible');
-                    }
-
-                    buttons.render('#paypal-button-container').catch(error => {
-                        console.error('PayPal button render error:', error);
-                        this.showMessage(`Failed to render PayPal button: ${error.message}`);
-                    });
                 } catch (error) {
-                    console.error('PayPal initialization error:', error);
-                    this.showMessage(`Failed to initialize payment system: ${error.message}`);
+                    console.error('Failed to update PayPal buttons:', error);
+                    this.showMessage('Failed to initialize payment system');
                 }
             }
         }"
@@ -180,5 +87,4 @@
             </div>
         </div>
     </div>
-
 </x-app-layout>

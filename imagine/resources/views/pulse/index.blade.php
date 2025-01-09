@@ -1,6 +1,92 @@
 <x-app-layout>
     <div class="py-12" 
-        x-data="pulsePayment"
+        x-data="{
+            selectedAmount: {{ $defaultOption['amount'] }},
+            selectedPrice: {{ $defaultOption['price'] }},
+            
+            init() {
+                if (window.paypal) {
+                    this.initPayPalButton();
+                } else {
+                    // Wait for PayPal SDK to load
+                    const checkPayPal = setInterval(() => {
+                        if (window.paypal) {
+                            clearInterval(checkPayPal);
+                            this.initPayPalButton();
+                        }
+                    }, 100);
+                }
+            },
+
+            selectOption(amount, price) {
+                this.selectedAmount = amount;
+                this.selectedPrice = price;
+                document.getElementById('paypal-button-container').innerHTML = '';
+                this.initPayPalButton();
+            },
+
+            showMessage(message) {
+                document.getElementById('result-message').innerHTML = message;
+            },
+
+            async initPayPalButton() {
+                try {
+                    const buttons = paypal.Buttons({
+                        style: {
+                            shape: 'pill',
+                            layout: 'horizontal'
+                        },
+                        createOrder: async () => {
+                            const response = await fetch('/api/orders', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                                },
+                                body: JSON.stringify({
+                                    cart: [{
+                                        id: `pulse_${this.selectedAmount}`,
+                                        quantity: 1,
+                                        price: this.selectedPrice
+                                    }]
+                                })
+                            });
+
+                            const data = await response.json();
+                            if (!data.id) throw new Error('Failed to create order');
+                            return data.id;
+                        },
+                        onApprove: async (data) => {
+                            const response = await fetch(`/api/orders/${data.orderID}/capture`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                                },
+                                body: JSON.stringify({
+                                    amount: this.selectedAmount
+                                })
+                            });
+
+                            const result = await response.json();
+                            if (result.status === 'COMPLETED') {
+                                this.showMessage('Payment successful! Your Pulse has been added.');
+                                setTimeout(() => window.location.reload(), 2000);
+                            }
+                        },
+                        onError: (err) => {
+                            console.error('PayPal error:', err);
+                            this.showMessage('Payment failed. Please try again.');
+                        }
+                    });
+
+                    await buttons.render('#paypal-button-container');
+                } catch (error) {
+                    console.error('Failed to initialize PayPal:', error);
+                    this.showMessage('Failed to initialize payment system. Please refresh the page.');
+                }
+            }
+        }"
         x-init="init">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -48,154 +134,6 @@
     </div>
 
     @push('scripts')
-    <script>
-        // Only load PayPal SDK if not already loaded
-        if (!window.paypal) {
-            const script = document.createElement('script');
-            script.src = "https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency=USD";
-            script.async = true;
-            document.head.appendChild(script);
-        }
-    </script>
-    <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('pulsePayment', () => ({
-                selectedAmount: {{ $defaultOption['amount'] }},
-                selectedPrice: {{ $defaultOption['price'] }},
-                paypalLoaded: false,
-                
-                init() {
-                    this.waitForPayPal();
-                },
-
-                waitForPayPal() {
-                    if (window.paypal) {
-                        this.initPayPalButton();
-                    } else {
-                        setTimeout(() => this.waitForPayPal(), 100);
-                    }
-                },
-
-                selectOption(amount, price) {
-                    this.selectedAmount = amount;
-                    this.selectedPrice = price;
-                    // Re-render PayPal button with new amount
-                    document.getElementById('paypal-button-container').innerHTML = '';
-                    this.initPayPalButton();
-                },
-
-                initPayPalButton() {
-                    const self = this;
-                    try {
-                        paypal.Buttons({
-                            style: {
-                                shape: "pill",
-                                layout: "horizontal",
-                            },
-                            async createOrder() {
-                                try {
-                                    const response = await fetch("/api/orders", {
-                                        method: "POST",
-                                        headers: {
-                                            "Content-Type": "application/json",
-                                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                                        },
-                                        body: JSON.stringify({
-                                            cart: [
-                                                {
-                                                    id: `pulse_${self.selectedAmount}`,
-                                                    quantity: 1,
-                                                    price: self.selectedPrice
-                                                },
-                                            ],
-                                        }),
-                                    });
-
-                                    if (!response.ok) {
-                                        const errorData = await response.json();
-                                        throw new Error(errorData.error || 'Failed to create order');
-                                    }
-
-                                    const orderData = await response.json();
-
-                                    if (!orderData || !orderData.id) {
-                                        throw new Error('Invalid order response from server');
-                                    }
-
-                                    return orderData.id;
-                                } catch (error) {
-                                    console.error('PayPal createOrder error:', error);
-                                    self.showMessage(`Could not initiate PayPal Checkout: ${error.message}`);
-                                    throw error; // Rethrow to prevent PayPal button from proceeding
-                                }
-                            },
-                            async onApprove(data, actions) {
-                                try {
-                                    const response = await fetch(`/api/orders/${data.orderID}/capture`, {
-                                        method: "POST",
-                                        headers: {
-                                            "Content-Type": "application/json",
-                                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                                        },
-                                        body: JSON.stringify({
-                                            amount: self.selectedAmount
-                                        }),
-                                    });
-
-                                    if (!response.ok) {
-                                        const errorData = await response.json();
-                                        throw new Error(errorData.error || 'Failed to capture order');
-                                    }
-
-                                    const orderData = await response.json();
-                                    const errorDetail = orderData?.details?.[0];
-
-                                    if (errorDetail?.issue === "INSTRUMENT_DECLINED") {
-                                        return actions.restart();
-                                    } else if (errorDetail) {
-                                        throw new Error(`${errorDetail.description} (${orderData.debug_id})`);
-                                    } else if (!orderData.purchase_units) {
-                                        throw new Error(JSON.stringify(orderData));
-                                    }
-
-                                    const transaction =
-                                        orderData?.purchase_units?.[0]?.payments?.captures?.[0] ||
-                                        orderData?.purchase_units?.[0]?.payments?.authorizations?.[0];
-
-                                    if (!transaction) {
-                                        throw new Error('Transaction details not found in response');
-                                    }
-
-                                    self.showMessage(
-                                        `Transaction ${transaction.status}: ${transaction.id}<br><br>Your Pulse has been added to your account!`,
-                                    );
-                                    // Refresh the page after a successful transaction
-                                    setTimeout(() => window.location.reload(), 3000);
-                                } catch (error) {
-                                    console.error('PayPal capture error:', error);
-                                    self.showMessage(
-                                        `Sorry, your transaction could not be processed: ${error.message}`,
-                                    );
-                                    throw error; // Rethrow to prevent PayPal from considering this a success
-                                }
-                            },
-                            onError(err) {
-                                console.error('PayPal button error:', err);
-                                self.showMessage(`PayPal encountered an error: ${err.message}`);
-                            }
-                        }).render("#paypal-button-container");
-                    } catch (error) {
-                        console.error('PayPal button initialization error:', error);
-                        self.showMessage(`Failed to initialize PayPal button: ${error.message}`);
-                    }
-                },
-
-                showMessage(message) {
-                    const container = document.querySelector("#result-message");
-                    container.innerHTML = message;
-                }
-            }));
-        });
-    </script>
+    <script src="https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency=USD&components=buttons&enable-funding=venmo,paylater&disable-funding=card"></script>
     @endpush
 </x-app-layout>

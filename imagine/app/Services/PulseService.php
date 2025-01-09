@@ -13,7 +13,7 @@ class PulseService
         return $this->calculateBalanceFromDb($user);
     }
 
-    public function addCredits(User $user, int $amount, ?string $description = null, ?string $reference = null): void
+    public function addCredits(User $user, int $amount, ?string $description = null, ?string $reference = null, ?int $pack_id = null): void
     {
         Log::info('Starting addCredits process', [
             'user_id' => $user->id,
@@ -42,6 +42,7 @@ class PulseService
                 'type' => 'credit',
                 'description' => $description,
                 'reference' => $reference,
+                'pack_id' => $pack_id
             ]);
 
             if (!$transaction) {
@@ -56,24 +57,7 @@ class PulseService
                 'amount' => $amount
             ]);
 
-            // Verify the transaction was saved
-            $savedTransaction = CreditTransaction::find($transaction->id);
-            if (!$savedTransaction) {
-                Log::error('Transaction not found after creation', [
-                    'transaction_id' => $transaction->id
-                ]);
-                DB::rollBack();
-                throw new \Exception('Transaction not found after creation');
-            }
-
-            Log::info('Credit transaction verified', [
-                'transaction_id' => $savedTransaction->id,
-                'amount' => $savedTransaction->amount,
-                'type' => $savedTransaction->type
-            ]);
-
             DB::commit();
-
             Log::info('Transaction committed successfully');
 
         } catch (\Exception $e) {
@@ -90,7 +74,7 @@ class PulseService
         }
     }
 
-    public function deductCredits(User $user, int $amount, ?string $description = null, ?string $reference = null): bool
+    public function deductCredits(User $user, int $amount, ?string $description = null, ?string $reference = null, ?int $pack_id = null): bool
     {
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Debit amount must be positive');
@@ -99,7 +83,18 @@ class PulseService
         try {
             DB::beginTransaction();
 
-            $currentBalance = $this->getCreditBalance($user);
+            // Lock the user's transactions for balance calculation
+            $credits = CreditTransaction::where('user_id', $user->id)
+                ->where('type', 'credit')
+                ->lockForUpdate()
+                ->sum('amount');
+
+            $debits = CreditTransaction::where('user_id', $user->id)
+                ->where('type', 'debit')
+                ->lockForUpdate()
+                ->sum('amount');
+
+            $currentBalance = $credits - $debits;
 
             if ($currentBalance < $amount) {
                 DB::rollBack();
@@ -118,6 +113,7 @@ class PulseService
                 'type' => 'debit',
                 'description' => $description,
                 'reference' => $reference,
+                'pack_id' => $pack_id
             ]);
 
             if (!$transaction) {
@@ -159,14 +155,18 @@ class PulseService
 
     private function calculateBalanceFromDb(User $user): int
     {
-        $credits = CreditTransaction::where('user_id', $user->id)
-            ->where('type', 'credit')
-            ->sum('amount');
+        return DB::transaction(function () use ($user) {
+            $credits = CreditTransaction::where('user_id', $user->id)
+                ->where('type', 'credit')
+                ->lockForUpdate()
+                ->sum('amount');
 
-        $debits = CreditTransaction::where('user_id', $user->id)
-            ->where('type', 'debit')
-            ->sum('amount');
+            $debits = CreditTransaction::where('user_id', $user->id)
+                ->where('type', 'debit')
+                ->lockForUpdate()
+                ->sum('amount');
 
-        return $credits - $debits;
+            return $credits - $debits;
+        });
     }
 }

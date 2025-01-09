@@ -18,10 +18,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(PulseService::class, function ($app) {
-            return new PulseService($app->make(RedisManager::class));
-        });
-
         $this->app->singleton(PayPalService::class, function ($app) {
             return new PayPalService();
         });
@@ -44,9 +40,7 @@ class AppServiceProvider extends ServiceProvider
                 $cacheKey = 'user_pulse_balance:' . $user->id;
                 
                 try {
-                    $pulseBalance = cache()->remember($cacheKey, now()->addMinutes(5), function () use ($user) {
-                        return $user->getCreditBalance();
-                    });
+                    $pulseBalance = $user->getCreditBalance();
                 } catch (\Exception $e) {
                     // Keep default 0 balance on error
                     \Log::error('Failed to fetch pulse balance: ' . $e->getMessage());

@@ -13,10 +13,16 @@ class CreditTransaction extends Model
         'type',
         'description',
         'reference',
+        'pack_id'
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function pack(): BelongsTo
+    {
+        return $this->belongsTo(Pack::class);
     }
 }

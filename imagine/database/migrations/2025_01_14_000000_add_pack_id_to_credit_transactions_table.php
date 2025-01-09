@@ -8,16 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('credit_transactions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->integer('amount');
-            $table->string('type'); // credit, debit
-            $table->string('description')->nullable();
-            $table->string('reference')->nullable();
+        Schema::table('credit_transactions', function (Blueprint $table) {
+            // Add pack_id foreign key
             $table->foreignId('pack_id')->nullable()->constrained()->onDelete('set null');
-            $table->timestamps();
-
+            
             // Add indexes for efficient balance calculations and lookups
             $table->index(['user_id', 'type']);
             $table->index(['pack_id', 'type']);
@@ -26,6 +20,11 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('credit_transactions');
+        Schema::table('credit_transactions', function (Blueprint $table) {
+            $table->dropIndex(['user_id', 'type']);
+            $table->dropIndex(['pack_id', 'type']);
+            $table->dropForeign(['pack_id']);
+            $table->dropColumn('pack_id');
+        });
     }
 };

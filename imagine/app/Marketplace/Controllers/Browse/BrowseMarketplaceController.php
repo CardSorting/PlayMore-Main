@@ -17,10 +17,34 @@ class BrowseMarketplaceController extends Controller
         $this->browseService = $browseService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $availablePacks = $this->browseService->getAvailablePacks();
-        return view('marketplace.browse.index', compact('availablePacks'));
+        $filters = $request->validate([
+            'min_price' => 'nullable|integer|min:0',
+            'max_price' => 'nullable|integer|min:0',
+            'min_cards' => 'nullable|integer|min:1',
+            'sort' => 'nullable|string|in:price_asc,price_desc,cards_asc,cards_desc,latest'
+        ]);
+
+        $availablePacks = $this->browseService->getAvailablePacks(
+            filters: $filters,
+            page: $request->integer('page', 1)
+        );
+
+        $marketplaceStats = $this->browseService->getMarketplaceStats();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'packs' => $availablePacks,
+                'stats' => $marketplaceStats
+            ]);
+        }
+
+        return view('marketplace.browse.index', [
+            'availablePacks' => $availablePacks,
+            'marketplaceStats' => $marketplaceStats,
+            'filters' => $filters
+        ]);
     }
 
     public function purchasePack(Pack $pack)
@@ -35,5 +59,29 @@ class BrowseMarketplaceController extends Controller
 
         return redirect()->route('packs.show', $pack)
             ->with('success', $result['message']);
+    }
+
+    public function filter(Request $request)
+    {
+        $filters = $request->validate([
+            'min_price' => 'nullable|integer|min:0',
+            'max_price' => 'nullable|integer|min:0',
+            'min_cards' => 'nullable|integer|min:1',
+            'sort' => 'nullable|string|in:price_asc,price_desc,cards_asc,cards_desc,latest'
+        ]);
+
+        $availablePacks = $this->browseService->getAvailablePacks(
+            filters: $filters,
+            page: $request->integer('page', 1)
+        );
+
+        return response()->json([
+            'html' => view('marketplace.browse.components.pack-grid', [
+                'availablePacks' => $availablePacks
+            ])->render(),
+            'pagination' => view('components.pagination', [
+                'paginator' => $availablePacks
+            ])->render()
+        ]);
     }
 }

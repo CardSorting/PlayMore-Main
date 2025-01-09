@@ -18,8 +18,10 @@
         <!-- Livewire Styles -->
         @livewireStyles
 
-        <!-- Scripts -->
+        <!-- Alpine.js -->
         @vite(['resources/js/app.js'])
+        
+        <!-- PayPal SDK will be loaded in specific views -->
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">

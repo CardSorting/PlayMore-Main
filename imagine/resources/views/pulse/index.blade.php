@@ -3,19 +3,18 @@
         x-data="{
             selectedAmount: {{ $defaultOption['amount'] }},
             selectedPrice: {{ $defaultOption['price'] }},
+            paypalLoaded: false,
             
             init() {
-                if (window.paypal) {
+                // Load PayPal SDK after Alpine is initialized
+                const script = document.createElement('script');
+                script.src = 'https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency=USD';
+                script.async = true;
+                script.onload = () => {
+                    this.paypalLoaded = true;
                     this.initPayPalButton();
-                } else {
-                    // Wait for PayPal SDK to load
-                    const checkPayPal = setInterval(() => {
-                        if (window.paypal) {
-                            clearInterval(checkPayPal);
-                            this.initPayPalButton();
-                        }
-                    }, 100);
-                }
+                };
+                document.body.appendChild(script);
             },
 
             selectOption(amount, price) {
@@ -30,8 +29,17 @@
             },
 
             async initPayPalButton() {
+                if (!this.paypalLoaded || !window.paypal) {
+                    console.warn('PayPal SDK not loaded yet');
+                    return;
+                }
+
                 try {
-                    const buttons = paypal.Buttons({
+                    if (document.getElementById('paypal-button-container').children.length > 0) {
+                        return; // Buttons already rendered
+                    }
+
+                    const buttons = window.paypal.Buttons({
                         style: {
                             shape: 'pill',
                             layout: 'horizontal',
@@ -113,11 +121,14 @@
                         }
                     });
 
-                    if (!buttons.isEligible()) {
+                    if (buttons.isEligible && !buttons.isEligible()) {
                         throw new Error('PayPal Buttons are not eligible');
                     }
 
-                    await buttons.render('#paypal-button-container');
+                    buttons.render('#paypal-button-container').catch(error => {
+                        console.error('PayPal button render error:', error);
+                        this.showMessage(`Failed to render PayPal button: ${error.message}`);
+                    });
                 } catch (error) {
                     console.error('PayPal initialization error:', error);
                     this.showMessage(`Failed to initialize payment system: ${error.message}`);
@@ -170,7 +181,4 @@
         </div>
     </div>
 
-    @push('scripts')
-    <script src="https://www.paypal.com/sdk/js?client-id={{ $paypalClientId }}&currency=USD&components=buttons&enable-funding=venmo,paylater&disable-funding=card"></script>
-    @endpush
 </x-app-layout>

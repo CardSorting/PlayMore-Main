@@ -30,11 +30,18 @@ class CardController extends Controller
      */
     public function index(Request $request)
     {
-        $cards = Gallery::where('type', 'card')
+        $tab = $request->get('tab', 'all');
+        $query = Gallery::where('type', 'card')
             ->where('user_id', auth()->id())
-            ->with('user')  // Eager load user information
-            ->orderBy('created_at', 'desc')
-            ->paginate(12);
+            ->with('user');  // Eager load user information
+
+        if ($tab === 'newest') {
+            $query->where('created_at', '>=', now()->subDays(7));
+        }
+
+        $cards = $query->orderBy('created_at', 'desc')
+            ->paginate(12)
+            ->withQueryString();
 
         // Show success message if redirected from pack opening
         if ($request->has('opened')) {
@@ -43,6 +50,7 @@ class CardController extends Controller
 
         return view('dashboard.cards.index', [
             'cards' => $cards,
+            'currentTab' => $tab
         ]);
     }
 

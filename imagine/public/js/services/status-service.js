@@ -1,5 +1,15 @@
 class StatusService {
     constructor() {
+        // Wait for DOM to be fully loaded before initializing
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        } else {
+            this.init();
+        }
+    }
+
+    init() {
+        // Initialize elements only if they exist
         this.modal = document.getElementById('imageModal');
         this.modalContent = this.modal?.querySelector('.bg-white');
         this.modalImage = document.getElementById('modalImage');
@@ -23,26 +33,32 @@ class StatusService {
     }
 
     initialize() {
-        // Handle modal events
-        this.modal?.addEventListener('click', (e) => {
-            if (e.target === this.modal) {
-                this.closeModal();
-            }
-        });
+        // Only add event listeners if elements exist
+        if (this.modal) {
+            this.modal.addEventListener('click', (e) => {
+                if (e.target === this.modal) {
+                    this.closeModal();
+                }
+            });
+        }
 
+        // Global event listeners
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
+            if (e.key === 'Escape' && this.modal?.classList.contains('flex')) {
                 this.closeModal();
             }
         });
 
         // Start auto-refresh if status is pending or processing
-        const status = document.querySelector('[data-status]')?.dataset.status;
-        if (status === 'pending' || status === 'processing') {
-            this.startAutoRefresh();
-            if (this.newImageButton) {
-                this.newImageButton.disabled = true;
-                this.newImageButton.classList.add('opacity-50', 'cursor-not-allowed');
+        const statusElement = document.querySelector('[data-status]');
+        if (statusElement) {
+            const status = statusElement.dataset.status;
+            if (status === 'pending' || status === 'processing') {
+                this.startAutoRefresh();
+                if (this.newImageButton) {
+                    this.newImageButton.disabled = true;
+                    this.newImageButton.classList.add('opacity-50', 'cursor-not-allowed');
+                }
             }
         }
     }
@@ -60,21 +76,25 @@ class StatusService {
         // Pre-load image
         const img = new Image();
         img.onload = () => {
-            this.modalImage.src = imageUrl;
-            this.modalPrompt.textContent = data.input.prompt || 'Not available';
-            this.modalAspectRatio.textContent = data.input.aspect_ratio || '1:1';
-            this.modalProcessMode.textContent = data.input.process_mode || 'relax';
-            this.modalTaskId.textContent = data.task_id || 'Not available';
+            if (this.modalImage) this.modalImage.src = imageUrl;
+            if (this.modalPrompt) this.modalPrompt.textContent = data.input.prompt || 'Not available';
+            if (this.modalAspectRatio) this.modalAspectRatio.textContent = data.input.aspect_ratio || '1:1';
+            if (this.modalProcessMode) this.modalProcessMode.textContent = data.input.process_mode || 'relax';
+            if (this.modalTaskId) this.modalTaskId.textContent = data.task_id || 'Not available';
             
-            const createdDate = new Date(data.meta.created_at || null);
-            this.modalCreated.textContent = createdDate.toLocaleString() || 'Not available';
+            if (this.modalCreated) {
+                const createdDate = new Date(data.meta.created_at || null);
+                this.modalCreated.textContent = createdDate.toLocaleString() || 'Not available';
+            }
 
             // Show modal with animation
             this.modal.classList.remove('hidden');
             requestAnimationFrame(() => {
                 this.modal.classList.add('flex');
-                this.modalContent.style.transform = 'scale(1)';
-                this.modalContent.style.opacity = '1';
+                if (this.modalContent) {
+                    this.modalContent.style.transform = 'scale(1)';
+                    this.modalContent.style.opacity = '1';
+                }
             });
         };
         img.src = imageUrl;
@@ -84,8 +104,10 @@ class StatusService {
         if (!this.modal || !this.modalContent) return;
         
         // Hide modal with animation
-        this.modalContent.style.transform = 'scale(0.95)';
-        this.modalContent.style.opacity = '0';
+        if (this.modalContent) {
+            this.modalContent.style.transform = 'scale(0.95)';
+            this.modalContent.style.opacity = '0';
+        }
         
         setTimeout(() => {
             this.modal.classList.add('hidden');
@@ -114,6 +136,9 @@ class StatusService {
         this.refreshTimer = setTimeout(async () => {
             try {
                 const response = await fetch(window.location.href);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const html = await response.text();
                 const parser = new DOMParser();
                 const newDoc = parser.parseFromString(html, 'text/html');
@@ -159,8 +184,8 @@ class StatusService {
                 }
             } catch (error) {
                 console.error('Failed to refresh status:', error);
-                // Retry on error
-                this.startAutoRefresh();
+                // Retry on error after a delay
+                setTimeout(() => this.startAutoRefresh(), 2000);
             }
         }, this.refreshInterval);
     }
@@ -181,7 +206,9 @@ class StatusService {
     }
 }
 
-// Initialize the service
-document.addEventListener('DOMContentLoaded', () => {
-    window.statusService = new StatusService();
-});
+// Initialize the service only once
+let statusService;
+if (!window.statusService) {
+    statusService = new StatusService();
+    window.statusService = statusService;
+}

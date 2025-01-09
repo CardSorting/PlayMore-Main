@@ -154,13 +154,15 @@ class ImageController extends Controller
         try {
             // Initialize session with random feedback
             $stage = self::STAGES['pending'];
-            session()->put('image_task', [
+            $initialFeedback = $stage['feedback']['initial'][array_rand($stage['feedback']['initial'])];
+            
+            $taskInfo = [
                 'status' => 'pending',
                 'stage_info' => [
                     'message' => $stage['message'],
                     'progress' => $stage['progress'],
                     'substages' => $stage['substages'],
-                    'feedback' => $stage['feedback']['initial'][array_rand($stage['feedback']['initial'])]
+                    'feedback' => $initialFeedback
                 ],
                 'current_substage' => 0,
                 'started_at' => now(),
@@ -169,8 +171,10 @@ class ImageController extends Controller
                 'prompt' => $request->prompt,
                 'aspect_ratio' => $request->aspect_ratio ?? '1:1',
                 'process_mode' => $request->process_mode ?? 'relax',
-                'feedback_history' => []
-            ]);
+                'feedback_history' => [$initialFeedback]
+            ];
+
+            session(['image_task' => $taskInfo]);
 
             $response = Http::withHeaders([
                 'x-api-key' => env('GOAPI_KEY'),
@@ -191,19 +195,19 @@ class ImageController extends Controller
                 
                 // Update session with processing state
                 $stage = self::STAGES['processing'];
-                $initialFeedback = $stage['feedback']['composition'][array_rand($stage['feedback']['composition'])];
+                $processingFeedback = $stage['feedback']['composition'][array_rand($stage['feedback']['composition'])];
                 
-                session()->put('image_task.task_id', $taskId);
-                session()->put('image_task.status', 'processing');
-                session()->put('image_task.stage_info', [
+                $taskInfo['task_id'] = $taskId;
+                $taskInfo['status'] = 'processing';
+                $taskInfo['stage_info'] = [
                     'message' => $stage['message'],
                     'progress' => $stage['progress'],
                     'substages' => $stage['substages'],
-                    'feedback' => $initialFeedback
-                ]);
-                session()->put('image_task.current_substage', 0);
-                session()->put('image_task.last_updated', now());
-                session()->push('image_task.feedback_history', $initialFeedback);
+                    'feedback' => $processingFeedback
+                ];
+                $taskInfo['feedback_history'][] = $processingFeedback;
+                
+                session(['image_task' => $taskInfo]);
                 
                 return redirect()
                     ->route('images.status', $taskId)
@@ -232,13 +236,24 @@ class ImageController extends Controller
 
             if ($response->successful()) {
                 $data = $response->json('data');
-                $taskInfo = session('image_task');
+                $taskInfo = session('image_task', []);
+                
+                // Ensure we have valid task info
+                if (empty($taskInfo)) {
+                    // Reconstruct basic task info if session was lost
+                    $taskInfo = [
+                        'status' => $data['status'],
+                        'stage_info' => self::STAGES[$data['status']],
+                        'current_substage' => 0,
+                        'feedback_history' => []
+                    ];
+                }
                 
                 // Update progress based on time elapsed and status
-                if ($data['status'] === 'processing' && $taskInfo['status'] === 'processing') {
+                if ($data['status'] === 'processing' && ($taskInfo['status'] ?? '') === 'processing') {
                     $currentSubstage = $taskInfo['current_substage'];
                     $totalSubstages = count(self::STAGES['processing']['substages']);
-                    $timeElapsed = now()->diffInSeconds($taskInfo['last_progress_update']);
+                    $timeElapsed = now()->diffInSeconds($taskInfo['last_progress_update'] ?? now()->subSeconds(20));
                     
                     // Advance substage with variable timing (10-20 seconds)
                     if ($timeElapsed >= rand(10, 20) && $currentSubstage < $totalSubstages - 1) {
@@ -258,11 +273,13 @@ class ImageController extends Controller
                             ? $stage['feedback']['encouragement'][array_rand($stage['feedback']['encouragement'])]
                             : $stage['feedback'][$feedbackType][array_rand($stage['feedback'][$feedbackType])];
                         
-                        session()->put('image_task.current_substage', $currentSubstage + 1);
-                        session()->put('image_task.last_progress_update', now());
-                        session()->put('image_task.stage_info.progress', $progress);
-                        session()->put('image_task.stage_info.feedback', $feedback);
-                        session()->push('image_task.feedback_history', $feedback);
+                        $taskInfo['current_substage'] = $currentSubstage + 1;
+                        $taskInfo['last_progress_update'] = now();
+                        $taskInfo['stage_info']['progress'] = $progress;
+                        $taskInfo['stage_info']['feedback'] = $feedback;
+                        $taskInfo['feedback_history'][] = $feedback;
+                        
+                        session(['image_task' => $taskInfo]);
                     }
                 }
                 
@@ -273,22 +290,24 @@ class ImageController extends Controller
                         ? $stage['feedback']['artistic'][array_rand($stage['feedback']['artistic'])]
                         : $stage['feedback']['standard'][array_rand($stage['feedback']['standard'])];
                     
-                    session()->put('image_task.status', 'completed');
-                    session()->put('image_task.stage_info', [
+                    $taskInfo['status'] = 'completed';
+                    $taskInfo['stage_info'] = [
                         'message' => $stage['message'],
                         'progress' => $stage['progress'],
                         'substages' => $stage['substages'],
                         'feedback' => $feedback
-                    ]);
-                    session()->push('image_task.feedback_history', $feedback);
+                    ];
+                    $taskInfo['feedback_history'][] = $feedback;
+                    
+                    session(['image_task' => $taskInfo]);
                     
                     foreach ($data['output']['image_urls'] as $imageUrl) {
                         auth()->user()->galleries()->create([
                             'type' => 'image',
                             'image_url' => str_replace('\\', '', $imageUrl),
-                            'prompt' => $taskInfo['prompt'],
-                            'aspect_ratio' => $taskInfo['aspect_ratio'],
-                            'process_mode' => $taskInfo['process_mode'],
+                            'prompt' => $taskInfo['prompt'] ?? '',
+                            'aspect_ratio' => $taskInfo['aspect_ratio'] ?? '1:1',
+                            'process_mode' => $taskInfo['process_mode'] ?? 'relax',
                             'task_id' => $data['task_id'],
                             'metadata' => [
                                 'created_at' => $data['meta']['created_at'] ?? now(),
@@ -305,20 +324,22 @@ class ImageController extends Controller
                         ? $stage['feedback']['gentle'][array_rand($stage['feedback']['gentle'])]
                         : $stage['feedback']['technical'][array_rand($stage['feedback']['technical'])];
                     
-                    session()->put('image_task.status', 'failed');
-                    session()->put('image_task.stage_info', [
+                    $taskInfo['status'] = 'failed';
+                    $taskInfo['stage_info'] = [
                         'message' => $stage['message'],
                         'progress' => $stage['progress'],
                         'substages' => $stage['substages'],
                         'feedback' => $feedback
-                    ]);
-                    session()->push('image_task.feedback_history', $feedback);
+                    ];
+                    $taskInfo['feedback_history'][] = $feedback;
+                    
+                    session(['image_task' => $taskInfo]);
                     session()->forget('image_task');
                 }
                 
                 return view('images.status', [
                     'data' => $data,
-                    'taskInfo' => session('image_task')
+                    'taskInfo' => $taskInfo
                 ]);
             }
 

@@ -42,21 +42,37 @@ class PulseService
             throw new \InvalidArgumentException('Credit amount must be positive');
         }
 
-        try {
-            // Create transaction record
-            CreditTransaction::create([
+        // First create the transaction record in the database
+        $transaction = CreditTransaction::create([
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'type' => 'credit',
+            'description' => $description,
+            'reference' => $reference,
+        ]);
+
+        if (!$transaction) {
+            Log::error('Failed to create credit transaction', [
                 'user_id' => $user->id,
                 'amount' => $amount,
-                'type' => 'credit',
                 'description' => $description,
-                'reference' => $reference,
+                'reference' => $reference
             ]);
+            throw new \Exception('Failed to create credit transaction');
+        }
 
-            // Update Redis
+        // Then try to update Redis, but don't let Redis failures affect the transaction
+        try {
             $this->redis->incrby($this->getCreditKey($user->id), $amount);
         } catch (\Exception $e) {
-            Log::error('Redis error in addCredits: ' . $e->getMessage());
-            // Continue since the database transaction was successful
+            Log::error('Redis error in addCredits - credits added to database but Redis update failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'transaction_id' => $transaction->id
+            ]);
+            // Redis failed but database transaction succeeded, so we can continue
         }
     }
 

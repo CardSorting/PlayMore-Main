@@ -6,7 +6,7 @@ use App\Marketplace\Controllers\Purchase\PurchaseHistoryController;
 use Illuminate\Support\Facades\Route;
 
 // Browse Marketplace
-Route::middleware(['web', 'auth', 'verified'])->group(function () {
+Route::middleware(['web', 'auth', 'verified', 'marketplace.throttle'])->group(function () {
     Route::get('/marketplace', [BrowseMarketplaceController::class, 'index'])->name('marketplace.index');
     
     Route::post('/marketplace/packs/{pack}/purchase', [BrowseMarketplaceController::class, 'purchasePack'])

@@ -174,6 +174,11 @@ return [
             'database' => env('REDIS_CACHE_DB', '1'),
         ],
 
+        'rate_limit' => [
+            'url' => 'redis://default:tZVtoFHPwDxXEGeHqjYSGagtVODTCwtN@monorail.proxy.rlwy.net:27876',
+            'scheme' => 'tls',
+        ],
+
     ],
 
 ];

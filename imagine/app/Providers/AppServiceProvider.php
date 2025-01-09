@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Services\PulseService;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Redis\RedisManager;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Auth;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::composer('layouts.navigation', function ($view) {
+            $pulseBalance = 0;
+            
+            if (Auth::check()) {
+                try {
+                    $pulseBalance = Auth::user()->getCreditBalance();
+                } catch (\Exception $e) {
+                    // Keep default 0 balance on error
+                }
+            }
+
+            $view->with('pulseBalance', $pulseBalance);
+        });
     }
 }

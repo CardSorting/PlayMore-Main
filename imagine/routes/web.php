@@ -5,6 +5,7 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\CreditController;
+use App\Http\Controllers\PulseController;
 use Illuminate\Support\Facades\{Route, Redis};
 
 // Public Routes
@@ -63,5 +64,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/add', [CreditController::class, 'addCredits'])->name('add');
         Route::post('/deduct', [CreditController::class, 'deductCredits'])->name('deduct');
         Route::get('/history', [CreditController::class, 'getHistory'])->name('history');
+    });
+
+    // Pulse Purchase Routes
+    Route::get('/pulse', [PulseController::class, 'index'])->name('pulse.index');
+    
+    // PayPal API Routes
+    Route::prefix('api')->group(function () {
+        Route::post('/orders', [PulseController::class, 'createOrder']);
+        Route::post('/orders/{orderId}/capture', [PulseController::class, 'captureOrder']);
     });
 });

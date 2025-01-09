@@ -39,24 +39,33 @@
                             </svg>
                             <span>{{ __('Collection') }}</span>
                         </x-nav-link>
+
+                        <!-- Buy Pulse Link -->
+                        <x-nav-link :href="route('pulse.index')" :active="request()->routeIs('pulse.index')"
+                            class="flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            <span>{{ __('Buy Pulse') }}</span>
+                        </x-nav-link>
                     </div>
                 </div>
             </div>
 
             <!-- Credits Display -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6 mr-4">
+            <div class="hidden sm:flex sm:items-center sm:ms-6 mr-4 space-x-4">
                 <div class="flex items-center px-3 py-2 text-sm font-medium text-gray-500 rounded-md bg-gray-50">
                     <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>@php
-                        try {
-                            echo Auth::user()->getCreditBalance() . ' Pulse';
-                        } catch (\Exception $e) {
-                            echo '0 Pulse';
-                        }
-                    @endphp</span>
+                    <span>{{ $pulseBalance }} Pulse</span>
                 </div>
+                <a href="{{ route('pulse.index') }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Buy Pulse
+                </a>
             </div>
 
             <!-- Settings Dropdown -->
@@ -139,6 +148,15 @@
                 </svg>
                 {{ __('Collection') }}
             </x-responsive-nav-link>
+
+            <!-- Buy Pulse Link -->
+            <x-responsive-nav-link :href="route('pulse.index')" :active="request()->routeIs('pulse.index')"
+                class="flex items-center px-4 py-2 border-l-4 transition-colors">
+                <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                {{ __('Buy Pulse') }}
+            </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->
@@ -147,18 +165,20 @@
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                 <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
                 <div class="font-medium text-sm text-gray-500 mt-1">
-                    <span class="flex items-center">
-                        <svg class="w-4 h-4 text-gray-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        @php
-                            try {
-                                echo Auth::user()->getCreditBalance() . ' Pulse';
-                            } catch (\Exception $e) {
-                                echo '0 Pulse';
-                            }
-                        @endphp
-                    </span>
+                    <div class="flex items-center justify-between">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 text-gray-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {{ $pulseBalance }} Pulse
+                        </span>
+                        <a href="{{ route('pulse.index') }}" class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Buy
+                        </a>
+                    </div>
                 </div>
             </div>
 

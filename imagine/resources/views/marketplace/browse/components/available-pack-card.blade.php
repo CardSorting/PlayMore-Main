@@ -63,7 +63,7 @@
             {{ $pack->cards_count }} cards
         </span>
         @if($canPurchase)
-            <form action="{{ route('marketplace.browse.purchase', $pack) }}" method="POST" class="inline">
+            <form action="{{ route('marketplace.purchase', $pack) }}" method="POST" class="inline">
                 @csrf
                 <button type="submit" 
                         class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-sm"

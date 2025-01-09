@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified'])->group(function () {
     // Browse Marketplace
     Route::get('/marketplace', [BrowseMarketplaceController::class, 'index'])->name('marketplace.index');
-    Route::get('/marketplace/filter', [BrowseMarketplaceController::class, 'filter'])->name('marketplace.filter');
     Route::post('/marketplace/packs/{pack}/purchase', [BrowseMarketplaceController::class, 'purchasePack'])
         ->middleware('throttle:marketplace-purchase')
         ->name('marketplace.purchase');

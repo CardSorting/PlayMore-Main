@@ -10,7 +10,7 @@
                             <p class="text-sm text-gray-500 mt-1">Track your marketplace purchases and spending</p>
                         </div>
                         <div class="flex items-center space-x-4">
-                            <a href="{{ route('marketplace.browse.index') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            <a href="{{ route('marketplace.index') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                 Browse Marketplace
                             </a>
                         </div>
@@ -44,7 +44,7 @@
                                 <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No Purchases Yet</h3>
                                 <p class="mt-1 text-sm text-gray-500">You haven't purchased any packs from the marketplace.</p>
                                 <div class="mt-6">
-                                    <a href="{{ route('marketplace.browse.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                    <a href="{{ route('marketplace.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                                         Browse Marketplace
                                     </a>
                                 </div>

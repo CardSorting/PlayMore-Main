@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Str;
 
 class ImageController extends Controller
 {
@@ -14,22 +15,108 @@ class ImageController extends Controller
         'pending' => [
             'message' => 'Initializing image generation...',
             'progress' => 0,
-            'substages' => ['Validating prompt', 'Preparing request', 'Initializing task']
+            'substages' => [
+                'Analyzing your creative vision',
+                'Gathering artistic inspiration',
+                'Preparing the digital canvas',
+                'Setting up creative elements'
+            ],
+            'feedback' => [
+                'initial' => [
+                    'I see what you\'re envisioning. Let\'s bring this to life!',
+                    'What an interesting concept. This will be exciting to create!',
+                    'I love where this is going. Let\'s make something special!',
+                    'This prompt has so much potential. Let\'s explore it together!'
+                ],
+                'progress' => [
+                    'Understanding the subtle nuances of your request...',
+                    'Exploring different artistic approaches...',
+                    'Considering the perfect composition...',
+                    'Planning out the visual elements...'
+                ]
+            ]
         ],
         'processing' => [
-            'message' => 'Generating your image...',
-            'progress' => 33,
-            'substages' => ['Processing prompt', 'Creating initial image', 'Refining details', 'Applying final touches']
+            'message' => 'Crafting your masterpiece...',
+            'progress' => 25,
+            'substages' => [
+                'Sketching initial composition',
+                'Developing core elements',
+                'Adding artistic flourishes',
+                'Refining visual details',
+                'Enhancing color harmony',
+                'Perfecting final touches'
+            ],
+            'feedback' => [
+                'composition' => [
+                    'The composition is taking shape beautifully...',
+                    'Finding the perfect balance of elements...',
+                    'Building a harmonious arrangement...',
+                    'Crafting a compelling visual flow...'
+                ],
+                'elements' => [
+                    'Adding depth and dimension to each element...',
+                    'Bringing out the unique characteristics...',
+                    'Developing intricate details...',
+                    'Weaving in subtle complexities...'
+                ],
+                'colors' => [
+                    'The color palette is coming together wonderfully...',
+                    'Blending hues to create the perfect atmosphere...',
+                    'Fine-tuning the color balance...',
+                    'Adding rich color variations...'
+                ],
+                'details' => [
+                    'Now for those magical finishing touches...',
+                    'Adding those special little details...',
+                    'Perfecting every subtle nuance...',
+                    'Making sure every element shines...'
+                ],
+                'encouragement' => [
+                    'This is turning out even better than expected!',
+                    'You\'re going to love where this is heading!',
+                    'The vision is really coming together now!',
+                    'Each element is falling perfectly into place!'
+                ]
+            ]
         ],
         'completed' => [
-            'message' => 'Image generation completed!',
+            'message' => 'Your creation is ready!',
             'progress' => 100,
-            'substages' => []
+            'substages' => [],
+            'feedback' => [
+                'standard' => [
+                    'Voilà! Your vision has been brought to life with every detail carefully crafted.',
+                    'And... done! I think you\'ll love how all the elements came together.',
+                    'Perfect! Every aspect has been refined to match your creative vision.',
+                    'Finished! The final result captures exactly what you were looking for.'
+                ],
+                'artistic' => [
+                    'A true masterpiece, if I do say so myself! Each element tells part of the story.',
+                    'Behold your creation! Every detail has been lovingly crafted to perfection.',
+                    'Magnificent! The composition turned out even better than imagined.',
+                    'Simply stunning! The perfect balance of creativity and precision.'
+                ]
+            ]
         ],
         'failed' => [
-            'message' => 'Image generation failed',
+            'message' => 'Image generation encountered an issue',
             'progress' => 100,
-            'substages' => []
+            'substages' => [],
+            'feedback' => [
+                'gentle' => [
+                    'Hmm, we hit a small snag. Let\'s try again with a fresh perspective?',
+                    'Not quite what we were aiming for. Shall we give it another shot?',
+                    'Sometimes creativity needs a second take. Ready to try again?',
+                    'A minor setback, but I know we can get it right!'
+                ],
+                'technical' => [
+                    'The creative process encountered an unexpected challenge. Another attempt might work better.',
+                    'A technical hiccup interrupted our artistic flow. Let\'s start fresh!',
+                    'The digital canvas needs a reset. Ready for another creative journey?',
+                    'Sometimes the artistic process needs a restart. Shall we begin anew?'
+                ]
+            ]
         ]
     ];
 
@@ -50,7 +137,6 @@ class ImageController extends Controller
 
     public function generate(Request $request): RedirectResponse
     {
-        // Check if there's already an active task
         if (session()->has('image_task')) {
             $taskId = session('image_task.task_id');
             return redirect()
@@ -66,16 +152,24 @@ class ImageController extends Controller
         ]);
 
         try {
-            // Update session with initial status
+            // Initialize session with random feedback
+            $stage = self::STAGES['pending'];
             session()->put('image_task', [
                 'status' => 'pending',
-                'stage_info' => self::STAGES['pending'],
+                'stage_info' => [
+                    'message' => $stage['message'],
+                    'progress' => $stage['progress'],
+                    'substages' => $stage['substages'],
+                    'feedback' => $stage['feedback']['initial'][array_rand($stage['feedback']['initial'])]
+                ],
                 'current_substage' => 0,
                 'started_at' => now(),
                 'last_updated' => now(),
+                'last_progress_update' => now(),
                 'prompt' => $request->prompt,
                 'aspect_ratio' => $request->aspect_ratio ?? '1:1',
-                'process_mode' => $request->process_mode ?? 'relax'
+                'process_mode' => $request->process_mode ?? 'relax',
+                'feedback_history' => []
             ]);
 
             $response = Http::withHeaders([
@@ -95,12 +189,21 @@ class ImageController extends Controller
             if ($response->successful()) {
                 $taskId = $response->json('data.task_id');
                 
-                // Update session with task ID and move to next stage
+                // Update session with processing state
+                $stage = self::STAGES['processing'];
+                $initialFeedback = $stage['feedback']['composition'][array_rand($stage['feedback']['composition'])];
+                
                 session()->put('image_task.task_id', $taskId);
                 session()->put('image_task.status', 'processing');
-                session()->put('image_task.stage_info', self::STAGES['processing']);
+                session()->put('image_task.stage_info', [
+                    'message' => $stage['message'],
+                    'progress' => $stage['progress'],
+                    'substages' => $stage['substages'],
+                    'feedback' => $initialFeedback
+                ]);
                 session()->put('image_task.current_substage', 0);
                 session()->put('image_task.last_updated', now());
+                session()->push('image_task.feedback_history', $initialFeedback);
                 
                 return redirect()
                     ->route('images.status', $taskId)
@@ -135,19 +238,49 @@ class ImageController extends Controller
                 if ($data['status'] === 'processing' && $taskInfo['status'] === 'processing') {
                     $currentSubstage = $taskInfo['current_substage'];
                     $totalSubstages = count(self::STAGES['processing']['substages']);
-                    $timeElapsed = now()->diffInSeconds($taskInfo['last_updated']);
+                    $timeElapsed = now()->diffInSeconds($taskInfo['last_progress_update']);
                     
-                    // Advance substage every 15 seconds
-                    if ($timeElapsed >= 15 && $currentSubstage < $totalSubstages - 1) {
+                    // Advance substage with variable timing (10-20 seconds)
+                    if ($timeElapsed >= rand(10, 20) && $currentSubstage < $totalSubstages - 1) {
+                        $stage = self::STAGES['processing'];
+                        $progress = min(90, 25 + ($currentSubstage + 1) * (65 / $totalSubstages));
+                        
+                        // Select contextual feedback based on current substage
+                        $feedbackType = match(true) {
+                            $currentSubstage < 2 => 'composition',
+                            $currentSubstage < 3 => 'elements',
+                            $currentSubstage < 4 => 'colors',
+                            default => 'details'
+                        };
+                        
+                        // Occasionally mix in encouraging feedback
+                        $feedback = rand(1, 5) === 1 
+                            ? $stage['feedback']['encouragement'][array_rand($stage['feedback']['encouragement'])]
+                            : $stage['feedback'][$feedbackType][array_rand($stage['feedback'][$feedbackType])];
+                        
                         session()->put('image_task.current_substage', $currentSubstage + 1);
-                        session()->put('image_task.last_updated', now());
+                        session()->put('image_task.last_progress_update', now());
+                        session()->put('image_task.stage_info.progress', $progress);
+                        session()->put('image_task.stage_info.feedback', $feedback);
+                        session()->push('image_task.feedback_history', $feedback);
                     }
                 }
                 
-                // If the task is completed, save the images to gallery
+                // Handle completion
                 if ($data['status'] === 'completed' && isset($data['output']['image_urls'])) {
+                    $stage = self::STAGES['completed'];
+                    $feedback = rand(1, 3) === 1
+                        ? $stage['feedback']['artistic'][array_rand($stage['feedback']['artistic'])]
+                        : $stage['feedback']['standard'][array_rand($stage['feedback']['standard'])];
+                    
                     session()->put('image_task.status', 'completed');
-                    session()->put('image_task.stage_info', self::STAGES['completed']);
+                    session()->put('image_task.stage_info', [
+                        'message' => $stage['message'],
+                        'progress' => $stage['progress'],
+                        'substages' => $stage['substages'],
+                        'feedback' => $feedback
+                    ]);
+                    session()->push('image_task.feedback_history', $feedback);
                     
                     foreach ($data['output']['image_urls'] as $imageUrl) {
                         auth()->user()->galleries()->create([
@@ -159,15 +292,27 @@ class ImageController extends Controller
                             'task_id' => $data['task_id'],
                             'metadata' => [
                                 'created_at' => $data['meta']['created_at'] ?? now(),
-                                'completed_at' => now()
+                                'completed_at' => now(),
+                                'feedback_history' => $taskInfo['feedback_history'] ?? []
                             ]
                         ]);
                     }
                     
                     session()->forget('image_task');
                 } elseif ($data['status'] === 'failed') {
+                    $stage = self::STAGES['failed'];
+                    $feedback = rand(1, 2) === 1
+                        ? $stage['feedback']['gentle'][array_rand($stage['feedback']['gentle'])]
+                        : $stage['feedback']['technical'][array_rand($stage['feedback']['technical'])];
+                    
                     session()->put('image_task.status', 'failed');
-                    session()->put('image_task.stage_info', self::STAGES['failed']);
+                    session()->put('image_task.stage_info', [
+                        'message' => $stage['message'],
+                        'progress' => $stage['progress'],
+                        'substages' => $stage['substages'],
+                        'feedback' => $feedback
+                    ]);
+                    session()->push('image_task.feedback_history', $feedback);
                     session()->forget('image_task');
                 }
                 

@@ -1,6 +1,7 @@
 class StatusService {
     constructor() {
         this.modal = document.getElementById('imageModal');
+        this.modalContent = this.modal?.querySelector('.bg-white');
         this.modalImage = document.getElementById('modalImage');
         this.modalPrompt = document.getElementById('modalPrompt');
         this.modalAspectRatio = document.getElementById('modalAspectRatio');
@@ -10,6 +11,7 @@ class StatusService {
         this.progressBar = document.getElementById('refreshProgress');
         this.countdownElement = document.getElementById('refreshCountdown');
         this.newImageButton = document.querySelector('[data-new-image-button]');
+        this.statusContent = document.querySelector('[data-status-content]');
         
         this.refreshInterval = 5000; // 5 seconds
         this.refreshTimer = null;
@@ -53,26 +55,42 @@ class StatusService {
     }
 
     openModal(imageUrl, data) {
-        if (!this.modal) return;
+        if (!this.modal || !this.modalContent) return;
 
-        this.modalImage.src = imageUrl;
-        this.modalPrompt.textContent = data.input.prompt || 'Not available';
-        this.modalAspectRatio.textContent = data.input.aspect_ratio || '1:1';
-        this.modalProcessMode.textContent = data.input.process_mode || 'relax';
-        this.modalTaskId.textContent = data.task_id || 'Not available';
-        
-        const createdDate = new Date(data.meta.created_at || null);
-        this.modalCreated.textContent = createdDate.toLocaleString() || 'Not available';
+        // Pre-load image
+        const img = new Image();
+        img.onload = () => {
+            this.modalImage.src = imageUrl;
+            this.modalPrompt.textContent = data.input.prompt || 'Not available';
+            this.modalAspectRatio.textContent = data.input.aspect_ratio || '1:1';
+            this.modalProcessMode.textContent = data.input.process_mode || 'relax';
+            this.modalTaskId.textContent = data.task_id || 'Not available';
+            
+            const createdDate = new Date(data.meta.created_at || null);
+            this.modalCreated.textContent = createdDate.toLocaleString() || 'Not available';
 
-        this.modal.classList.remove('hidden');
-        this.modal.classList.add('flex');
+            // Show modal with animation
+            this.modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                this.modal.classList.add('flex');
+                this.modalContent.style.transform = 'scale(1)';
+                this.modalContent.style.opacity = '1';
+            });
+        };
+        img.src = imageUrl;
     }
 
     closeModal() {
-        if (!this.modal) return;
+        if (!this.modal || !this.modalContent) return;
         
-        this.modal.classList.add('hidden');
-        this.modal.classList.remove('flex');
+        // Hide modal with animation
+        this.modalContent.style.transform = 'scale(0.95)';
+        this.modalContent.style.opacity = '0';
+        
+        setTimeout(() => {
+            this.modal.classList.add('hidden');
+            this.modal.classList.remove('flex');
+        }, 300);
     }
 
     startAutoRefresh() {
@@ -87,7 +105,6 @@ class StatusService {
         // Start progress bar animation
         if (this.progressBar) {
             this.progressBar.style.width = '0%';
-            this.progressBar.style.transition = `width ${this.refreshInterval}ms linear`;
             requestAnimationFrame(() => {
                 this.progressBar.style.width = '100%';
             });
@@ -102,17 +119,30 @@ class StatusService {
                 const newDoc = parser.parseFromString(html, 'text/html');
                 
                 // Update only the main content area to prevent page flicker
-                const currentContent = document.querySelector('[data-status-content]');
                 const newContent = newDoc.querySelector('[data-status-content]');
                 
-                if (currentContent && newContent) {
+                if (this.statusContent && newContent) {
+                    // Prepare for transition
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = newContent.innerHTML;
+                    
                     // Fade out current content
-                    currentContent.style.opacity = '0';
+                    this.statusContent.style.opacity = '0';
+                    
+                    // After fade out, update content and fade in
                     setTimeout(() => {
                         // Update content
-                        currentContent.innerHTML = newContent.innerHTML;
+                        this.statusContent.innerHTML = tempDiv.innerHTML;
+                        
+                        // Trigger any new animations
+                        this.statusContent.querySelectorAll('.animate-slide-up').forEach(el => {
+                            el.style.animation = 'none';
+                            el.offsetHeight; // Trigger reflow
+                            el.style.animation = null;
+                        });
+                        
                         // Fade in new content
-                        currentContent.style.opacity = '1';
+                        this.statusContent.style.opacity = '1';
                         
                         // Check if we should continue refreshing
                         const newStatus = newDoc.querySelector('[data-status]')?.dataset.status;
@@ -125,7 +155,7 @@ class StatusService {
                                 this.newImageButton.classList.remove('opacity-50', 'cursor-not-allowed');
                             }
                         }
-                    }, 150);
+                    }, 300);
                 }
             } catch (error) {
                 console.error('Failed to refresh status:', error);
@@ -155,12 +185,3 @@ class StatusService {
 document.addEventListener('DOMContentLoaded', () => {
     window.statusService = new StatusService();
 });
-
-// Add fade transition styles
-const style = document.createElement('style');
-style.textContent = `
-    [data-status-content] {
-        transition: opacity 150ms ease-in-out;
-    }
-`;
-document.head.appendChild(style);

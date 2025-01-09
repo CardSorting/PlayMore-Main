@@ -8,11 +8,14 @@ class StatusService {
         this.modalTaskId = document.getElementById('modalTaskId');
         this.modalCreated = document.getElementById('modalCreated');
         this.progressBar = document.getElementById('refreshProgress');
+        this.countdownElement = document.getElementById('refreshCountdown');
         this.newImageButton = document.querySelector('[data-new-image-button]');
         
         this.refreshInterval = 5000; // 5 seconds
         this.refreshTimer = null;
         this.progressTimer = null;
+        this.countdownTimer = null;
+        this.countdown = 5;
         
         this.initialize();
     }
@@ -74,8 +77,12 @@ class StatusService {
 
     startAutoRefresh() {
         // Clear any existing timers
-        if (this.refreshTimer) clearTimeout(this.refreshTimer);
-        if (this.progressTimer) clearInterval(this.progressTimer);
+        this.clearTimers();
+
+        // Start countdown
+        this.countdown = 5;
+        this.updateCountdown();
+        this.countdownTimer = setInterval(() => this.updateCountdown(), 1000);
 
         // Start progress bar animation
         if (this.progressBar) {
@@ -99,10 +106,26 @@ class StatusService {
                 const newContent = newDoc.querySelector('[data-status-content]');
                 
                 if (currentContent && newContent) {
-                    currentContent.innerHTML = newContent.innerHTML;
-                    
-                    // Reinitialize the service for the new content
-                    this.initialize();
+                    // Fade out current content
+                    currentContent.style.opacity = '0';
+                    setTimeout(() => {
+                        // Update content
+                        currentContent.innerHTML = newContent.innerHTML;
+                        // Fade in new content
+                        currentContent.style.opacity = '1';
+                        
+                        // Check if we should continue refreshing
+                        const newStatus = newDoc.querySelector('[data-status]')?.dataset.status;
+                        if (newStatus === 'pending' || newStatus === 'processing') {
+                            this.startAutoRefresh();
+                        } else {
+                            this.clearTimers();
+                            if (this.newImageButton) {
+                                this.newImageButton.disabled = false;
+                                this.newImageButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                            }
+                        }
+                    }, 150);
                 }
             } catch (error) {
                 console.error('Failed to refresh status:', error);
@@ -111,9 +134,33 @@ class StatusService {
             }
         }, this.refreshInterval);
     }
+
+    updateCountdown() {
+        if (this.countdownElement) {
+            this.countdownElement.textContent = this.countdown;
+            if (this.countdown > 0) {
+                this.countdown--;
+            }
+        }
+    }
+
+    clearTimers() {
+        if (this.refreshTimer) clearTimeout(this.refreshTimer);
+        if (this.progressTimer) clearInterval(this.progressTimer);
+        if (this.countdownTimer) clearInterval(this.countdownTimer);
+    }
 }
 
 // Initialize the service
 document.addEventListener('DOMContentLoaded', () => {
     window.statusService = new StatusService();
 });
+
+// Add fade transition styles
+const style = document.createElement('style');
+style.textContent = `
+    [data-status-content] {
+        transition: opacity 150ms ease-in-out;
+    }
+`;
+document.head.appendChild(style);

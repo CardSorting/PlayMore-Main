@@ -85,20 +85,78 @@
                         </div>
                     @else
                         <div class="flex flex-col items-center justify-center p-12">
-                            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
-                            <p class="text-gray-600">
-                                Please wait while your image is being generated...
+                            <!-- Progress Circle -->
+                            <div class="relative">
+                                <svg class="w-24 h-24" viewBox="0 0 100 100">
+                                    <!-- Background circle -->
+                                    <circle 
+                                        class="text-gray-200" 
+                                        stroke-width="8" 
+                                        stroke="currentColor" 
+                                        fill="transparent" 
+                                        r="42" 
+                                        cx="50" 
+                                        cy="50"
+                                    />
+                                    <!-- Progress circle -->
+                                    <circle 
+                                        class="text-blue-500 transition-all duration-1000" 
+                                        stroke-width="8" 
+                                        stroke="currentColor" 
+                                        fill="transparent" 
+                                        r="42" 
+                                        cx="50" 
+                                        cy="50"
+                                        stroke-dasharray="264"
+                                        stroke-dashoffset="{{ 264 - ($taskInfo['stage_info']['progress'] / 100 * 264) }}"
+                                        transform="rotate(-90 50 50)"
+                                    />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span class="text-xl font-semibold">{{ $taskInfo['stage_info']['progress'] }}%</span>
+                                </div>
+                            </div>
+
+                            <!-- Status Message -->
+                            <p class="text-gray-600 mt-6 text-center">
+                                {{ $taskInfo['stage_info']['message'] }}
                             </p>
-                            <p class="text-sm text-gray-500 mt-2">
-                                This may take a few minutes depending on the selected process mode.
-                            </p>
-                            <!-- Progress bar for auto-refresh -->
-                            <div class="w-64 h-1 bg-gray-200 rounded-full mt-6 overflow-hidden">
+
+                            <!-- Substages Progress -->
+                            <div class="w-full max-w-md mt-8">
+                                @foreach($taskInfo['stage_info']['substages'] as $index => $substage)
+                                    <div class="flex items-center mb-2">
+                                        <div class="w-6 h-6 flex-shrink-0 mr-4">
+                                            @if($index < $taskInfo['current_substage'])
+                                                <!-- Completed -->
+                                                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                </svg>
+                                            @elseif($index === $taskInfo['current_substage'])
+                                                <!-- Current -->
+                                                <div class="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                            @else
+                                                <!-- Pending -->
+                                                <div class="w-6 h-6 border-2 border-gray-200 rounded-full"></div>
+                                            @endif
+                                        </div>
+                                        <span class="text-sm {{ $index <= $taskInfo['current_substage'] ? 'text-gray-900' : 'text-gray-500' }}">
+                                            {{ $substage }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <!-- Auto-refresh Progress -->
+                            <div class="w-64 h-1 bg-gray-200 rounded-full mt-8 overflow-hidden">
                                 <div 
                                     id="refreshProgress"
                                     class="h-full bg-blue-500 w-0"
                                 ></div>
                             </div>
+                            <p class="text-sm text-gray-500 mt-2">
+                                Next update in <span id="refreshCountdown">5</span> seconds
+                            </p>
                         </div>
                     @endif
                 </div>

@@ -1,6 +1,6 @@
 @props([
     'pack',
-    'mode' => 'browse', // browse, listed, purchased
+    'mode' => 'browse', // browse, listed, purchased, unlisted
     'showActions' => true
 ])
 
@@ -94,6 +94,8 @@
                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
                     View Pack
                 </a>
+            @elseif($mode === 'unlisted')
+                {{ $actions ?? '' }}
             @endif
         </div>
     @endif

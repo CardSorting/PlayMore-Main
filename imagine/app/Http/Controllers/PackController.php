@@ -114,9 +114,11 @@ class PackController extends Controller
             return back()->with('error', 'Pack must be full before sealing');
         }
 
-        $pack->update(['is_sealed' => true]);
+        if (!$pack->seal()) {
+            return back()->with('error', 'Unable to seal pack. Please ensure it is not already sealed and has enough cards.');
+        }
 
-        return back()->with('success', 'Pack has been sealed');
+        return back()->with('success', 'Pack has been sealed and can now be listed on the marketplace');
     }
 
 }

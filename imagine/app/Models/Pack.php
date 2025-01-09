@@ -15,16 +15,20 @@ class Pack extends Model
         'description',
         'user_id',
         'is_sealed',
+        'sealed_at',
         'is_listed',
         'listed_at',
-        'price'
+        'price',
+        'card_limit'
     ];
 
     protected $casts = [
         'is_sealed' => 'boolean',
         'is_listed' => 'boolean',
+        'sealed_at' => 'datetime',
         'listed_at' => 'datetime',
-        'price' => 'integer'
+        'price' => 'integer',
+        'card_limit' => 'integer'
     ];
 
     // Relationships
@@ -92,13 +96,47 @@ class Pack extends Model
     public function canBeListed(): bool
     {
         return $this->is_sealed && 
-               !$this->is_listed;
+               $this->sealed_at !== null &&
+               !$this->is_listed &&
+               $this->cards()->count() >= $this->card_limit;
     }
 
-    public function list(int $price): bool
+    public function seal(): bool
     {
-        if (!$this->canBeListed()) {
+        if ($this->is_sealed || $this->cards()->count() < $this->card_limit) {
             return false;
+        }
+
+        $this->update([
+            'is_sealed' => true,
+            'sealed_at' => now()
+        ]);
+
+        return true;
+    }
+
+    public function list(int $price): array
+    {
+        if (!$this->is_sealed || !$this->sealed_at) {
+            return [
+                'success' => false,
+                'message' => 'Pack must be sealed before listing.'
+            ];
+        }
+
+        if ($this->is_listed) {
+            return [
+                'success' => false,
+                'message' => 'Pack is already listed on the marketplace.'
+            ];
+        }
+
+        $cardCount = $this->cards()->count();
+        if ($cardCount < $this->card_limit) {
+            return [
+                'success' => false,
+                'message' => "Pack must be full before listing ({$cardCount}/{$this->card_limit} cards)."
+            ];
         }
 
         $this->update([
@@ -109,7 +147,10 @@ class Pack extends Model
 
         $this->clearMarketplaceCache();
 
-        return true;
+        return [
+            'success' => true,
+            'message' => 'Pack has been listed successfully.'
+        ];
     }
 
     public function unlist(): bool
@@ -131,8 +172,15 @@ class Pack extends Model
 
     protected function clearMarketplaceCache(): void
     {
-        Cache::tags(['marketplace_listings'])->flush();
-        Cache::forget('marketplace_stats');
+        try {
+            // Use specific cache keys instead of tags
+            Cache::forget('marketplace_listings');
+            Cache::forget('marketplace_stats');
+            Cache::forget('marketplace_listings_user_' . $this->user_id);
+            Cache::forget('marketplace_sales_user_' . $this->user_id);
+        } catch (\Exception $e) {
+            report($e); // Log but don't throw
+        }
     }
 
     // Boot Method
@@ -142,8 +190,7 @@ class Pack extends Model
 
         static::updated(function ($pack) {
             if ($pack->isDirty(['is_listed', 'price'])) {
-                Cache::tags(['marketplace_listings'])->flush();
-                Cache::forget('marketplace_stats');
+                $pack->clearMarketplaceCache();
             }
         });
     }

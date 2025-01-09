@@ -46,25 +46,18 @@ class SellerDashboardController extends Controller
                 'price.max' => 'The price cannot exceed 1,000,000 PULSE.'
             ]);
 
-            if (!$pack->is_sealed) {
+            $result = $pack->list($validated['price']);
+
+            if (!$result['success']) {
                 return back()
                     ->withInput()
-                    ->with('error', 'This pack must be sealed before it can be listed on the marketplace.');
+                    ->with('error', $result['message']);
             }
 
-            if ($pack->is_listed) {
-                return back()
-                    ->withInput()
-                    ->with('error', 'This pack is already listed on the marketplace.');
-            }
-
-            if (!$this->sellerService->listPack($pack, $validated['price'])) {
-                return back()
-                    ->withInput()
-                    ->with('error', 'Unable to list pack. Please ensure the pack is sealed and not already listed.');
-            }
-
-            return back()->with('success', 'Your pack has been listed on the marketplace for ' . number_format($validated['price']) . ' PULSE.');
+            // Pack was successfully listed
+            return redirect()
+                ->route('marketplace.seller.dashboard')
+                ->with('success', 'Your pack has been listed on the marketplace for ' . number_format($validated['price']) . ' PULSE.');
         } catch (\Exception $e) {
             return back()
                 ->withInput()

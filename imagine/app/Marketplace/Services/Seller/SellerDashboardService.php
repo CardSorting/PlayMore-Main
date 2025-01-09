@@ -39,6 +39,8 @@ class SellerDashboardService
         return Pack::where('user_id', $user->id)
             ->where('is_sealed', true)
             ->where('is_listed', false)
+            ->whereNotNull('sealed_at')
+            ->whereRaw('(SELECT COUNT(*) FROM global_cards WHERE pack_id = packs.id) >= packs.card_limit')
             ->withCount('cards')
             ->with(['cards' => function($query) {
                 $query->inRandomOrder()->limit(1);
@@ -47,50 +49,16 @@ class SellerDashboardService
             ->get();
     }
 
-    public function listPack(Pack $pack, int $price): bool
+    public function listPack(Pack $pack, int $price): array
     {
-        if (!$pack->is_sealed) {
-            return false;
-        }
-
-        try {
-            DB::beginTransaction();
-
-            $pack->update([
-                'is_listed' => true,
-                'listed_at' => now(),
-                'price' => $price
-            ]);
-
-            DB::commit();
-            return true;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return false;
-        }
+        // Delegate listing to the Pack model
+        return $pack->list($price);
     }
 
     public function unlistPack(Pack $pack): bool
     {
-        if (!$pack->is_listed) {
-            return false;
-        }
-
-        try {
-            DB::beginTransaction();
-
-            $pack->update([
-                'is_listed' => false,
-                'listed_at' => null,
-                'price' => null
-            ]);
-
-            DB::commit();
-            return true;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return false;
-        }
+        // Delegate unlisting to the Pack model
+        return $pack->unlist();
     }
 
     public function getTotalSales(User $user): int

@@ -53,6 +53,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{card}', 'destroy')->name('destroy');
     });
 
+    // Pack Routes
+    Route::controller(PackController::class)->prefix('dashboard/packs')->name('packs.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{pack}', 'show')->name('show');
+        Route::post('/{pack}/add-card', 'addCard')->name('add-card');
+        Route::post('/{pack}/seal', 'seal')->name('seal');
+    });
+
     // Profile Routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -40,19 +40,6 @@
                             <span>{{ __('Collection') }}</span>
                         </x-nav-link>
 
-                        @if($showPulseButton)
-                            <!-- Buy Pulse Link -->
-                            <x-nav-link :href="route('pulse.index')" :active="request()->routeIs('pulse.index')"
-                                class="flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition duration-150 ease-in-out"
-                                x-data="{ loading: false }"
-                                x-on:click="loading = true"
-                                x-bind:class="{ 'opacity-75 cursor-wait': loading }">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                <span>{{ __('Buy Pulse') }}</span>
-                            </x-nav-link>
-                        @endif
                     </div>
                 </div>
             </div>

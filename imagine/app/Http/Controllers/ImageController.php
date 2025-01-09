@@ -25,6 +25,13 @@ class ImageController extends Controller
 
     public function generate(Request $request)
     {
+        // Check if there's already an active task
+        if (session()->has('image_task')) {
+            $taskId = session('image_task.task_id');
+            return redirect()->route('images.status', $taskId)
+                ->with('error', 'You already have an image generation in progress. Please wait for it to complete.');
+        }
+
         $request->validate([
             'prompt' => 'required|string|max:1000',
             'aspect_ratio' => 'nullable|string|in:1:1,16:9,4:3',
@@ -60,8 +67,10 @@ class ImageController extends Controller
                 return redirect()->route('images.status', $taskId)->with('success', 'Image generation started');
             }
 
-            return back()->with('error', 'Failed to start image generation: ' . $response->json('message'));
+                session()->forget('image_task'); // Clean up session on failure
+                return back()->with('error', 'Failed to start image generation: ' . $response->json('message'));
         } catch (\Exception $e) {
+            session()->forget('image_task'); // Clean up session on error
             return back()->with('error', 'Failed to connect to image generation service: ' . $e->getMessage());
         }
     }
@@ -101,8 +110,10 @@ class ImageController extends Controller
                 return view('images.status', compact('data'));
             }
 
+            session()->forget('image_task'); // Clean up session on error
             return back()->with('error', 'Failed to fetch task status');
         } catch (\Exception $e) {
+            session()->forget('image_task'); // Clean up session on error
             return back()->with('error', 'Failed to connect to image generation service: ' . $e->getMessage());
         }
     }

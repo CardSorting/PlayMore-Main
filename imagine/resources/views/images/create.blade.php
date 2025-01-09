@@ -19,7 +19,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('images.generate') }}" method="POST" class="space-y-6">
+                <form action="{{ route('images.generate') }}" method="POST" class="space-y-6" id="generateForm">
                     @csrf
                     
                     <div>
@@ -68,15 +68,41 @@
                     <div class="bg-gray-50 -mx-6 -mb-6 px-6 py-4 mt-6">
                         <button 
                             type="submit"
-                            class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200 flex items-center justify-center"
+                            id="generateButton"
+                            class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 mr-2 generate-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            Generate Image
+                            <svg class="w-5 h-5 mr-2 loading-icon hidden animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="button-text">Generate Image</span>
                         </button>
                     </div>
                 </form>
+
+                <script>
+                    document.getElementById('generateForm').addEventListener('submit', function(e) {
+                        const button = document.getElementById('generateButton');
+                        const generateIcon = button.querySelector('.generate-icon');
+                        const loadingIcon = button.querySelector('.loading-icon');
+                        const buttonText = button.querySelector('.button-text');
+                        
+                        // Prevent multiple submissions
+                        if (button.disabled) {
+                            e.preventDefault();
+                            return;
+                        }
+                        
+                        // Disable button and show loading state
+                        button.disabled = true;
+                        generateIcon.classList.add('hidden');
+                        loadingIcon.classList.remove('hidden');
+                        buttonText.textContent = 'Generating...';
+                    });
+                </script>
             </div>
         </div>
     </div>

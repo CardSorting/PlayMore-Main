@@ -32,12 +32,14 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
-            Route::middleware(['web'])
-                ->group(function () {
-                    require base_path('routes/marketplace.php');
-                    require base_path('routes/web.php');
-                    require base_path('routes/auth.php');
-                });
+            // Load marketplace routes first
+            Route::middleware('web')->group(base_path('routes/marketplace.php'));
+            
+            // Load auth routes
+            Route::middleware('web')->group(base_path('routes/auth.php'));
+            
+            // Load web routes last
+            Route::middleware('web')->group(base_path('routes/web.php'));
         });
     }
 
@@ -51,26 +53,9 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-        // Rate limit marketplace purchases
-        RateLimiter::for('marketplace-purchase', function (Request $request) {
-            return Limit::perMinute(5)
-                ->by($request->user()?->id ?: $request->ip())
-                ->response(function () {
-                    return response()->json([
-                        'message' => 'Too many purchase attempts. Please wait before trying again.',
-                    ], 429);
-                });
-        });
-
-        // Rate limit marketplace listings
+        // Marketplace rate limiting
         RateLimiter::for('marketplace-list', function (Request $request) {
-            return Limit::perMinute(10)
-                ->by($request->user()?->id ?: $request->ip())
-                ->response(function () {
-                    return response()->json([
-                        'message' => 'Too many listing attempts. Please wait before trying again.',
-                    ], 429);
-                });
+            return Limit::none();
         });
     }
 }

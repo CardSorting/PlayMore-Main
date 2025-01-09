@@ -34,28 +34,61 @@ class SellerDashboardController extends Controller
 
     public function listPack(Request $request, Pack $pack)
     {
-        $this->authorize('listOnMarketplace', $pack);
+        try {
+            $this->authorize('listOnMarketplace', $pack);
 
-        $validated = $request->validate([
-            'price' => 'required|integer|min:1'
-        ]);
+            $validated = $request->validate([
+                'price' => 'required|integer|min:1|max:1000000'
+            ], [
+                'price.required' => 'Please enter a price for your pack.',
+                'price.integer' => 'The price must be a whole number.',
+                'price.min' => 'The price must be at least 1 PULSE.',
+                'price.max' => 'The price cannot exceed 1,000,000 PULSE.'
+            ]);
 
-        if (!$this->sellerService->listPack($pack, $validated['price'])) {
-            return back()->with('error', 'Pack must be sealed before listing');
+            if (!$pack->is_sealed) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'This pack must be sealed before it can be listed on the marketplace.');
+            }
+
+            if ($pack->is_listed) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'This pack is already listed on the marketplace.');
+            }
+
+            if (!$this->sellerService->listPack($pack, $validated['price'])) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Unable to list pack. Please ensure the pack is sealed and not already listed.');
+            }
+
+            return back()->with('success', 'Your pack has been listed on the marketplace for ' . number_format($validated['price']) . ' PULSE.');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred while listing your pack. Please try again.');
         }
-
-        return back()->with('success', 'Pack listed on marketplace');
     }
 
     public function unlistPack(Pack $pack)
     {
-        $this->authorize('removeFromMarketplace', $pack);
+        try {
+            $this->authorize('removeFromMarketplace', $pack);
 
-        if (!$this->sellerService->unlistPack($pack)) {
-            return back()->with('error', 'Failed to remove pack from marketplace');
+            if (!$pack->is_listed) {
+                return back()->with('error', 'This pack is not currently listed on the marketplace.');
+            }
+
+            if (!$this->sellerService->unlistPack($pack)) {
+                return back()->with('error', 'Unable to remove pack from marketplace. Please try again.');
+            }
+
+            return back()->with('success', 'Your pack has been removed from the marketplace.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'An unexpected error occurred while removing your pack. Please try again.');
         }
-
-        return back()->with('success', 'Pack removed from marketplace');
     }
 
     public function salesHistory()

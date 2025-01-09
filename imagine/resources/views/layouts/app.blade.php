@@ -17,11 +17,6 @@
         
         <!-- Livewire Styles -->
         @livewireStyles
-
-        <!-- Alpine.js -->
-        @vite(['resources/js/app.js'])
-        
-        <!-- PayPal SDK will be loaded in specific views -->
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
@@ -47,15 +42,22 @@
         
         <!-- Initialize Livewire -->
         <script>
-            window.livewire.on('cardUpdated', () => {
-                // Reinitialize 3D effects after Livewire updates
-                if (typeof initializeCardEffects === 'function') {
-                    initializeCardEffects();
+            document.addEventListener('DOMContentLoaded', () => {
+                if (window.livewire) {
+                    window.livewire.on('cardUpdated', () => {
+                        // Reinitialize 3D effects after Livewire updates
+                        if (typeof initializeCardEffects === 'function') {
+                            initializeCardEffects();
+                        }
+                    });
                 }
             });
         </script>
 
         <!-- Additional Scripts -->
         @stack('scripts')
+        
+        <!-- App Scripts -->
+        @vite(['resources/js/app.js'])
     </body>
 </html>

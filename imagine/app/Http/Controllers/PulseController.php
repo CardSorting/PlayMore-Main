@@ -4,33 +4,27 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Services\PayPalService;
+use App\Services\StripeService;
 
 class PulseController extends Controller
 {
+    private StripeService $stripeService;
+
+    public function __construct(StripeService $stripeService)
+    {
+        $this->stripeService = $stripeService;
+    }
+
     public function index()
     {
-        $pulseOptions = [
-            ['amount' => 100, 'price' => 10],
-            ['amount' => 500, 'price' => 45],
-            ['amount' => 1000, 'price' => 80],
-        ];
-
         return view('pulse.index', [
-            'pulseOptions' => $pulseOptions,
-            'defaultOption' => $pulseOptions[0],
-            'paypalClientId' => config('services.paypal.client_id')
+            'amount' => 500,
+            'price' => 45,
+            'stripeKey' => config('services.stripe.key')
         ]);
     }
 
-    private PayPalService $paypalService;
-
-    public function __construct(PayPalService $paypalService)
-    {
-        $this->paypalService = $paypalService;
-    }
-
-    public function createOrder(Request $request)
+    public function createPaymentIntent(Request $request)
     {
         try {
             // Validate the request
@@ -41,10 +35,10 @@ class PulseController extends Controller
                 'cart.*.price' => 'required|numeric|min:0'
             ]);
 
-            // Create PayPal order with cart data
-            $order = $this->paypalService->createOrder($validated['cart']);
+            // Create Stripe payment intent with cart data
+            $paymentIntent = $this->stripeService->createPaymentIntent($validated['cart']);
             
-            return response()->json($order, 200, [
+            return response()->json($paymentIntent, 200, [
                 'Content-Type' => 'application/json'
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -53,18 +47,18 @@ class PulseController extends Controller
                 'details' => $e->errors()
             ], 422, ['Content-Type' => 'application/json']);
         } catch (\Exception $e) {
-            \Log::error('PayPal create order error', [
+            \Log::error('Stripe create payment intent error', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json([
-                'error' => 'Failed to create order',
+                'error' => 'Failed to create payment intent',
                 'message' => $e->getMessage()
             ], 500, ['Content-Type' => 'application/json']);
         }
     }
 
-    public function captureOrder(Request $request, $orderId)
+    public function confirmPayment(Request $request, $paymentIntentId)
     {
         try {
             // Validate the request
@@ -77,15 +71,15 @@ class PulseController extends Controller
                 throw new \Exception('User not authenticated');
             }
 
-            // Capture the PayPal order
-            $result = $this->paypalService->captureOrder($orderId);
+            // Confirm the Stripe payment
+            $result = $this->stripeService->confirmPayment($paymentIntentId);
             
-            // If capture successful, add credits to user's account
+            // If payment successful, add credits to user's account
             if ($result['status'] === 'COMPLETED') {
                 auth()->user()->addCredits(
                     $validated['amount'],
-                    'PayPal purchase',
-                    $orderId
+                    'Stripe purchase',
+                    $paymentIntentId
                 );
 
                 return response()->json([
@@ -105,13 +99,13 @@ class PulseController extends Controller
                 'details' => $e->errors()
             ], 422, ['Content-Type' => 'application/json']);
         } catch (\Exception $e) {
-            \Log::error('PayPal capture order error', [
+            \Log::error('Stripe confirm payment error', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'orderId' => $orderId
+                'paymentIntentId' => $paymentIntentId
             ]);
             return response()->json([
-                'error' => 'Failed to capture order',
+                'error' => 'Failed to confirm payment',
                 'message' => $e->getMessage()
             ], 500, ['Content-Type' => 'application/json']);
         }

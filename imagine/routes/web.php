@@ -69,9 +69,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Pulse Purchase Routes
     Route::get('/pulse', [PulseController::class, 'index'])->name('pulse.index');
     
-    // PayPal API Routes
+    // Stripe API Routes
     Route::prefix('api')->group(function () {
-        Route::post('/orders', [PulseController::class, 'createOrder']);
-        Route::post('/orders/{orderId}/capture', [PulseController::class, 'captureOrder']);
+        Route::post('/payment-intent', [PulseController::class, 'createPaymentIntent']);
+        Route::post('/payment-intent/{paymentIntentId}/confirm', [PulseController::class, 'confirmPayment']);
     });
 });

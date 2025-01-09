@@ -1,8 +1,7 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
-import { initPayPalButtons } from './components/paypal-buttons';
 
-// Initialize Alpine.js once
+// Initialize Alpine.js
 if (!window.Alpine) {
     window.Alpine = Alpine;
     
@@ -13,6 +12,3 @@ if (!window.Alpine) {
         Alpine.start();
     }
 }
-
-// Expose PayPal buttons globally
-window.initPayPalButtons = initPayPalButtons;

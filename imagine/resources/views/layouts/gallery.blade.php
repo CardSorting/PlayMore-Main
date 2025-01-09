@@ -26,6 +26,7 @@
     <!-- Gallery Services -->
     <script src="{{ asset('js/services/filter-service.js') }}"></script>
     <script src="{{ asset('js/services/sort-service.js') }}"></script>
+    <script src="{{ asset('js/services/modal-service.js') }}"></script>
 
     <!-- Custom Styles -->
     <style>

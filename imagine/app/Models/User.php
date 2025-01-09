@@ -30,6 +30,6 @@ class User extends Authenticatable
 
     public function galleries(): HasMany
     {
-        return $this->hasMany(Gallery::class)->latest();
+        return $this->hasMany(Gallery::class);
     }
 }

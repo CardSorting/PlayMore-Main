@@ -146,7 +146,22 @@ class GalleryService {
         // Update URL and history if needed
         if (updateHistory) {
             const url = new URL(window.location);
-            url.searchParams.set('tab', tabName);
+            // Preserve existing query parameters
+            const existingParams = new URLSearchParams(window.location.search);
+            const newParams = new URLSearchParams();
+            
+            // Copy all existing parameters except 'tab'
+            for (const [key, value] of existingParams.entries()) {
+                if (key !== 'tab') {
+                    newParams.append(key, value);
+                }
+            }
+            
+            // Add the new tab parameter
+            newParams.set('tab', tabName);
+            
+            // Update URL with all parameters
+            url.search = newParams.toString();
             window.history.pushState({ tab: tabName }, '', url);
         }
 

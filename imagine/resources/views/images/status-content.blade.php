@@ -73,7 +73,7 @@
                                         
                                         <!-- Info Overlay -->
                                         <div class="absolute inset-0 z-20 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                            <p class="text-white text-sm">Click to view details</p>
+                                            <p class="text-white text-sm px-4 py-2 text-center">{{ $data['input']['prompt'] }}</p>
                                         </div>
                                     </div>
                                 </div>

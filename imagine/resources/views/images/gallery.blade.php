@@ -17,7 +17,7 @@
                 </div>
 
                 <div class="mt-8">
-                    {{ $images->links() }}
+                    {{ $images->appends(request()->query())->links() }}
                 </div>
             @endif
         </div>

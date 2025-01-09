@@ -37,8 +37,8 @@ class Gallery extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function getCreatedAtAttribute($value)
+    public function getCreatedAtForHumansAttribute()
     {
-        return \Carbon\Carbon::parse($value)->diffForHumans();
+        return \Carbon\Carbon::parse($this->attributes['created_at'])->diffForHumans();
     }
 }

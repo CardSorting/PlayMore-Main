@@ -125,12 +125,13 @@ class ImageController extends Controller
         return view('images.create');
     }
 
-    public function gallery(): View
+    public function gallery(Request $request): View
     {
         $images = auth()->user()->galleries()
             ->where('type', 'image')
             ->orderBy('created_at', 'desc')
-            ->paginate(6);
+            ->paginate(6)
+            ->withQueryString();
         
         return view('images.gallery', compact('images'));
     }
@@ -301,20 +302,28 @@ class ImageController extends Controller
                     
                     session(['image_task' => $taskInfo]);
                     
-                    foreach ($data['output']['image_urls'] as $imageUrl) {
-                        auth()->user()->galleries()->create([
-                            'type' => 'image',
-                            'image_url' => str_replace('\\', '', $imageUrl),
-                            'prompt' => $taskInfo['prompt'] ?? '',
-                            'aspect_ratio' => $taskInfo['aspect_ratio'] ?? '1:1',
-                            'process_mode' => $taskInfo['process_mode'] ?? 'relax',
-                            'task_id' => $data['task_id'],
-                            'metadata' => [
-                                'created_at' => $data['meta']['created_at'] ?? now(),
-                                'completed_at' => now(),
-                                'feedback_history' => $taskInfo['feedback_history'] ?? []
-                            ]
-                        ]);
+                    // Check if images for this task already exist
+                    $existingImages = Gallery::where('task_id', $data['task_id'])
+                        ->where('type', 'image')
+                        ->exists();
+                    
+                    // Only create new gallery entries if they don't already exist
+                    if (!$existingImages) {
+                        foreach ($data['output']['image_urls'] as $imageUrl) {
+                            auth()->user()->galleries()->create([
+                                'type' => 'image',
+                                'image_url' => str_replace('\\', '', $imageUrl),
+                                'prompt' => $taskInfo['prompt'] ?? '',
+                                'aspect_ratio' => $taskInfo['aspect_ratio'] ?? '1:1',
+                                'process_mode' => $taskInfo['process_mode'] ?? 'relax',
+                                'task_id' => $data['task_id'],
+                                'metadata' => [
+                                    'created_at' => $data['meta']['created_at'] ?? now(),
+                                    'completed_at' => now(),
+                                    'feedback_history' => $taskInfo['feedback_history'] ?? []
+                                ]
+                            ]);
+                        }
                     }
                     
                     session()->forget('image_task');

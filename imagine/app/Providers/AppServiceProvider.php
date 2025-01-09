@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\PulseService;
+use App\Services\PayPalService;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Redis\RedisManager;
 use Illuminate\Support\Facades\View;
@@ -18,6 +19,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PulseService::class, function ($app) {
             return new PulseService($app->make(RedisManager::class));
         });
+
+        $this->app->singleton(PayPalService::class, function ($app) {
+            return new PayPalService();
+        });
     }
 
     /**
@@ -29,14 +34,24 @@ class AppServiceProvider extends ServiceProvider
             $pulseBalance = 0;
             
             if (Auth::check()) {
+                $user = Auth::user();
+                $cacheKey = 'user_pulse_balance:' . $user->id;
+                
                 try {
-                    $pulseBalance = Auth::user()->getCreditBalance();
+                    $pulseBalance = cache()->remember($cacheKey, now()->addMinutes(5), function () use ($user) {
+                        return $user->getCreditBalance();
+                    });
                 } catch (\Exception $e) {
                     // Keep default 0 balance on error
+                    \Log::error('Failed to fetch pulse balance: ' . $e->getMessage());
                 }
             }
 
-            $view->with('pulseBalance', $pulseBalance);
+            $view->with([
+                'pulseBalance' => $pulseBalance,
+                'showPulseButton' => !request()->routeIs('pulse.index'),
+            ]);
         });
+
     }
 }

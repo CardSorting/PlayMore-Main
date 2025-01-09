@@ -40,32 +40,50 @@
                             <span>{{ __('Collection') }}</span>
                         </x-nav-link>
 
-                        <!-- Buy Pulse Link -->
-                        <x-nav-link :href="route('pulse.index')" :active="request()->routeIs('pulse.index')"
-                            class="flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            <span>{{ __('Buy Pulse') }}</span>
-                        </x-nav-link>
+                        @if($showPulseButton)
+                            <!-- Buy Pulse Link -->
+                            <x-nav-link :href="route('pulse.index')" :active="request()->routeIs('pulse.index')"
+                                class="flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition duration-150 ease-in-out"
+                                x-data="{ loading: false }"
+                                x-on:click="loading = true"
+                                x-bind:class="{ 'opacity-75 cursor-wait': loading }">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                <span>{{ __('Buy Pulse') }}</span>
+                            </x-nav-link>
+                        @endif
                     </div>
                 </div>
             </div>
 
             <!-- Credits Display -->
             <div class="hidden sm:flex sm:items-center sm:ms-6 mr-4 space-x-4">
-                <div class="flex items-center px-3 py-2 text-sm font-medium text-gray-500 rounded-md bg-gray-50">
+                <div class="flex items-center px-3 py-2 text-sm font-medium text-gray-500 rounded-md bg-gray-50 transition-all duration-200 hover:bg-gray-100">
                     <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>{{ $pulseBalance }} Pulse</span>
                 </div>
-                <a href="{{ route('pulse.index') }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Buy Pulse
-                </a>
+                @if($showPulseButton)
+                    <a href="{{ route('pulse.index') }}" 
+                        class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-all duration-150 ease-in-out transform hover:scale-105"
+                        x-data="{ loading: false }"
+                        x-on:click="loading = true"
+                        x-bind:class="{ 'opacity-75 cursor-wait': loading }">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span x-show="!loading">Buy Pulse</span>
+                        <span x-show="loading" class="inline-flex items-center">
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Loading...
+                        </span>
+                    </a>
+                @endif
             </div>
 
             <!-- Settings Dropdown -->
@@ -149,14 +167,26 @@
                 {{ __('Collection') }}
             </x-responsive-nav-link>
 
-            <!-- Buy Pulse Link -->
-            <x-responsive-nav-link :href="route('pulse.index')" :active="request()->routeIs('pulse.index')"
-                class="flex items-center px-4 py-2 border-l-4 transition-colors">
-                <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                {{ __('Buy Pulse') }}
-            </x-responsive-nav-link>
+            @if($showPulseButton)
+                <!-- Buy Pulse Link -->
+                <x-responsive-nav-link :href="route('pulse.index')" :active="request()->routeIs('pulse.index')"
+                    class="flex items-center px-4 py-2 border-l-4 transition-all duration-150 ease-in-out hover:bg-gray-50"
+                    x-data="{ loading: false }"
+                    x-on:click="loading = true"
+                    x-bind:class="{ 'opacity-75 cursor-wait': loading }">
+                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span x-show="!loading">{{ __('Buy Pulse') }}</span>
+                    <span x-show="loading" class="inline-flex items-center">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading...
+                    </span>
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
@@ -172,12 +202,19 @@
                             </svg>
                             {{ $pulseBalance }} Pulse
                         </span>
-                        <a href="{{ route('pulse.index') }}" class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors">
-                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            Buy
-                        </a>
+                        @if($showPulseButton)
+                            <a href="{{ route('pulse.index') }}" 
+                                class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition-all duration-150 ease-in-out transform hover:scale-105"
+                                x-data="{ loading: false }"
+                                x-on:click="loading = true"
+                                x-bind:class="{ 'opacity-75 cursor-wait': loading }">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                <span x-show="!loading">Buy</span>
+                                <span x-show="loading">...</span>
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>

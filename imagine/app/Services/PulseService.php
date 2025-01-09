@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\CreditTransaction;
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\{DB, Log};
 
 class PulseService
 {
@@ -15,11 +15,27 @@ class PulseService
 
     public function addCredits(User $user, int $amount, ?string $description = null, ?string $reference = null): void
     {
+        Log::info('Starting addCredits process', [
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'description' => $description,
+            'reference' => $reference
+        ]);
+
         if ($amount <= 0) {
+            Log::error('Invalid credit amount', ['amount' => $amount]);
             throw new \InvalidArgumentException('Credit amount must be positive');
         }
 
         try {
+            DB::beginTransaction();
+
+            Log::info('Creating credit transaction', [
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'type' => 'credit'
+            ]);
+
             $transaction = CreditTransaction::create([
                 'user_id' => $user->id,
                 'amount' => $amount,
@@ -29,15 +45,46 @@ class PulseService
             ]);
 
             if (!$transaction) {
+                Log::error('Transaction creation returned null');
+                DB::rollBack();
                 throw new \Exception('Failed to create credit transaction');
             }
+
+            Log::info('Credit transaction created successfully', [
+                'transaction_id' => $transaction->id,
+                'user_id' => $user->id,
+                'amount' => $amount
+            ]);
+
+            // Verify the transaction was saved
+            $savedTransaction = CreditTransaction::find($transaction->id);
+            if (!$savedTransaction) {
+                Log::error('Transaction not found after creation', [
+                    'transaction_id' => $transaction->id
+                ]);
+                DB::rollBack();
+                throw new \Exception('Transaction not found after creation');
+            }
+
+            Log::info('Credit transaction verified', [
+                'transaction_id' => $savedTransaction->id,
+                'amount' => $savedTransaction->amount,
+                'type' => $savedTransaction->type
+            ]);
+
+            DB::commit();
+
+            Log::info('Transaction committed successfully');
+
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Failed to create credit transaction', [
                 'user_id' => $user->id,
                 'amount' => $amount,
                 'description' => $description,
                 'reference' => $reference,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             throw $e;
         }
@@ -49,14 +96,23 @@ class PulseService
             throw new \InvalidArgumentException('Debit amount must be positive');
         }
 
-        $currentBalance = $this->getCreditBalance($user);
-
-        if ($currentBalance < $amount) {
-            return false;
-        }
-
         try {
-            CreditTransaction::create([
+            DB::beginTransaction();
+
+            $currentBalance = $this->getCreditBalance($user);
+
+            if ($currentBalance < $amount) {
+                DB::rollBack();
+                return false;
+            }
+
+            Log::info('Creating debit transaction', [
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'type' => 'debit'
+            ]);
+
+            $transaction = CreditTransaction::create([
                 'user_id' => $user->id,
                 'amount' => $amount,
                 'type' => 'debit',
@@ -64,14 +120,30 @@ class PulseService
                 'reference' => $reference,
             ]);
 
+            if (!$transaction) {
+                Log::error('Debit transaction creation returned null');
+                DB::rollBack();
+                throw new \Exception('Failed to create debit transaction');
+            }
+
+            Log::info('Debit transaction created successfully', [
+                'transaction_id' => $transaction->id,
+                'user_id' => $user->id,
+                'amount' => $amount
+            ]);
+
+            DB::commit();
             return true;
+
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Failed to create debit transaction', [
                 'user_id' => $user->id,
                 'amount' => $amount,
                 'description' => $description,
                 'reference' => $reference,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             throw $e;
         }

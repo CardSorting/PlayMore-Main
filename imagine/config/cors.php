@@ -14,13 +14,15 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'dashboard/api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
         'http://localhost:8000',
+        'http://localhost:8001',
         'http://127.0.0.1:8000',
+        'http://127.0.0.1:8001',
         'https://www.paypal.com',
         'https://www.sandbox.paypal.com',
         'https://*.paypal.com',

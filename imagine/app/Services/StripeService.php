@@ -87,21 +87,50 @@ class StripeService
     public function confirmPayment(string $paymentIntentId): array
     {
         try {
+            Log::info('Retrieving payment intent for confirmation', [
+                'payment_intent_id' => $paymentIntentId
+            ]);
+
             $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
             
+            Log::info('Payment intent retrieved', [
+                'status' => $paymentIntent->status,
+                'amount' => $paymentIntent->amount,
+                'currency' => $paymentIntent->currency,
+                'payment_intent_id' => $paymentIntentId
+            ]);
+            
             if ($paymentIntent->status === 'succeeded') {
+                Log::info('Payment intent succeeded, returning COMPLETED status');
                 return [
                     'status' => 'COMPLETED',
                     'id' => $paymentIntent->id,
                 ];
             }
 
+            Log::info('Payment intent not succeeded', [
+                'status' => $paymentIntent->status,
+                'payment_intent_id' => $paymentIntentId
+            ]);
+
             return [
                 'status' => strtoupper($paymentIntent->status),
                 'id' => $paymentIntent->id,
             ];
         } catch (ApiErrorException $e) {
-            Log::error('Stripe confirm payment failed: ' . $e->getMessage());
+            Log::error('Stripe confirm payment failed', [
+                'error' => $e->getMessage(),
+                'type' => $e->getError()->type ?? null,
+                'code' => $e->getError()->code ?? null,
+                'payment_intent_id' => $paymentIntentId
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Unexpected error confirming payment', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'payment_intent_id' => $paymentIntentId
+            ]);
             throw $e;
         }
     }

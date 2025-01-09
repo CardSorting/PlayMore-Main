@@ -3,6 +3,7 @@
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CreditController;
+use App\Http\Controllers\PulseController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -34,5 +35,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/add', [CreditController::class, 'addCredits'])->name('add');
         Route::post('/deduct', [CreditController::class, 'deductCredits'])->name('deduct');
         Route::get('/history', [CreditController::class, 'getHistory'])->name('history');
+    });
+
+    // Payment Processing Routes
+    Route::prefix('api')->group(function () {
+        Route::get('/pulse', [PulseController::class, 'index'])->name('pulse.index');
+        Route::post('/payment-intent', [PulseController::class, 'createPaymentIntent'])
+            ->withoutMiddleware(['auth', 'verified']);
+        Route::post('/payment-intent/{paymentIntentId}/confirm', [PulseController::class, 'confirmPayment'])
+            ->withoutMiddleware(['auth', 'verified']);
     });
 });

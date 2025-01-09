@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\PulseController;
 use Illuminate\Support\Facades\{Route, Redis};
 
 // Public Routes
@@ -29,12 +28,6 @@ Route::prefix('dashboard')->middleware(['auth', 'verified'])->group(function () 
     require __DIR__.'/cards.php';
     require __DIR__.'/packs.php';
     
-    // Payment Processing Routes
-    Route::prefix('api')->group(function () {
-        Route::get('/pulse', [PulseController::class, 'index'])->name('pulse.index');
-        Route::post('/payment-intent', [PulseController::class, 'createPaymentIntent']);
-        Route::post('/payment-intent/{paymentIntentId}/confirm', [PulseController::class, 'confirmPayment']);
-    });
 });
 
 // Marketplace Routes

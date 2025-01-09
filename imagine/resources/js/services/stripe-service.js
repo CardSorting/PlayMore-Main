@@ -29,7 +29,7 @@ class StripeService {
 
     async createPaymentIntent(cart) {
         try {
-            const response = await fetch('/api/payment-intent', {
+            const response = await fetch('/dashboard/api/payment-intent', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -39,21 +39,31 @@ class StripeService {
                 body: JSON.stringify({ cart })
             });
 
+            const data = await response.json();
+            
             if (!response.ok) {
-                throw new Error('Failed to create payment intent');
+                console.error('Payment intent creation failed:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    data
+                });
+                throw new Error(data.message || 'Failed to create payment intent');
             }
 
-            const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error creating payment intent:', error);
+            console.error('Error creating payment intent:', {
+                error,
+                message: error.message,
+                stack: error.stack
+            });
             throw error;
         }
     }
 
     async confirmPayment(paymentIntentId, amount) {
         try {
-            const response = await fetch(`/api/payment-intent/${paymentIntentId}/confirm`, {
+            const response = await fetch(`/dashboard/api/payment-intent/${paymentIntentId}/confirm`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -63,14 +73,25 @@ class StripeService {
                 body: JSON.stringify({ amount })
             });
 
+            const data = await response.json();
+            
             if (!response.ok) {
-                throw new Error('Failed to confirm payment');
+                console.error('Payment confirmation failed:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    data
+                });
+                throw new Error(data.message || 'Failed to confirm payment');
             }
 
-            const data = await response.json();
+            console.log('Payment confirmation successful:', data);
             return data;
         } catch (error) {
-            console.error('Error confirming payment:', error);
+            console.error('Error confirming payment:', {
+                error,
+                message: error.message,
+                stack: error.stack
+            });
             throw error;
         }
     }

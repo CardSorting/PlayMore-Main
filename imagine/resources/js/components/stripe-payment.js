@@ -96,20 +96,44 @@ class StripePayment {
                     return;
                 }
 
+                console.log('Payment intent confirmation result:', paymentIntent);
+
                 if (paymentIntent.status === 'succeeded') {
-                    const result = await stripeService.confirmPayment(
-                        paymentIntent.id,
-                        this.amount
-                    );
+                    console.log('Payment succeeded, confirming with backend...');
+                    try {
+                        const result = await stripeService.confirmPayment(
+                            paymentIntent.id,
+                            this.amount
+                        );
+
+                        console.log('Backend confirmation result:', result);
 
                     if (result.status === 'COMPLETED') {
+                        console.log('Credits added successfully, reloading page...');
                         window.location.reload();
+                    } else if (result.error === 'Authentication required') {
+                        console.log('User needs to log in to complete purchase');
+                        // Store payment intent ID in session storage
+                        sessionStorage.setItem('pendingPaymentIntent', paymentIntent.id);
+                        // Redirect to login page with return URL
+                        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
                     } else {
-                        this.showError('Payment completed but credits could not be added. Please contact support.');
+                        console.error('Backend confirmation failed:', result);
+                        this.showError(result.message || 'Payment completed but credits could not be added.');
                     }
+                    } catch (confirmError) {
+                        console.error('Error confirming payment with backend:', confirmError);
+                        this.showError('Error confirming payment. Please contact support.');
+                    }
+                } else {
+                    console.error('Payment intent not succeeded:', paymentIntent);
+                    this.showError(`Payment not completed. Status: ${paymentIntent.status}`);
                 }
             } catch (error) {
-                console.error('Payment failed:', error);
+                console.error('Payment process failed:', error);
+                if (error.response) {
+                    console.error('Error response:', await error.response.text());
+                }
                 this.showError('Payment failed. Please try again.');
             } finally {
                 this.setLoading(false);

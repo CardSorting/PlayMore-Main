@@ -43,23 +43,46 @@
                             @else
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     @foreach($availableCards as $card)
-                                        <div class="border dark:border-gray-700 rounded-lg p-4">
-                                            <div class="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <h4 class="font-medium">{{ $card->name }}</h4>
-                                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ $card->card_type }}</p>
+                                        <div class="border dark:border-gray-700 rounded-lg p-4 transform-gpu card-container">
+                                            <div class="card">
+                                                <div class="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <h4 class="font-medium">{{ $card->name }}</h4>
+                                                        <div class="flex items-center gap-2 mt-1">
+                                                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $card->card_type }}</p>
+                                                            <span class="text-xs px-2 py-1 rounded {{ 
+                                                                $card->rarity === 'Mythic Rare' ? 'bg-red-100 text-red-800' :
+                                                                ($card->rarity === 'Rare' ? 'bg-yellow-100 text-yellow-800' :
+                                                                ($card->rarity === 'Uncommon' ? 'bg-gray-100 text-gray-800' :
+                                                                'bg-green-100 text-green-800'))
+                                                            }}">
+                                                                {{ $card->rarity }}
+                                                            </span>
+                                                        </div>
+                                                        <div class="mt-1">
+                                                            <p class="text-sm text-blue-600">{{ $card->mana_cost }}</p>
+                                                        </div>
+                                                    </div>
+                                                    <form method="POST" action="{{ route('packs.add-card', $pack) }}">
+                                                        @csrf
+                                                        <input type="hidden" name="card_id" value="{{ $card->id }}">
+                                                        <button type="submit" class="text-blue-500 hover:text-blue-700">
+                                                            Add to Pack
+                                                        </button>
+                                                    </form>
                                                 </div>
-                                                <form method="POST" action="{{ route('packs.add-card', $pack) }}">
-                                                    @csrf
-                                                    <input type="hidden" name="card_id" value="{{ $card->id }}">
-                                                    <button type="submit" class="text-blue-500 hover:text-blue-700">
-                                                        Add to Pack
-                                                    </button>
-                                                </form>
+                                                @if($card->image_url)
+                                                    <div class="card-face">
+                                                        <img src="{{ $card->image_url }}" alt="{{ $card->name }}" class="w-full h-40 object-cover rounded mt-2">
+                                                    </div>
+                                                @endif
+                                                <div class="mt-2">
+                                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ $card->abilities }}</p>
+                                                    @if($card->power_toughness)
+                                                        <p class="text-sm font-semibold mt-1">{{ $card->power_toughness }}</p>
+                                                    @endif
+                                                </div>
                                             </div>
-                                            @if($card->image_url)
-                                                <img src="{{ $card->image_url }}" alt="{{ $card->name }}" class="w-full h-40 object-cover rounded mt-2">
-                                            @endif
                                         </div>
                                     @endforeach
                                 </div>
@@ -74,14 +97,37 @@
                         @else
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 @foreach($pack->cards as $card)
-                                    <div class="border dark:border-gray-700 rounded-lg p-4">
-                                        <div class="mb-2">
-                                            <h4 class="font-medium">{{ $card->name }}</h4>
-                                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $card->card_type }}</p>
+                                    <div class="border dark:border-gray-700 rounded-lg p-4 transform-gpu card-container">
+                                        <div class="card">
+                                            <div class="mb-2">
+                                                <h4 class="font-medium">{{ $card->name }}</h4>
+                                                <div class="flex items-center gap-2 mt-1">
+                                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ $card->card_type }}</p>
+                                                    <span class="text-xs px-2 py-1 rounded {{ 
+                                                        $card->rarity === 'Mythic Rare' ? 'bg-red-100 text-red-800' :
+                                                        ($card->rarity === 'Rare' ? 'bg-yellow-100 text-yellow-800' :
+                                                        ($card->rarity === 'Uncommon' ? 'bg-gray-100 text-gray-800' :
+                                                        'bg-green-100 text-green-800'))
+                                                    }}">
+                                                        {{ $card->rarity }}
+                                                    </span>
+                                                </div>
+                                                <div class="mt-1">
+                                                    <p class="text-sm text-blue-600">{{ $card->mana_cost }}</p>
+                                                </div>
+                                            </div>
+                                            @if($card->image_url)
+                                                <div class="card-face">
+                                                    <img src="{{ $card->image_url }}" alt="{{ $card->name }}" class="w-full h-40 object-cover rounded">
+                                                </div>
+                                            @endif
+                                            <div class="mt-2">
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $card->abilities }}</p>
+                                                @if($card->power_toughness)
+                                                    <p class="text-sm font-semibold mt-1">{{ $card->power_toughness }}</p>
+                                                @endif
+                                            </div>
                                         </div>
-                                        @if($card->image_url)
-                                            <img src="{{ $card->image_url }}" alt="{{ $card->name }}" class="w-full h-40 object-cover rounded">
-                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -91,4 +137,12 @@
             </div>
         </div>
     </div>
+    @push('scripts')
+        <script src="/js/mtg-card-3d-effect.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                initializeCardEffects();
+            });
+        </script>
+    @endpush
 </x-app-layout>

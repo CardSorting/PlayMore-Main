@@ -127,9 +127,39 @@ class ImageController extends Controller
 
     public function gallery(Request $request): View
     {
-        $images = auth()->user()->galleries()
-            ->where('type', 'image')
-            ->orderBy('created_at', 'desc')
+        $query = auth()->user()->galleries()
+            ->where('type', 'image');
+
+        // Apply filter if specified
+        if ($request->filter === 'available') {
+            // Get images that don't have cards in either Gallery or GlobalCard
+            $query->whereNotExists(function ($query) {
+                $query->select(\DB::raw(1))
+                    ->from('galleries as cards')
+                    ->where('cards.type', 'card')
+                    ->whereRaw('cards.image_url = galleries.image_url');
+            })->whereNotExists(function ($query) {
+                $query->select(\DB::raw(1))
+                    ->from('global_cards')
+                    ->whereRaw('global_cards.image_url = galleries.image_url');
+            });
+        } elseif ($request->filter === 'created') {
+            // Get images that have cards in either Gallery or GlobalCard
+            $query->where(function ($query) {
+                $query->whereExists(function ($subquery) {
+                    $subquery->select(\DB::raw(1))
+                        ->from('galleries as cards')
+                        ->where('cards.type', 'card')
+                        ->whereRaw('cards.image_url = galleries.image_url');
+                })->orWhereExists(function ($subquery) {
+                    $subquery->select(\DB::raw(1))
+                        ->from('global_cards')
+                        ->whereRaw('global_cards.image_url = galleries.image_url');
+                });
+            });
+        }
+
+        $images = $query->orderBy('created_at', 'desc')
             ->paginate(6)
             ->withQueryString();
         

@@ -1,0 +1,53 @@
+/* Pack styles */
+.text-gold {
+    color: #FFD700;
+}
+
+.border-gold {
+    border-color: #FFD700;
+}
+
+.bg-gold {
+    background-color: #FFD700;
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+    0% {
+        transform: translateY(-100%);
+    }
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+.animate-shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 100%
+    );
+}
+
+/* Pack hover effects */
+.pack-card {
+    transition: all 0.3s ease;
+}
+
+.pack-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Foil pattern */
+.foil-pattern {
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.1) 0px,
+        rgba(255, 255, 255, 0.1) 2px,
+        transparent 2px,
+        transparent 4px
+    );
+}

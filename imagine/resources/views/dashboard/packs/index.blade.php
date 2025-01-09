@@ -30,6 +30,45 @@
                                         <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">{{ $pack->description }}</p>
                                     @endif
 
+                                    @if($pack->is_sealed && $pack->cards->isNotEmpty())
+                                        <div class="mb-4">
+                                            <div class="pack-card relative aspect-[7/5] rounded-lg overflow-hidden group cursor-pointer">
+                                                <!-- Base gradient -->
+                                                <div class="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-700 to-purple-900"></div>
+                                                <!-- Foil pattern -->
+                                                <div class="absolute inset-0 foil-pattern opacity-30"></div>
+                                                <!-- Glow effect -->
+                                                <div class="absolute inset-0 bg-gradient-to-t from-purple-500/20 to-transparent"></div>
+                                                <!-- Shimmer effect -->
+                                                <div class="shimmer"></div>
+                                                <!-- Pack design elements -->
+                                                <div class="absolute inset-0 flex flex-col items-center justify-center p-4">
+                                                    <!-- Outer border -->
+                                                    <div class="absolute inset-2 border-2 border-gold opacity-30 rounded-lg"></div>
+                                                    <!-- Inner border -->
+                                                    <div class="absolute inset-4 border border-gold opacity-20 rounded"></div>
+                                                    <!-- Pack content -->
+                                                    <div class="relative text-center z-10 transform transition-transform duration-500 group-hover:scale-105">
+                                                        <div class="text-gold font-bold text-2xl mb-3 font-beleren tracking-wider">
+                                                            SEALED PACK
+                                                        </div>
+                                                        <div class="text-gold/90 font-medium text-lg mb-4 font-beleren">
+                                                            {{ $pack->cards_count }} CARDS
+                                                        </div>
+                                                        <div class="text-gold/70 text-xs font-medium uppercase tracking-widest">
+                                                            Premium Collection
+                                                        </div>
+                                                    </div>
+                                                    <!-- Corner decorations -->
+                                                    <div class="absolute top-6 left-6 w-3 h-3 border-t-2 border-l-2 border-gold opacity-50"></div>
+                                                    <div class="absolute top-6 right-6 w-3 h-3 border-t-2 border-r-2 border-gold opacity-50"></div>
+                                                    <div class="absolute bottom-6 left-6 w-3 h-3 border-b-2 border-l-2 border-gold opacity-50"></div>
+                                                    <div class="absolute bottom-6 right-6 w-3 h-3 border-b-2 border-r-2 border-gold opacity-50"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
                                     <div class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
                                         <span>{{ $pack->cards_count }} / {{ $pack->card_limit }} cards</span>
                                         <a href="{{ route('packs.show', $pack) }}" class="text-blue-500 hover:text-blue-700">

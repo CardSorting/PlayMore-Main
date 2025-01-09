@@ -15,6 +15,9 @@ class PackController extends Controller
     {
         $packs = Pack::where('user_id', Auth::id())
             ->withCount('cards')
+            ->with(['cards' => function($query) {
+                $query->inRandomOrder()->limit(1);
+            }])
             ->get();
             
         return view('dashboard.packs.index', compact('packs'));
@@ -50,7 +53,10 @@ class PackController extends Controller
         $this->authorize('view', $pack);
         
         $pack->load('cards');
-        $availableCards = Gallery::where('user_id', Auth::id())->get();
+        $availableCards = Gallery::where('user_id', Auth::id())
+            ->where('type', 'card')
+            ->orderBy('created_at', 'desc')
+            ->get();
         
         return view('dashboard.packs.show', compact('pack', 'availableCards'));
     }

@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Register marketplace components
-        Blade::component('marketplace.browse.available-pack-card', \App\Marketplace\Components\Browse\AvailablePackCard::class);
+        Blade::component('marketplace-browse-available-pack-card', \App\Marketplace\Components\Browse\AvailablePackCard::class);
         Blade::component('marketplace.seller.listed-pack-card', \App\Marketplace\Components\Seller\ListedPackCard::class);
 
         View::composer('layouts.navigation', function ($view) {

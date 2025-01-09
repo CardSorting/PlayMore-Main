@@ -16,7 +16,7 @@ class BrowseMarketplaceService
         $this->pulseService = $pulseService;
     }
 
-    public function getAvailablePacks(): \Illuminate\Database\Eloquent\Collection
+    public function getAvailablePacks()
     {
         return Pack::availableOnMarketplace()
             ->withCount('cards')
@@ -29,7 +29,8 @@ class BrowseMarketplaceService
                 'user:id,name'
             ])
             ->latest('listed_at')
-            ->get();
+            ->paginate(12)
+            ->withQueryString();
     }
 
     public function purchasePack(Pack $pack, User $buyer): array

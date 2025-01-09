@@ -24,33 +24,53 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-        });
-
-        // Rate limit marketplace purchases
-        RateLimiter::for('marketplace-purchase', function (Request $request) {
-            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
-        });
-
-        // Rate limit marketplace listings
-        RateLimiter::for('marketplace-list', function (Request $request) {
-            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
-        });
+        // Configure rate limiters
+        $this->configureRateLimiting();
 
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
-            Route::middleware('web')
-                ->group(base_path('routes/web.php'));
+            Route::middleware(['web'])
+                ->group(function () {
+                    require base_path('routes/marketplace.php');
+                    require base_path('routes/web.php');
+                    require base_path('routes/auth.php');
+                });
+        });
+    }
 
-            Route::middleware('web')
-                ->group(base_path('routes/marketplace.php'));
+    /**
+     * Configure the rate limiters for the application.
+     */
+    protected function configureRateLimiting(): void
+    {
+        // API rate limiting
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
 
-            Route::middleware('web')
-                ->group(base_path('routes/auth.php'));
+        // Rate limit marketplace purchases
+        RateLimiter::for('marketplace-purchase', function (Request $request) {
+            return Limit::perMinute(5)
+                ->by($request->user()?->id ?: $request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Too many purchase attempts. Please wait before trying again.',
+                    ], 429);
+                });
+        });
+
+        // Rate limit marketplace listings
+        RateLimiter::for('marketplace-list', function (Request $request) {
+            return Limit::perMinute(10)
+                ->by($request->user()?->id ?: $request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Too many listing attempts. Please wait before trying again.',
+                    ], 429);
+                });
         });
     }
 }

@@ -11,8 +11,9 @@ class SecurityHeadersMiddleware
     {
         $response = $next($request);
 
-        // PayPal domains needed for SDK
-        $paypalDomains = [
+        // External service domains
+        $allowedDomains = [
+            // PayPal
             'https://*.paypal.com',
             'https://*.paypalobjects.com',
             'https://*.sandbox.paypal.com',
@@ -20,20 +21,36 @@ class SecurityHeadersMiddleware
             'https://www.paypal.com',
             'https://t.paypal.com',
             'https://c.paypal.com',
-            'https://c.sandbox.paypal.com'
+            'https://c.sandbox.paypal.com',
+            // Stripe
+            'https://*.stripe.com',
+            'https://js.stripe.com',
+            'https://api.stripe.com',
+            // hCaptcha
+            'https://*.hcaptcha.com',
+            'https://hcaptcha.com',
+            'https://newassets.hcaptcha.com'
         ];
 
         // Build CSP
         $csp = [
-            "default-src" => ["'self'", "'unsafe-inline'", "'unsafe-eval'", ...$paypalDomains],
+            "default-src" => ["'self'", "'unsafe-inline'", "'unsafe-eval'", ...$allowedDomains],
             "script-src" => [
                 "'self'",
                 "'unsafe-inline'",
                 "'unsafe-eval'",
+                // PayPal
                 "https://www.paypal.com",
                 "https://www.sandbox.paypal.com",
                 "https://*.paypal.com",
                 "https://*.paypalobjects.com",
+                // Stripe
+                "https://*.stripe.com",
+                "https://js.stripe.com",
+                // hCaptcha
+                "https://*.hcaptcha.com",
+                "https://hcaptcha.com",
+                "https://newassets.hcaptcha.com"
             ],
             "style-src" => ["'self'", "'unsafe-inline'", "https://fonts.bunny.net"],
             "img-src" => [
@@ -43,20 +60,35 @@ class SecurityHeadersMiddleware
                 "http:",
                 "https://*.paypal.com",
                 "https://*.paypalobjects.com",
+                "https://*.stripe.com"
             ],
             "font-src" => ["'self'", "https://fonts.bunny.net", "https://*.paypalobjects.com"],
             "frame-src" => [
                 "'self'",
+                // PayPal
                 "https://www.sandbox.paypal.com",
                 "https://www.paypal.com",
                 "https://*.paypal.com",
+                // Stripe
+                "https://*.stripe.com",
+                "https://js.stripe.com",
+                // hCaptcha
+                "https://*.hcaptcha.com",
+                "https://newassets.hcaptcha.com"
             ],
             "connect-src" => [
                 "'self'",
+                // PayPal
                 "https://www.sandbox.paypal.com",
                 "https://www.paypal.com",
                 "https://*.paypal.com",
                 "https://*.paypalobjects.com",
+                // Stripe
+                "https://*.stripe.com",
+                "https://api.stripe.com",
+                // hCaptcha
+                "https://*.hcaptcha.com",
+                "https://api.hcaptcha.com"
             ],
             "form-action" => ["'self'"],
             "frame-ancestors" => ["'self'"],

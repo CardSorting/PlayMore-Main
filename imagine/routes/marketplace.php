@@ -5,24 +5,25 @@ use App\Marketplace\Controllers\Seller\SellerDashboardController;
 use App\Marketplace\Controllers\Purchase\PurchaseHistoryController;
 use Illuminate\Support\Facades\Route;
 
-// Browse Marketplace
-Route::middleware(['auth', 'verified', \App\Http\Middleware\MarketplaceRateLimiter::class])->group(function () {
-    Route::get('/marketplace', [BrowseMarketplaceController::class, 'index'])->name('marketplace.index');
-    
-    Route::post('/marketplace/packs/{pack}/purchase', [BrowseMarketplaceController::class, 'purchasePack'])
-        ->name('marketplace.purchase');
+Route::middleware(['auth', 'verified', \App\Http\Middleware\MarketplaceRateLimiter::class])
+    ->prefix('marketplace')
+    ->name('marketplace.')
+    ->group(function () {
+        // Browse Marketplace
+        Route::get('/', [BrowseMarketplaceController::class, 'index'])->name('index');
+        Route::post('/packs/{pack}/purchase', [BrowseMarketplaceController::class, 'purchasePack'])
+            ->name('purchase');
 
-    // Seller Dashboard
-    Route::get('/marketplace/seller', [SellerDashboardController::class, 'index'])->name('marketplace.seller.dashboard');
-    
-    Route::post('/marketplace/seller/packs/{pack}/list', [SellerDashboardController::class, 'listPack'])
-        ->name('marketplace.seller.list');
-    
-    Route::post('/marketplace/seller/packs/{pack}/unlist', [SellerDashboardController::class, 'unlistPack'])
-        ->name('marketplace.seller.unlist');
-    
-    Route::get('/marketplace/seller/sales', [SellerDashboardController::class, 'salesHistory'])->name('marketplace.seller.sales');
+        // Seller Dashboard
+        Route::prefix('seller')->name('seller.')->group(function () {
+            Route::get('/', [SellerDashboardController::class, 'index'])->name('dashboard');
+            Route::post('/packs/{pack}/list', [SellerDashboardController::class, 'listPack'])->name('list');
+            Route::post('/packs/{pack}/unlist', [SellerDashboardController::class, 'unlistPack'])->name('unlist');
+            Route::get('/sales', [SellerDashboardController::class, 'salesHistory'])->name('sales');
+        });
 
-    // Purchase History
-    Route::get('/marketplace/purchases', [PurchaseHistoryController::class, 'index'])->name('marketplace.purchase.history');
-});
+        // Purchase History
+        Route::prefix('purchases')->name('purchase.')->group(function () {
+            Route::get('/', [PurchaseHistoryController::class, 'index'])->name('history');
+        });
+    });

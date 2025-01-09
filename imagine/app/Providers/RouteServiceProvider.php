@@ -28,18 +28,35 @@ class RouteServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
 
         $this->routes(function () {
+            // API Routes
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
+            // Web Routes - Load in specific order to ensure proper route resolution
             Route::middleware('web')
-                ->group(base_path('routes/marketplace.php'));
-
-            Route::middleware('web')
-                ->group(base_path('routes/auth.php'));
-
-            Route::middleware('web')
-                ->group(base_path('routes/web.php'));
+                ->group(function () {
+                    // Public routes first
+                    require base_path('routes/web.php');
+                    
+                    // Authentication routes
+                    require base_path('routes/auth.php');
+                    
+                    // Protected routes
+                    Route::middleware(['auth', 'verified'])->group(function () {
+                        // Dashboard routes (including cards and packs)
+                        Route::prefix('dashboard')->group(function () {
+                            require base_path('routes/dashboard.php');
+                            require base_path('routes/cards.php');
+                            require base_path('routes/packs.php');
+                        });
+                        
+                        // Marketplace routes with rate limiting
+                        Route::middleware('marketplace.rate.limit')->group(function () {
+                            require base_path('routes/marketplace.php');
+                        });
+                    });
+                });
         });
     }
 
@@ -51,6 +68,11 @@ class RouteServiceProvider extends ServiceProvider
         // API rate limiting
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Marketplace rate limiting
+        RateLimiter::for('marketplace', function (Request $request) {
+            return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
         });
     }
 }

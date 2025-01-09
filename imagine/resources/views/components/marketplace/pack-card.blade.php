@@ -1,10 +1,18 @@
+@props([
+    'pack',
+    'mode' => 'browse', // browse, listed, purchased
+    'showActions' => true
+])
+
 <div class="border dark:border-gray-700 rounded-lg p-4 hover:shadow-lg transition-shadow">
     <div class="flex justify-between items-start mb-2">
         <h3 class="text-lg font-medium">{{ $pack->name }}</h3>
         <div class="flex flex-col items-end">
-            <span class="px-2 py-1 text-sm bg-purple-100 text-purple-800 rounded mb-1">
-                {{ number_format($pack->price) }} PULSE
-            </span>
+            @if($pack->is_listed)
+                <span class="px-2 py-1 text-sm bg-purple-100 text-purple-800 rounded mb-1">
+                    {{ number_format($pack->price) }} PULSE
+                </span>
+            @endif
             <span class="text-xs text-gray-500">
                 by {{ $pack->user->name }}
             </span>
@@ -63,7 +71,8 @@
             <span class="text-sm text-gray-500 dark:text-gray-400">
                 {{ $pack->cards_count }} cards
             </span>
-            @if($pack->user_id !== Auth::id())
+            
+            @if($mode === 'browse' && $pack->user_id !== Auth::id())
                 <form action="{{ route('marketplace.purchase', $pack) }}" method="POST" class="inline">
                     @csrf
                     <button type="submit" 
@@ -72,14 +81,19 @@
                         Purchase Pack
                     </button>
                 </form>
-            @else
-                <form action="{{ route('marketplace.unlist', $pack) }}" method="POST" class="inline">
+            @elseif($mode === 'listed' && $pack->user_id === Auth::id())
+                <form action="{{ route('marketplace.seller.unlist', $pack) }}" method="POST" class="inline">
                     @csrf
                     <button type="submit" 
                             class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm">
                         Remove Listing
                     </button>
                 </form>
+            @elseif($mode === 'purchased')
+                <a href="{{ route('packs.show', $pack) }}" 
+                   class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
+                    View Pack
+                </a>
             @endif
         </div>
     @endif

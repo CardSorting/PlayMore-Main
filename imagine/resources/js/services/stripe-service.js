@@ -7,10 +7,24 @@ class StripeService {
     }
 
     async initialize(publishableKey) {
-        if (!this.stripe) {
-            this.stripe = await loadStripe(publishableKey);
+        try {
+            console.log('Initializing Stripe with key:', publishableKey);
+            if (!publishableKey) {
+                throw new Error('Stripe publishable key is required');
+            }
+            
+            if (!this.stripe) {
+                this.stripe = await loadStripe(publishableKey);
+                if (!this.stripe) {
+                    throw new Error('Failed to initialize Stripe');
+                }
+                console.log('Stripe initialized successfully');
+            }
+            return this.stripe;
+        } catch (error) {
+            console.error('Error initializing Stripe:', error);
+            throw error;
         }
-        return this.stripe;
     }
 
     async createPaymentIntent(cart) {

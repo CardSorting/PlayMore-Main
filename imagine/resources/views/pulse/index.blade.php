@@ -25,21 +25,36 @@
     <script src="https://js.stripe.com/v3/"></script>
     
     <script type="module">
-        import { StripePayment } from '/js/components/stripe-payment.js';
-        
-        // Initialize Stripe payment
-        (function() {
-            const container = document.getElementById('stripe-payment-container');
-            const amount = {{ $amount }};
-            const price = {{ $price }};
-            const stripeKey = '{{ $stripeKey }}';
-            
-            new StripePayment(container, {
-                amount,
-                price,
-                stripeKey
-            });
-        })();
+        function initializeStripePayment() {
+            try {
+                const container = document.getElementById('stripe-payment-container');
+                const amount = {{ $amount }};
+                const price = {{ $price }};
+                const stripeKey = '{{ $stripeKey }}';
+                
+                console.log('Initializing Stripe payment with:', { amount, price, stripeKey });
+                
+                if (!window.StripePayment) {
+                    console.error('StripePayment class not found. Available globals:', Object.keys(window));
+                    return;
+                }
+                
+                new window.StripePayment(container, {
+                    amount,
+                    price,
+                    stripeKey
+                });
+            } catch (error) {
+                console.error('Error initializing Stripe payment:', error);
+            }
+        }
+
+        // Try to initialize after both DOM and scripts are loaded
+        if (document.readyState === 'complete') {
+            initializeStripePayment();
+        } else {
+            window.addEventListener('load', initializeStripePayment);
+        }
     </script>
 @endpush
 

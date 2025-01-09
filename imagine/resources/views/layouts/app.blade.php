@@ -54,10 +54,10 @@
             });
         </script>
 
-        <!-- Additional Scripts -->
-        @stack('scripts')
-        
         <!-- App Scripts -->
         @vite(['resources/js/app.js'])
+        
+        <!-- Additional Scripts -->
+        @stack('scripts')
     </body>
 </html>

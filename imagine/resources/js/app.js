@@ -1,5 +1,6 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
+import StripePayment from './components/stripe-payment';
 
 // Initialize Alpine.js
 if (!window.Alpine) {
@@ -12,3 +13,6 @@ if (!window.Alpine) {
         Alpine.start();
     }
 }
+
+// Export Stripe components
+window.StripePayment = StripePayment;

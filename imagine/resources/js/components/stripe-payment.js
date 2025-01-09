@@ -1,6 +1,6 @@
 import stripeService from '../services/stripe-service';
 
-export class StripePayment {
+class StripePayment {
     constructor(container, options) {
         this.container = container;
         this.amount = options.amount;
@@ -132,3 +132,5 @@ export class StripePayment {
         this.submitButton.textContent = isLoading ? 'Processing...' : `Pay $${this.price}`;
     }
 }
+
+export default StripePayment;

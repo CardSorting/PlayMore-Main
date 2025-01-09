@@ -12,6 +12,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Card Preview Container -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                    <!-- Original Image Author -->
+                    <div class="mb-4 text-sm text-gray-600">
+                        <span class="font-medium">Original Image by:</span>
+                        <span class="ml-1">{{ $image->user->name }}</span>
+                    </div>
                     <div class="mt-8">
                         <div id="card-container" class="mtg-card w-[375px] h-[525px] mx-auto relative rounded-[18px] shadow-lg overflow-hidden bg-white">
                             <div class="card-frame h-full flex flex-col bg-[#f8e7c9] border-8 border-[#171314] rounded-lg overflow-hidden relative">
@@ -133,6 +138,15 @@
                             <x-input-label for="power_toughness" value="Power/Toughness (for creatures, e.g. 3/4)" />
                             <x-text-input id="power_toughness" name="power_toughness" type="text" class="mt-1 block w-full" value="{{ old('power_toughness') }}" />
                             <x-input-error :messages="$errors->get('power_toughness')" class="mt-2" />
+                        </div>
+
+                        <!-- Original Image Info -->
+                        <div class="bg-gray-100 p-4 rounded-lg mb-4">
+                            <p class="text-sm text-gray-600 mb-2">
+                                <span class="font-medium">Original Image Author:</span>
+                                <span class="ml-1">{{ $image->user->name }}</span>
+                            </p>
+                            <p class="text-sm text-gray-600">The original author will be credited in the card's metadata.</p>
                         </div>
 
                         <!-- Rarity Info -->

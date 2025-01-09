@@ -27,6 +27,7 @@ class CardController extends Controller
     public function index()
     {
         $cards = Gallery::where('type', 'card')
+            ->with('user')  // Eager load user information
             ->orderBy('created_at', 'desc')
             ->paginate(12);
 
@@ -41,6 +42,7 @@ class CardController extends Controller
     public function create(Request $request)
     {
         $image = Gallery::where('type', 'image')
+            ->with('user')
             ->findOrFail($request->image_id);
 
         return view('dashboard.cards.create', [
@@ -175,7 +177,11 @@ class CardController extends Controller
                     'original_image_id' => $image->id,
                     'created_from' => 'image',
                     'created_at' => now()->toISOString(),
-                    'original_metadata' => $image->metadata
+                    'original_metadata' => $image->metadata,
+                    'original_author' => [
+                        'id' => $image->user->id,
+                        'name' => $image->user->name
+                    ]
                 ]
             ]);
 

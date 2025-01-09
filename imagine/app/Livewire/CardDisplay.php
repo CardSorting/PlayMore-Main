@@ -17,6 +17,7 @@ class CardDisplay extends Component
             'name' => $card['name'] ?? 'Unnamed Card',
             'mana_cost' => $card['mana_cost'] ?? '',
             'card_type' => $card['card_type'] ?? 'Unknown Type',
+            'author' => $card['user']['name'] ?? 'Unknown Author',
             'abilities' => $card['abilities'] ?? 'No abilities',
             'flavor_text' => $card['flavor_text'] ?? '',
             'power_toughness' => $card['power_toughness'] ?? null,

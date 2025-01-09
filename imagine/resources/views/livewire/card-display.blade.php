@@ -3,6 +3,7 @@
                 {{ $showFlipAnimation ? 'rotate-y-180 scale-105' : '' }} 
                 {{ $this->getRarityClasses() }}"
          data-rarity="{{ $this->getNormalizedRarity() }}"
+         data-author="{{ $card['author'] }}"
          style="transform-style: preserve-3d; will-change: transform;">
         
         <!-- Front of Card -->
@@ -236,10 +237,14 @@
                         <p class="text-gray-900 italic">{{ $card['flavor_text'] }}</p>
                     </div>
                     <div class="flex justify-between items-center">
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-500">Rarity</h4>
-                            <p class="text-gray-900">{{ $card['rarity'] }}</p>
-                        </div>
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500">Author</h4>
+                        <p class="text-gray-900">{{ $card['author'] }}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500">Rarity</h4>
+                        <p class="text-gray-900">{{ $card['rarity'] }}</p>
+                    </div>
                         @if(isset($card['power_toughness']))
                         <div>
                             <h4 class="text-sm font-medium text-gray-500">Power/Toughness</h4>

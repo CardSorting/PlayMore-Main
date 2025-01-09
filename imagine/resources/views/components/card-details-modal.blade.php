@@ -35,6 +35,10 @@
                     <span id="modalCardRarity" class="px-3 py-1 text-sm font-medium rounded-full"></span>
                 </div>
                 <div>
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Author</h3>
+                    <p id="modalCardAuthor" class="text-gray-900"></p>
+                </div>
+                <div>
                     <h3 class="text-sm font-medium text-gray-500 mb-2">Abilities</h3>
                     <p id="modalCardAbilities" class="text-gray-900 whitespace-pre-line"></p>
                 </div>
@@ -68,7 +72,7 @@
             this.cardDisplay = document.getElementById('modalCardDisplay');
             
             // Cache DOM elements
-            ['Name', 'Type', 'Rarity', 'Abilities', 'Power', 'Toughness'].forEach(field => {
+            ['Name', 'Type', 'Rarity', 'Author', 'Abilities', 'Power', 'Toughness'].forEach(field => {
                 this.elements[field.toLowerCase()] = document.getElementById(`modalCard${field}`);
             });
 
@@ -101,6 +105,7 @@
             // Update details
             this.elements.name.textContent = card.name;
             this.elements.type.textContent = card.type;
+            this.elements.author.textContent = card.author || 'Not available';
             
             // Update rarity with appropriate styling
             const rarityClasses = {
@@ -149,6 +154,7 @@
             name: cardName,
             type: cardElement.dataset.type,
             rarity: cardElement.dataset.rarity,
+            author: cardElement.dataset.author,
             abilities: cardElement.querySelector('.abilities-text')?.textContent,
             power: cardElement.querySelector('.power')?.textContent,
             toughness: cardElement.querySelector('.toughness')?.textContent

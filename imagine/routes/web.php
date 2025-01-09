@@ -4,9 +4,21 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CardController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CreditController;
+use Illuminate\Support\Facades\{Route, Redis};
 
 // Public Routes
+// Test Redis connection
+Route::get('/test-redis', function () {
+    try {
+        Redis::set('test_key', 'working');
+        $value = Redis::get('test_key');
+        return "Redis is working: " . $value;
+    } catch (\Exception $e) {
+        return "Redis error: " . $e->getMessage();
+    }
+});
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/features', [HomeController::class, 'features'])->name('features');
 Route::get('/pricing', [HomeController::class, 'pricing'])->name('pricing');
@@ -44,4 +56,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Credit Routes
+    Route::prefix('credits')->name('credits.')->group(function () {
+        Route::get('/', [CreditController::class, 'getBalance'])->name('balance');
+        Route::post('/add', [CreditController::class, 'addCredits'])->name('add');
+        Route::post('/deduct', [CreditController::class, 'deductCredits'])->name('deduct');
+        Route::get('/history', [CreditController::class, 'getHistory'])->name('history');
+    });
 });

@@ -43,8 +43,24 @@
                 </div>
             </div>
 
+            <!-- Credits Display -->
+            <div class="hidden sm:flex sm:items-center sm:ms-6 mr-4">
+                <div class="flex items-center px-3 py-2 text-sm font-medium text-gray-500 rounded-md bg-gray-50">
+                    <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>@php
+                        try {
+                            echo Auth::user()->getCreditBalance() . ' Pulse';
+                        } catch (\Exception $e) {
+                            echo '0 Pulse';
+                        }
+                    @endphp</span>
+                </div>
+            </div>
+
             <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <div class="hidden sm:flex sm:items-center">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
@@ -130,6 +146,20 @@
             <div class="px-4">
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                 <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                <div class="font-medium text-sm text-gray-500 mt-1">
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 text-gray-400 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        @php
+                            try {
+                                echo Auth::user()->getCreditBalance() . ' Pulse';
+                            } catch (\Exception $e) {
+                                echo '0 Pulse';
+                            }
+                        @endphp
+                    </span>
+                </div>
             </div>
 
             <div class="mt-3 space-y-1">

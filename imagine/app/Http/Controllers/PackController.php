@@ -106,6 +106,57 @@ class PackController extends Controller
         }
     }
 
+    public function open(Pack $pack)
+    {
+        if (!$pack->is_sealed) {
+            return redirect()->route('packs.show', $pack)
+                ->with('error', 'This pack must be sealed before it can be opened.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Load cards in random order
+            $cards = $pack->cards()
+                ->select('id', 'name', 'image_url', 'rarity', 'card_type', 'mana_cost', 'power_toughness', 'abilities', 'flavor_text')
+                ->inRandomOrder()
+                ->get();
+
+            // Add cards to user's collection
+            foreach ($cards as $card) {
+                auth()->user()->galleries()->create([
+                    'type' => 'card',
+                    'name' => $card->name,
+                    'image_url' => $card->image_url,
+                    'rarity' => $card->rarity,
+                    'card_type' => $card->card_type,
+                    'mana_cost' => $card->mana_cost,
+                    'power_toughness' => $card->power_toughness,
+                    'abilities' => $card->abilities,
+                    'flavor_text' => $card->flavor_text,
+                    'metadata' => [
+                        'opened_from_pack' => $pack->id,
+                        'opened_at' => now()->toISOString()
+                    ]
+                ]);
+
+                // Delete the global card
+                $card->delete();
+            }
+
+            // Mark pack as opened (you might want to add an is_opened column to packs table)
+            $pack->delete(); // Or update status if you prefer to keep record
+
+            DB::commit();
+
+            return view('dashboard.packs.open', compact('pack', 'cards'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('packs.index')
+                ->with('error', 'Failed to open pack. Please try again.');
+        }
+    }
+
     public function seal(Pack $pack)
     {
         $this->authorize('update', $pack);

@@ -28,12 +28,18 @@ class CardController extends Controller
     /**
      * Display a listing of the cards.
      */
-    public function index()
+    public function index(Request $request)
     {
         $cards = Gallery::where('type', 'card')
+            ->where('user_id', auth()->id())
             ->with('user')  // Eager load user information
             ->orderBy('created_at', 'desc')
             ->paginate(12);
+
+        // Show success message if redirected from pack opening
+        if ($request->has('opened')) {
+            session()->flash('success', 'Pack opened successfully! The cards have been added to your collection.');
+        }
 
         return view('dashboard.cards.index', [
             'cards' => $cards,

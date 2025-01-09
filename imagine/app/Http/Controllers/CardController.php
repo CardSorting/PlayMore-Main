@@ -31,6 +31,9 @@ class CardController extends Controller
     public function index(Request $request)
     {
         $tab = $request->get('tab', 'all');
+        $view = $request->get('view', 'grid');
+        $perPage = $view === 'grid' ? 15 : 20; // More cards per page in list view
+
         $query = Gallery::where('type', 'card')
             ->where('user_id', auth()->id())
             ->with('user');  // Eager load user information
@@ -40,7 +43,7 @@ class CardController extends Controller
         }
 
         $cards = $query->orderBy('created_at', 'desc')
-            ->paginate(12)
+            ->paginate($perPage)
             ->withQueryString();
 
         // Show success message if redirected from pack opening
@@ -50,7 +53,8 @@ class CardController extends Controller
 
         return view('dashboard.cards.index', [
             'cards' => $cards,
-            'currentTab' => $tab
+            'currentTab' => $tab,
+            'currentView' => $view
         ]);
     }
 

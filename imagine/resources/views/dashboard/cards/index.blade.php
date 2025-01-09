@@ -23,7 +23,7 @@
                     
                     <!-- Tab Navigation -->
                     <nav class="relative flex justify-center space-x-4 px-4" aria-label="Tabs">
-                        <a href="{{ route('cards.index', ['tab' => 'all']) }}" 
+                        <a href="{{ route('cards.index', ['tab' => 'all', 'view' => $currentView]) }}" 
                            class="tab-link group relative min-w-[120px] py-4 px-6
                                   {{ $currentTab === 'all' ? 'active' : '' }}">
                             <!-- Enhanced Background & Border Effects -->
@@ -42,7 +42,7 @@
                             </div>
                         </a>
 
-                        <a href="{{ route('cards.index', ['tab' => 'newest']) }}"
+                        <a href="{{ route('cards.index', ['tab' => 'newest', 'view' => $currentView]) }}"
                            class="tab-link group relative min-w-[120px] py-4 px-6
                                   {{ $currentTab === 'newest' ? 'active' : '' }}">
                             <!-- Enhanced Background & Border Effects -->
@@ -78,12 +78,14 @@
 
             <!-- View Controls -->
             <div class="flex justify-end mb-4 space-x-2">
-                <button class="view-btn p-2 rounded-lg hover:bg-gray-100 transition-colors" data-view="grid">
+                <button class="view-btn p-2 rounded-lg hover:bg-gray-100 transition-colors {{ $currentView === 'grid' ? 'bg-gray-100' : '' }}" 
+                        data-view="grid">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                 </button>
-                <button class="view-btn p-2 rounded-lg hover:bg-gray-100 transition-colors" data-view="list">
+                <button class="view-btn p-2 rounded-lg hover:bg-gray-100 transition-colors {{ $currentView === 'list' ? 'bg-gray-100' : '' }}" 
+                        data-view="list">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
@@ -118,9 +120,101 @@
                 </div>
             </div>
 
-            <div class="mt-8">
-                {{ $cards->links() }}
+            <!-- Enhanced Pagination -->
+            <div class="mt-8 pb-6">
+                <div class="pagination-container">
+                    {{ $cards->appends(['tab' => $currentTab, 'view' => $currentView])->links() }}
+                </div>
             </div>
+
+            @push('styles')
+            <style>
+                /* Pagination Styling */
+                .pagination-container nav {
+                    @apply flex justify-center;
+                }
+
+                .pagination-container .relative.z-0 {
+                    @apply inline-flex rounded-md shadow-sm -space-x-px overflow-hidden;
+                    background: linear-gradient(to bottom, 
+                        rgba(255, 255, 255, 0.1),
+                        rgba(255, 255, 255, 0.05)
+                    );
+                }
+
+                .pagination-container .relative.z-0 > span,
+                .pagination-container .relative.z-0 > a {
+                    @apply relative inline-flex items-center px-4 py-2 text-sm font-medium;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    background: linear-gradient(to bottom,
+                        rgba(255, 255, 255, 0.1),
+                        rgba(255, 255, 255, 0.05)
+                    );
+                }
+
+                .pagination-container span[aria-current="page"] > span {
+                    @apply z-10 text-indigo-600 relative;
+                    background: linear-gradient(to bottom,
+                        rgba(99, 102, 241, 0.15),
+                        rgba(99, 102, 241, 0.05)
+                    );
+                    box-shadow: 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                        inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+                        0 0 15px rgba(99, 102, 241, 0.1);
+                }
+
+                .pagination-container a:hover {
+                    @apply text-gray-700 relative;
+                    background: linear-gradient(to bottom,
+                        rgba(99, 102, 241, 0.05),
+                        rgba(99, 102, 241, 0.02)
+                    );
+                    transform: translateY(-1px);
+                }
+
+                .pagination-container span[aria-disabled="true"] > span,
+                .pagination-container a {
+                    @apply text-gray-500 hover:bg-gray-50 relative;
+                }
+
+                /* Metallic border effect */
+                .pagination-container .relative.z-0::before {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(45deg,
+                        transparent 0%,
+                        rgba(255, 255, 255, 0.1) 45%,
+                        rgba(255, 255, 255, 0.2) 50%,
+                        rgba(255, 255, 255, 0.1) 55%,
+                        transparent 100%
+                    );
+                    opacity: 0.5;
+                    pointer-events: none;
+                }
+
+                /* Active page shine animation */
+                @keyframes paginationShine {
+                    0% { background-position: -200% 0; }
+                    100% { background-position: 200% 0; }
+                }
+
+                .pagination-container span[aria-current="page"] > span::before {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(90deg,
+                        transparent,
+                        rgba(255, 255, 255, 0.2),
+                        transparent
+                    );
+                    background-size: 200% 100%;
+                    animation: paginationShine 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+                    pointer-events: none;
+                }
+            </style>
+            @endpush
         @endif
     </div>
 </div>
@@ -138,14 +232,21 @@
         const listView = document.getElementById('listView');
         let currentView = 'grid';
 
+        // Function to update URL with current view
+        const updateURL = (view) => {
+            const url = new URL(window.location);
+            url.searchParams.set('view', view);
+            window.history.pushState({}, '', url);
+        };
+
         // Function to switch views
-        const switchView = (view) => {
+        const switchView = (view, animate = true) => {
             currentView = view;
+            updateURL(view);
             
             // Update button states
             viewButtons.forEach(btn => {
                 const isActive = btn.getAttribute('data-view') === view;
-                btn.classList.toggle('active', isActive);
                 btn.classList.toggle('bg-gray-100', isActive);
             });
 
@@ -153,28 +254,38 @@
                 gridView.style.opacity = '1';
                 gridView.classList.remove('hidden');
                 listView.classList.add('hidden');
-                // Show and animate grid cards with stagger
-                const cardItems = gridView.querySelectorAll('.card-item');
-                cardItems.forEach((card, index) => {
-                    setTimeout(() => {
+                
+                if (animate) {
+                    // Show and animate grid cards with stagger
+                    const cardItems = gridView.querySelectorAll('.card-item');
+                    cardItems.forEach((card, index) => {
+                        setTimeout(() => {
+                            card.classList.add('visible');
+                        }, index * 100);
+                    });
+                } else {
+                    // Show cards immediately without animation
+                    gridView.querySelectorAll('.card-item').forEach(card => {
                         card.classList.add('visible');
-                    }, index * 100);
-                });
-                // Initialize 3D effects after cards are visible
+                    });
+                }
+
+                // Initialize 3D effects
                 setTimeout(() => {
                     const cards = document.querySelectorAll('.card-container');
                     cards.forEach(card => {
                         new MTGCard3DTiltEffect(card);
                     });
-                }, 500);
+                }, animate ? 500 : 0);
             } else {
                 listView.style.opacity = '1';
                 listView.classList.remove('hidden');
                 gridView.classList.add('hidden');
-                // Show list items
+                
                 const listItems = listView.querySelectorAll('.card-item');
                 listItems.forEach(item => {
                     item.style.display = 'flex';
+                    if (!animate) item.classList.add('visible');
                 });
             }
         };
@@ -183,12 +294,21 @@
         viewButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const view = btn.getAttribute('data-view');
-                switchView(view);
+                switchView(view, true);
             });
         });
 
-        // Show initial view after a short delay
-        setTimeout(() => switchView('grid'), 150);
+        // Update pagination links to maintain view parameter
+        document.querySelectorAll('.pagination-container a').forEach(link => {
+            const url = new URL(link.href);
+            url.searchParams.set('view', currentView);
+            link.href = url.toString();
+        });
+
+        // Initialize view from URL parameter or default
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialView = urlParams.get('view') || '{{ $currentView }}';
+        setTimeout(() => switchView(initialView, false), 150);
     });
 </script>
 @endpush

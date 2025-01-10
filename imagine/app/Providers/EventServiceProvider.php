@@ -9,7 +9,6 @@ use App\Events\{
 };
 use App\Listeners\PrintOrder\{
     HandleRefund,
-    InitiatePrintProduction,
     LogOrderActivity,
     NotifyStatusChange,
     SendOrderConfirmation
@@ -33,7 +32,6 @@ class EventServiceProvider extends ServiceProvider
         // Print Order Events
         PrintOrderCreated::class => [
             SendOrderConfirmation::class,
-            InitiatePrintProduction::class,
             LogOrderActivity::class,
         ],
 

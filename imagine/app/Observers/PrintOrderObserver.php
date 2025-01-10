@@ -47,7 +47,7 @@ class PrintOrderObserver
         event(new PrintOrderCreated($order));
 
         // Clear any relevant caches
-        Cache::tags(['print_orders', "user:{$order->user_id}"])->flush();
+        Cache::put("print_orders.user.{$order->user_id}", null);
 
         // Log order creation
         Log::channel('orders')->info("Print order created: {$order->order_number}", [
@@ -130,10 +130,10 @@ class PrintOrderObserver
     public function updated(PrintOrder $order): void
     {
         // Clear relevant caches
-        Cache::tags(['print_orders', "user:{$order->user_id}"])->flush();
+        Cache::put("print_orders.user.{$order->user_id}", null);
 
         if ($order->wasChanged('status')) {
-            Cache::tags(['order_stats'])->flush();
+            Cache::put('order_stats', null);
         }
     }
 
@@ -149,11 +149,8 @@ class PrintOrderObserver
         ]);
 
         // Clear relevant caches
-        Cache::tags([
-            'print_orders',
-            "user:{$order->user_id}",
-            'order_stats'
-        ])->flush();
+        Cache::put("print_orders.user.{$order->user_id}", null);
+        Cache::put('order_stats', null);
     }
 
     /**
@@ -168,11 +165,8 @@ class PrintOrderObserver
         ]);
 
         // Clear relevant caches
-        Cache::tags([
-            'print_orders',
-            "user:{$order->user_id}",
-            'order_stats'
-        ])->flush();
+        Cache::put("print_orders.user.{$order->user_id}", null);
+        Cache::put('order_stats', null);
     }
 
     /**
@@ -187,10 +181,7 @@ class PrintOrderObserver
         ]);
 
         // Clear relevant caches
-        Cache::tags([
-            'print_orders',
-            "user:{$order->user_id}",
-            'order_stats'
-        ])->flush();
+        Cache::put("print_orders.user.{$order->user_id}", null);
+        Cache::put('order_stats', null);
     }
 }

@@ -30,6 +30,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/gallery/{gallery}/material', [PrintOrderController::class, 'storeMaterial'])
             ->name('store-material');
 
+        // Quantity selection
+        Route::get('/orders/{order}/quantity', [PrintOrderController::class, 'selectQuantity'])
+            ->name('select-quantity');
+        Route::post('/orders/{order}/quantity', [PrintOrderController::class, 'updateQuantity'])
+            ->name('update-quantity');
+
         Route::post('/gallery/{gallery}', [PrintOrderController::class, 'store'])
             ->name('store');
 

@@ -22,6 +22,7 @@ use App\Http\Requests\Print\CancelPrintRequest;
 use App\Http\Requests\Print\ReorderPrintRequest;
 use App\Http\Requests\Print\DownloadInvoiceRequest;
 use App\Http\Requests\Print\TrackPrintRequest;
+use App\Http\Requests\Print\UpdateQuantityRequest;
 
 class PrintOrderController extends Controller
 {
@@ -65,30 +66,32 @@ class PrintOrderController extends Controller
 
     public function storeMaterial(StoreMaterialRequest $request, Gallery $gallery)
     {
-
-        // Calculate price based on size and material
+        // Calculate unit price based on size and material
         $selectedSize = session('print_order.size');
         $basePrice = collect(config('prints.sizes'))->flatMap(function ($category) {
             return collect($category['sizes']);
         })->get($selectedSize)['price'];
 
         $materialMultiplier = config('prints.materials')[$request->material]['price_multiplier'];
-        $finalPrice = (int) ($basePrice * $materialMultiplier);
+        $unitPrice = (int) ($basePrice * $materialMultiplier);
 
-        // Create the print order
+        // Create the print order with default quantity of 1
         $order = PrintOrder::create([
             'user_id' => auth()->id(),
             'gallery_id' => $gallery->id,
             'size' => $selectedSize,
             'material' => $request->material,
             'status' => 'pending',
-            'price' => $finalPrice
+            'quantity' => 1,
+            'unit_price' => $unitPrice,
+            'total_price' => $unitPrice // Initial total price for quantity of 1
         ]);
 
         // Clear the session data as we've created the order
         session()->forget(['print_order.size', 'print_order.material']);
 
-        return redirect()->route('prints.checkout', ['order' => $order]);
+        // Redirect to quantity selection step
+        return redirect()->route('prints.select-quantity', ['order' => $order]);
     }
 
     public function storeSize(StoreSizeRequest $request, Gallery $gallery)
@@ -97,6 +100,25 @@ class PrintOrderController extends Controller
         session(['print_order.size' => $request->size]);
 
         return redirect()->route('prints.select-material', ['gallery' => $gallery]);
+    }
+
+    public function selectQuantity(PrintOrder $order)
+    {
+        return view('prints.select-quantity', [
+            'order' => $order,
+            'maxQuantity' => config('prints.max_quantity', 10)
+        ]);
+    }
+
+    public function updateQuantity(UpdateQuantityRequest $request, PrintOrder $order)
+    {
+
+        $order->update([
+            'quantity' => $request->quantity,
+            'total_price' => $order->unit_price * $request->quantity
+        ]);
+
+        return redirect()->route('prints.checkout', ['order' => $order]);
     }
 
     public function checkout(ShowCheckoutRequest $request, PrintOrder $order)
@@ -198,13 +220,13 @@ class PrintOrderController extends Controller
 
     public function reorder(ReorderPrintRequest $request, PrintOrder $order)
     {
-        // Calculate price based on size and material
+        // Calculate unit price based on size and material
         $basePrice = collect(config('prints.sizes'))->flatMap(function ($category) {
             return collect($category['sizes']);
         })->get($order->size)['price'];
 
         $materialMultiplier = config('prints.materials')[$order->material]['price_multiplier'];
-        $finalPrice = (int) ($basePrice * $materialMultiplier);
+        $unitPrice = (int) ($basePrice * $materialMultiplier);
 
         // Create a new order with the same details
         $newOrder = PrintOrder::create([
@@ -213,7 +235,9 @@ class PrintOrderController extends Controller
             'size' => $order->size,
             'material' => $order->material,
             'status' => 'pending',
-            'price' => $finalPrice
+            'quantity' => $order->quantity,
+            'unit_price' => $unitPrice,
+            'total_price' => $unitPrice * $order->quantity
         ]);
 
         return redirect()->route('prints.checkout', ['order' => $newOrder]);

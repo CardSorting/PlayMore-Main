@@ -16,7 +16,9 @@ class PrintOrder extends Model
         'gallery_id',
         'size',
         'material',
-        'price',
+        'quantity',
+        'unit_price',
+        'total_price',
         'status',
         'shipping_name',
         'shipping_address',
@@ -73,9 +75,19 @@ class PrintOrder extends Model
         ]));
     }
 
-    public function getFormattedPriceAttribute(): string
+    public function getFormattedUnitPriceAttribute(): string
     {
-        return number_format($this->price, 2);
+        return number_format($this->unit_price / 100, 2);
+    }
+
+    public function getFormattedTotalPriceAttribute(): string
+    {
+        return number_format($this->total_price / 100, 2);
+    }
+
+    public function recalculateTotal(): void
+    {
+        $this->total_price = $this->unit_price * $this->quantity;
     }
 
     public function getTrackingUrlAttribute(): ?string

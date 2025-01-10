@@ -40,7 +40,7 @@
                                     <h3 class="text-sm font-medium text-gray-900">Selected Size</h3>
                                     <p class="mt-1 text-sm text-gray-500">{{ $sizes[$size]['name'] }} ({{ $sizes[$size]['dimensions'] }})</p>
                                 </div>
-                                <a href="{{ route('prints.select-size', $gallery) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Change</a>
+                                <a href="{{ route('prints.create', $gallery) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Change</a>
                             </div>
                         </div>
                     </div>

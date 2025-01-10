@@ -1,12 +1,5 @@
 <x-app-layout>
     <div class="min-h-screen">
-        <!-- Progress Stepper -->
-        <div class="bg-white border-b border-gray-200">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <x-prints.progress-stepper :currentStep="1" />
-            </div>
-        </div>
-
         <!-- Main Content -->
         {{ $slot }}
 

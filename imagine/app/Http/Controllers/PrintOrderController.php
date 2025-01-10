@@ -35,7 +35,19 @@ class PrintOrderController extends Controller
         return view('prints.index', compact('orders'));
     }
 
-    public function create(Gallery $gallery): View
+    public function overview(Gallery $gallery): View
+    {
+        // Ensure the gallery belongs to the user
+        if ($gallery->user_id !== auth()->id()) {
+            abort(403, 'You do not have permission to create prints from this gallery.');
+        }
+
+        return view('prints.product-overview', [
+            'gallery' => $gallery,
+        ]);
+    }
+
+    public function selectSize(Gallery $gallery): View
     {
         // Ensure the gallery belongs to the user
         if ($gallery->user_id !== auth()->id()) {
@@ -71,7 +83,7 @@ class PrintOrderController extends Controller
         $size = $request->query('size');
         if (!$size || !array_key_exists($size, config('prints.sizes'))) {
             return redirect()
-                ->route('prints.create', $gallery)
+                ->route('prints.overview', $gallery)
                 ->with('error', 'Please select a size first.');
         }
 
@@ -175,7 +187,7 @@ class PrintOrderController extends Controller
 
     public function reorder(PrintOrder $order): RedirectResponse
     {
-        return redirect()->route('prints.create', [
+        return redirect()->route('prints.overview', [
             'gallery' => $order->gallery_id,
         ]);
     }

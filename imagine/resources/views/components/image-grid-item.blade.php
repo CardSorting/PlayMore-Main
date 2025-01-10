@@ -22,34 +22,38 @@
                     ->exists() || 
                 \App\Models\GlobalCard::where('image_url', $image->image_url)
                     ->exists();
+                $currentTab = request('tab', 'create');
             @endphp
-            @if($hasCard)
-                <div class="flex-1 flex items-center justify-center px-3 py-1.5 bg-gray-200 text-gray-500 text-sm font-medium rounded cursor-not-allowed"
-                     aria-label="Card already created for this image">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span>Card Created</span>
-                </div>
+            
+            @if($currentTab === 'create')
+                @if($hasCard)
+                    <div class="w-full flex items-center justify-center px-3 py-1.5 bg-gray-200 text-gray-500 text-sm font-medium rounded cursor-not-allowed"
+                         aria-label="Card already created for this image">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Card Created</span>
+                    </div>
+                @else
+                    <a href="{{ route('cards.create', ['image_id' => $image->id]) }}"
+                       class="w-full flex items-center justify-center px-3 py-1.5 bg-purple-500 text-black text-sm font-medium rounded hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                       aria-label="Create card from this image">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        <span>Create Card</span>
+                    </a>
+                @endif
             @else
-                <a href="{{ route('cards.create', ['image_id' => $image->id]) }}"
-                   class="flex-1 flex items-center justify-center px-3 py-1.5 bg-purple-500 text-black text-sm font-medium rounded hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                   aria-label="Create card from this image">
+                <a href="{{ route('prints.create', ['gallery' => $image->id]) }}"
+                   class="w-full flex items-center justify-center px-3 py-1.5 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                   aria-label="Order print of this image">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                     </svg>
-                    <span>Create Card</span>
+                    <span>Order Print</span>
                 </a>
             @endif
-            
-            <a href="{{ route('prints.create', ['gallery' => $image->id]) }}"
-               class="flex-1 flex items-center justify-center px-3 py-1.5 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-               aria-label="Order print of this image">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                </svg>
-                <span>Order Print</span>
-            </a>
         </div>
     </div>
 </div>

@@ -7,6 +7,7 @@
 @section('content')
     <div class="min-h-screen bg-gray-50">
         <div class="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8">
+            <x-gallery-tabs />
             <x-gallery-filter />
             @if($images->isEmpty())
                 <x-empty-state type="images" />

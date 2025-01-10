@@ -6,7 +6,7 @@ use App\Services\PrintOrderService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class CreatePrintOrderRequest extends FormRequest
+class StorePrintOrderRequest extends FormRequest
 {
     public function authorize(): bool
     {

@@ -7,6 +7,7 @@ use App\Models\Gallery;
 use App\Models\PrintOrder;
 use App\Services\StripeService;
 use Illuminate\Support\Collection;
+use App\Http\Requests\Print\InitiatePrintOrderRequest;
 use App\Http\Requests\Print\ProcessPaymentRequest;
 use App\Http\Requests\Print\StoreMaterialRequest;
 use App\Http\Requests\Print\StoreSizeRequest;
@@ -24,6 +25,12 @@ use App\Http\Requests\Print\TrackPrintRequest;
 
 class PrintOrderController extends Controller
 {
+    public function create(InitiatePrintOrderRequest $request, Gallery $gallery)
+    {
+        // Start the print order process by redirecting to the overview page
+        return redirect()->route('prints.overview', ['gallery' => $gallery]);
+    }
+
     public function index()
     {
         $orders = PrintOrder::where('user_id', auth()->id())

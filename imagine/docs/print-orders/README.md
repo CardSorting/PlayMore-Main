@@ -42,7 +42,8 @@ app/
 │   │   └── PrintOrderAccess.php
 │   └── Requests/
 │       └── Print/
-│           ├── CreatePrintOrderRequest.php
+│           ├── InitiatePrintOrderRequest.php
+│           ├── StorePrintOrderRequest.php
 │           └── ProcessPaymentRequest.php
 ├── Jobs/
 │   └── ExportPrintOrders.php
@@ -191,7 +192,10 @@ tests/
 
 ```
 GET    /dashboard/prints                    # List user's orders
-POST   /dashboard/prints/gallery/{id}       # Create order
+GET    /prints/gallery/{id}/create         # Start print order process
+GET    /prints/gallery/{id}/overview       # View print details
+GET    /prints/gallery/{id}/size           # Select print size
+GET    /prints/gallery/{id}/material       # Select print material
 GET    /dashboard/prints/{order}            # View order
 POST   /dashboard/prints/{order}/payment    # Process payment
 ```

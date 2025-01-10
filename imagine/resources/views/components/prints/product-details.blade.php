@@ -1,4 +1,4 @@
-@props(['title', 'description'])
+@props(['title', 'description', 'next-step'])
 
 <div x-data="{ showStickyBar: false }" class="relative">
     <!-- Sticky Product Summary Bar -->
@@ -17,7 +17,9 @@
                     <h2 class="text-lg font-medium text-gray-900">{{ $title }}</h2>
                     <span class="ml-4 text-sm text-gray-500">From $19.99</span>
                 </div>
-                <a href="#customize" class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700">
+                <a 
+                    href="{{ $nextStep }}"
+                    class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700">
                     Start Customizing
                 </a>
             </div>

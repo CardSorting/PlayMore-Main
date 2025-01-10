@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\{PrintOrder, Gallery};
 use App\Services\PrintOrderService;
 use App\Http\Resources\PrintOrderResource;
-use App\Http\Requests\Print\{CreatePrintOrderRequest, ProcessPaymentRequest};
+use App\Http\Requests\Print\{StorePrintOrderRequest, ProcessPaymentRequest};
 use App\DTOs\{PrintOrderData, PaymentData};
 use App\Exceptions\{PrintOrderException, PaymentException};
 use Illuminate\Http\{JsonResponse, Request, Resources\Json\AnonymousResourceCollection};
@@ -45,7 +45,7 @@ class PrintOrderController extends Controller
     /**
      * Create a new print order.
      */
-    public function store(CreatePrintOrderRequest $request, Gallery $gallery): JsonResponse
+    public function store(StorePrintOrderRequest $request, Gallery $gallery): JsonResponse
     {
         try {
             $data = PrintOrderData::fromRequest(

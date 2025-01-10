@@ -22,7 +22,12 @@ class PrintOrderController extends Controller
         protected PrintOrderService $printOrderService
     ) {
         $this->middleware(['auth', 'verified']);
-        $this->authorizeResource(PrintOrder::class, 'order');
+    }
+
+    public function create(Gallery $gallery): RedirectResponse
+    {
+        // Redirect to the first step of the print order creation flow
+        return redirect()->route('prints.overview', $gallery);
     }
 
     public function index(): View

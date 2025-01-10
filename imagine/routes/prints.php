@@ -6,31 +6,29 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Print Order Routes
-    Route::prefix('dashboard/prints')->name('prints.')->group(function () {
+    Route::prefix('prints')->name('prints.')->group(function () {
         // List all print orders
         Route::get('/', [PrintOrderController::class, 'index'])
             ->name('index');
 
         // Multi-step print order creation
+        Route::get('/gallery/{gallery}/create', [PrintOrderController::class, 'create'])
+            ->name('create');
+
         Route::get('/gallery/{gallery}', [PrintOrderController::class, 'overview'])
-            ->name('overview')
-            ->middleware('can:create,App\Models\PrintOrder');
+            ->name('overview');
 
         Route::get('/gallery/{gallery}/size', [PrintOrderController::class, 'selectSize'])
-            ->name('select-size')
-            ->middleware('can:create,App\Models\PrintOrder');
+            ->name('select-size');
 
         Route::post('/gallery/{gallery}/size', [PrintOrderController::class, 'storeSize'])
-            ->name('store-size')
-            ->middleware('can:create,App\Models\PrintOrder');
+            ->name('store-size');
 
         Route::get('/gallery/{gallery}/material', [PrintOrderController::class, 'selectMaterial'])
-            ->name('select-material')
-            ->middleware('can:create,App\Models\PrintOrder');
+            ->name('select-material');
 
         Route::post('/gallery/{gallery}', [PrintOrderController::class, 'store'])
-            ->name('store')
-            ->middleware('can:create,App\Models\PrintOrder');
+            ->name('store');
 
         // Print order management
         Route::middleware('print.access')->group(function () {

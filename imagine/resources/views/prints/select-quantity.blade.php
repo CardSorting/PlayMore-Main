@@ -9,9 +9,10 @@
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Quantity Selection -->
-                        <form action="{{ route('prints.update-quantity', $order) }}" method="POST">
+                        <form id="quantity-form" x-ref="quantityForm" action="{{ route('prints.update-quantity', ['order' => $order]) }}" method="POST" x-data="{ selectedQuantity: {{ $order->quantity ?? 1 }} }">
                             @csrf
                             <input type="hidden" name="final_price" id="final_price">
+                            <input type="hidden" name="quantity" x-bind:value="selectedQuantity">
                             <div>
                                 <!-- Header -->
                                 <div class="flex items-center justify-between mb-6">
@@ -26,7 +27,15 @@
                                 </div>
 
                                 <!-- Quantity Tabs -->
-                                <x-prints.quantity-tabs :activeTab="'personal'">
+                                @php
+                                    $activeTab = 'personal';
+                                    if ($order->quantity > 5 && $order->quantity <= 50) {
+                                        $activeTab = 'professional';
+                                    } elseif ($order->quantity > 50) {
+                                        $activeTab = 'wholesale';
+                                    }
+                                @endphp
+                                <x-prints.quantity-tabs :activeTab="$activeTab">
                                     <x-slot name="personal">
                                         @foreach ($presets as $preset)
                                             @if($preset->amount <= 5)
@@ -52,6 +61,16 @@
                                     </x-slot>
                                 </x-prints.quantity-tabs>
 
+                            </div>
+
+                            <!-- Continue Button -->
+                            <div class="mt-6">
+                                <button type="submit" form="quantity-form" 
+                                    x-bind:disabled="!selectedQuantity"
+                                    x-bind:class="{ 'opacity-50 cursor-not-allowed': !selectedQuantity }"
+                                    class="w-full flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Continue to Checkout
+                                </button>
                             </div>
                         </form>
 
@@ -144,10 +163,6 @@
                                         </div>
                                     </dl>
 
-                                    <!-- Continue Button -->
-                                    <button type="submit" class="w-full flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mt-4">
-                                        Continue to Checkout
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -260,21 +275,24 @@
                 }
             }
 
-            // Handle radio button changes with smooth transitions
-            quantityInputs.forEach(input => {
-                input.addEventListener('change', function() {
-                    if (this.checked) {
-                        updateTotal(parseInt(this.value));
-                        customQuantityInput.value = ''; // Clear custom input
+            // Add highlight effect when quantity changes
+            function addHighlightEffect() {
+                const summary = document.querySelector('.bg-gray-50');
+                summary.classList.add('ring-2', 'ring-indigo-200');
+                setTimeout(() => {
+                    summary.classList.remove('ring-2', 'ring-indigo-200');
+                }, 800);
+            }
 
-                        // Add highlight effect to order summary
-                        const summary = document.querySelector('.bg-gray-50');
-                        summary.classList.add('ring-2', 'ring-indigo-200');
-                        setTimeout(() => {
-                            summary.classList.remove('ring-2', 'ring-indigo-200');
-                        }, 800);
-                    }
-                });
+            // Watch Alpine.js state changes
+            Alpine.effect(() => {
+                const form = document.getElementById('quantity-form');
+                const alpineComponent = Alpine.$data(form);
+                if (alpineComponent.selectedQuantity) {
+                    updateTotal(alpineComponent.selectedQuantity);
+                    customQuantityInput.value = ''; // Clear custom input
+                    addHighlightEffect();
+                }
             });
 
             // Handle custom quantity with validation feedback
@@ -298,20 +316,12 @@
 
                 const customValue = parseInt(customQuantityInput.value);
                 if (customValue && customValue >= 1 && customValue <= {{ $maxQuantity }}) {
-                    quantityInputs.forEach(input => input.checked = false);
-                    
-                    const hiddenInput = document.querySelector('input[name="quantity"][value="' + customValue + '"]') || 
-                        document.createElement('input');
-                    hiddenInput.type = 'radio';
-                    hiddenInput.name = 'quantity';
-                    hiddenInput.value = customValue;
-                    hiddenInput.checked = true;
-                    
-                    if (!hiddenInput.parentElement) {
-                        document.querySelector('form').appendChild(hiddenInput);
-                    }
-                    
+                    // Update Alpine.js state and submit form
+                    const form = document.getElementById('quantity-form');
+                    const alpineComponent = Alpine.$data(form);
+                    alpineComponent.selectedQuantity = customValue;
                     updateTotal(customValue);
+                    // Don't auto-submit, just update the state and price
 
                     // Success feedback
                     const btn = this;
@@ -325,8 +335,9 @@
             });
 
             // Set initial total without animation
-            const currentQuantity = parseInt(document.querySelector('input[name="quantity"]:checked')?.value || 1);
-            updateTotal(currentQuantity, false);
+            const form = document.getElementById('quantity-form');
+            const alpineComponent = Alpine.$data(form);
+            updateTotal(alpineComponent.selectedQuantity, false);
 
             // Handle Enter key in custom quantity input
             customQuantityInput.addEventListener('keypress', function(e) {

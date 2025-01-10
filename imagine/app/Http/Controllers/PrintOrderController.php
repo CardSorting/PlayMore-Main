@@ -120,15 +120,20 @@ class PrintOrderController extends Controller
 
     public function updateQuantity(UpdateQuantityRequest $request, PrintOrder $order)
     {
-        $quantity = $request->quantity;
-        $priceData = $this->quantityService->calculatePrice($order, $quantity);
+        try {
+            $quantity = $request->quantity;
+            $priceData = $this->quantityService->calculatePrice($order, $quantity);
 
-        $order->update([
-            'quantity' => $quantity,
-            'total_price' => $priceData['total']
-        ]);
+            $order->update([
+                'quantity' => $quantity,
+                'total_price' => $priceData['total']
+            ]);
 
-        return redirect()->route('prints.checkout', ['order' => $order]);
+            return redirect()->route('prints.checkout', ['order' => $order]);
+        } catch (\Exception $e) {
+            \Log::error('Update quantity error: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to update quantity. Please try again.']);
+        }
     }
 
     public function checkout(ShowCheckoutRequest $request, PrintOrder $order)

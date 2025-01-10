@@ -1,12 +1,11 @@
 @props(['preset', 'order'])
 
-<label class="relative">
-    <input type="radio" name="quantity" value="{{ $preset->amount }}" 
-        class="peer sr-only" 
-        {{ $order->quantity == $preset->amount ? 'checked' : '' }}>
-    <div class="relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-300 h-full
-        peer-checked:border-indigo-600 peer-checked:ring-4 peer-checked:ring-indigo-600/20 peer-checked:bg-indigo-50/50
-        hover:border-indigo-300 hover:bg-indigo-50/30 hover:shadow-md group">
+<div class="relative cursor-pointer h-full" @click.stop="selectedQuantity = {{ $preset->amount }}">
+    <div class="relative p-5 rounded-xl border-2 transition-all duration-300 h-full flex flex-col"
+        :class="{
+            'border-indigo-600 ring-4 ring-indigo-600/20 bg-indigo-50/50': selectedQuantity === {{ $preset->amount }},
+            'hover:border-indigo-300 hover:bg-indigo-50/30 hover:shadow-md': selectedQuantity !== {{ $preset->amount }}
+        }">
         @if($preset->savings)
             <span class="absolute -top-3 -right-3 inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-800 shadow-md ring-1 ring-green-100/50">
                 {{ $preset->savings }}
@@ -74,7 +73,7 @@
                 {{ $preset->amount }}
             </span>
         </div>
-        <div class="flex flex-col space-y-2 mt-6 pt-4 border-t border-gray-200">
+        <div class="flex flex-col space-y-2 mt-auto pt-4 border-t border-gray-200">
             @if($preset->savings)
                 <div class="flex justify-between items-baseline text-gray-500">
                     <p class="text-sm">Original price</p>
@@ -104,4 +103,4 @@
             @endif
         </div>
     </div>
-</label>
+</div>

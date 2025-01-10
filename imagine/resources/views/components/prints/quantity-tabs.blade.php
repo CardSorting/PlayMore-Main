@@ -46,19 +46,19 @@
 
     <div class="mt-6">
         <div x-cloak x-show="activeTab === 'personal'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div class="grid grid-cols-2 gap-4 max-w-3xl mx-auto">
                 {{ $personal }}
             </div>
         </div>
 
         <div x-cloak x-show="activeTab === 'professional'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div class="grid grid-cols-2 gap-4 max-w-3xl mx-auto">
                 {{ $professional }}
             </div>
         </div>
 
         <div x-cloak x-show="activeTab === 'wholesale'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div class="grid grid-cols-2 gap-4 max-w-3xl mx-auto">
                 {{ $wholesale }}
             </div>
         </div>

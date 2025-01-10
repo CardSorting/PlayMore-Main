@@ -22,8 +22,40 @@ class Gallery extends Model
     protected $casts = [
         'is_available' => 'boolean',
         'views_count' => 'integer',
-        'price' => 'integer'
+        'price' => 'integer',
+        'metadata' => 'array'
     ];
+
+    // Card-specific accessors
+    public function getManaCountAttribute()
+    {
+        return $this->metadata['mana_cost'] ?? null;
+    }
+
+    public function getCardTypeAttribute()
+    {
+        return $this->metadata['type'] ?? null;
+    }
+
+    public function getAbilitiesAttribute()
+    {
+        return $this->metadata['abilities'] ?? null;
+    }
+
+    public function getRarityAttribute()
+    {
+        return $this->metadata['rarity'] ?? null;
+    }
+
+    public function getPowerToughnessAttribute()
+    {
+        return $this->metadata['power_toughness'] ?? null;
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->metadata['image_url'] ?? $this->attributes['image_url'] ?? null;
+    }
 
     public function getFormattedPriceAttribute(): string
     {

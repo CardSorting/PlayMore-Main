@@ -50,18 +50,18 @@ class GlobalCard extends Model
             'original_user_id' => $gallery->user_id,
             'type' => $gallery->type,
             'name' => $gallery->name,
-            'image_url' => $gallery->image_url,
+            'image_url' => $gallery->getImageUrlAttribute(),
             'prompt' => $gallery->prompt,
             'aspect_ratio' => $gallery->aspect_ratio,
             'process_mode' => $gallery->process_mode,
             'task_id' => $gallery->task_id,
             'metadata' => $gallery->metadata,
-            'mana_cost' => $gallery->mana_cost,
-            'card_type' => $gallery->card_type,
-            'abilities' => $gallery->abilities,
-            'flavor_text' => $gallery->flavor_text,
-            'power_toughness' => $gallery->power_toughness,
-            'rarity' => $gallery->rarity
+            'mana_cost' => $gallery->metadata['mana_cost'] ?? null,
+            'card_type' => $gallery->metadata['type'] ?? null,
+            'abilities' => $gallery->metadata['abilities'] ?? null,
+            'flavor_text' => $gallery->metadata['flavor_text'] ?? null,
+            'power_toughness' => $gallery->metadata['power_toughness'] ?? null,
+            'rarity' => $gallery->metadata['rarity'] ?? null
         ]);
     }
 }

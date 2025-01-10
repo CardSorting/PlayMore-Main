@@ -95,7 +95,7 @@
                     <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#171314]/40 z-30"></div>
                     <img src="{{ $card['image_url'] }}" 
                          alt="{{ $card['name'] }}" 
-                         class="w-full h-full object-contain object-center transform transition-all duration-700 ease-out
+                         class="w-full h-full object-cover object-center transform transition-all duration-700 ease-out
                                 group-hover:scale-110 group-hover:filter group-hover:brightness-110"
                          loading="lazy">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>

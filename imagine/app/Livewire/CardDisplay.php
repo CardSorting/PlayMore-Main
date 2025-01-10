@@ -12,17 +12,31 @@ class CardDisplay extends Component
 
     public function mount($card)
     {
+        // Handle both array and object access
+        $getData = function($key) use ($card) {
+            if (is_array($card)) {
+                if ($key === 'author') {
+                    return $card['user']['name'] ?? 'Unknown Author';
+                }
+                return $card[$key] ?? null;
+            }
+            if ($key === 'author') {
+                return optional($card->user)->name ?? 'Unknown Author';
+            }
+            return $card->$key ?? null;
+        };
+
         // Ensure all required fields are present with defaults
         $this->card = [
-            'name' => $card['name'] ?? 'Unnamed Card',
-            'mana_cost' => $card['mana_cost'] ?? '',
-            'card_type' => $card['card_type'] ?? 'Unknown Type',
-            'author' => $card['user']['name'] ?? 'Unknown Author',
-            'abilities' => $card['abilities'] ?? 'No abilities',
-            'flavor_text' => $card['flavor_text'] ?? '',
-            'power_toughness' => $card['power_toughness'] ?? null,
-            'rarity' => $card['rarity'] ?? 'Common',
-            'image_url' => $card['image_url'] ?? '/static/images/placeholder.png',
+            'name' => $getData('name') ?? 'Unnamed Card',
+            'mana_cost' => $getData('mana_cost') ?? '',
+            'card_type' => $getData('card_type') ?? 'Unknown Type',
+            'author' => $getData('author'),
+            'abilities' => $getData('abilities') ?? 'No abilities',
+            'flavor_text' => $getData('flavor_text') ?? '',
+            'power_toughness' => $getData('power_toughness') ?? null,
+            'rarity' => $getData('rarity') ?? 'Common',
+            'image_url' => $getData('image_url') ?? '/static/images/placeholder.png',
         ];
     }
 

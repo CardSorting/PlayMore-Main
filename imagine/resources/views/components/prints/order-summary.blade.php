@@ -64,7 +64,15 @@
                 </template>
                 <div class="flex justify-between">
                     <dt class="text-sm text-gray-600">Subtotal</dt>
-                    <dd class="text-sm font-medium text-gray-900" x-text="'$' + calculateTotal().toFixed(2)"></dd>
+                    <dd class="text-sm font-medium text-gray-900">
+                        <span x-text="
+                            '$' + (
+                                presetData[selectedQuantity] 
+                                    ? (presetData[selectedQuantity].discountedPrice / 100) 
+                                    : (selectedQuantity * unitPrice / 100)
+                            ).toFixed(2)
+                        "></span>
+                    </dd>
                 </div>
                 <div class="flex justify-between">
                     <dt class="text-sm text-gray-600">Shipping</dt>
@@ -72,7 +80,15 @@
                 </div>
                 <div class="flex justify-between border-t border-gray-200 pt-3 mb-4">
                     <dt class="text-base font-medium text-gray-900">Total</dt>
-                    <dd class="text-base font-medium text-gray-900" x-text="'$' + calculateTotal().toFixed(2)"></dd>
+                    <dd class="text-base font-medium text-gray-900">
+                        <span x-text="
+                            '$' + (
+                                presetData[selectedQuantity] 
+                                    ? (presetData[selectedQuantity].discountedPrice / 100) 
+                                    : (selectedQuantity * unitPrice / 100)
+                            ).toFixed(2)
+                        "></span>
+                    </dd>
                 </div>
             </dl>
         </div>

@@ -2,14 +2,11 @@
 
 namespace App\Providers;
 
-use App\Services\PulseService;
-use App\Services\PayPalService;
-use App\Marketplace\Components\PackCard;
+use App\Livewire\CardCreator;
+use App\Livewire\CardDetailsModal;
+use App\Livewire\CardDisplay;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Redis\RedisManager;
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Blade;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,9 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(PayPalService::class, function ($app) {
-            return new PayPalService();
-        });
+        //
     }
 
     /**
@@ -28,28 +23,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register marketplace components
-        Blade::component('marketplace-browse-available-pack-card', \App\Marketplace\Components\Browse\AvailablePackCard::class);
-        Blade::component('marketplace.seller.listed-pack-card', \App\Marketplace\Components\Seller\ListedPackCard::class);
+        Livewire::component('card-creator', CardCreator::class);
+        Livewire::component('card-details-modal', CardDetailsModal::class);
+        Livewire::component('card-display', CardDisplay::class);
 
-        View::composer('layouts.navigation', function ($view) {
-            $pulseBalance = 0;
-            
-            if (Auth::check()) {
-                $user = Auth::user();
-                $cacheKey = 'user_pulse_balance:' . $user->id;
-                
-                try {
-                    $pulseBalance = $user->getCreditBalance();
-                } catch (\Exception $e) {
-                    // Keep default 0 balance on error
-                    \Log::error('Failed to fetch pulse balance: ' . $e->getMessage());
-                }
-            }
-
+        // Share pulse balance data with all views
+        view()->composer('*', function ($view) {
             $view->with([
-                'pulseBalance' => $pulseBalance,
-                'showPulseButton' => !request()->routeIs('pulse.index'),
+                'pulseBalance' => auth()->check() ? auth()->user()->pulse_balance ?? 0 : 0,
+                'showPulseButton' => auth()->check()
             ]);
         });
     }

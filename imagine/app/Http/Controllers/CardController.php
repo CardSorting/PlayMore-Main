@@ -113,35 +113,15 @@ class CardController extends Controller
                 'request' => $request->all(),
                 'user_id' => auth()->id()
             ]);
-            
-            try {
-                $validatedData = $request->validate([
-                    'image_id' => ['required', 'exists:galleries,id'],
-                    'name' => ['required', 'string', 'max:255'],
-                    'mana_cost' => ['required', 'string', 'max:50'],
-                    'card_type' => ['required', 'string', 'max:255'],
-                    'abilities' => ['required', 'string'],
-                    'flavor_text' => ['nullable', 'string'],
-                    'power_toughness' => ['nullable', 'string', 'max:10'],
-                    'image_url' => ['required', 'url']
-                ]);
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                \Log::error('Card creation validation failed', [
-                    'errors' => $e->errors(),
-                    'request_data' => $request->all()
-                ]);
-                return back()
-                    ->withErrors($e->errors())
-                    ->withInput();
-            }
 
-            $image = Gallery::where('id', $validatedData['image_id'])
+            // Get the image first
+            $image = Gallery::where('id', $request->image_id)
                 ->where('type', 'image')
                 ->first();
 
             if (!$image) {
                 \Log::error('Invalid image selected', [
-                    'image_id' => $validatedData['image_id'],
+                    'image_id' => $request->image_id,
                     'user_id' => auth()->id()
                 ]);
                 return back()
@@ -156,14 +136,30 @@ class CardController extends Controller
                     ->withErrors(['error' => 'A card already exists for this image.']);
             }
 
-            // Verify image URL matches
-            if ($validatedData['image_url'] !== $image->image_url) {
-                return back()
-                    ->withInput()
-                    ->withErrors(['error' => 'Invalid image URL provided.']);
-            }
+            // Validate the data
+            $validatedData = $request->validate([
+                'image_id' => ['required', 'exists:galleries,id'],
+                'name' => ['required', 'string', 'max:255'],
+                'manaCost' => ['required', 'string', 'max:50'],
+                'cardType' => ['required', 'string', 'max:255'],
+                'abilities' => ['required', 'string'],
+                'flavorText' => ['nullable', 'string'],
+                'powerToughness' => ['nullable', 'string', 'max:10'],
+            ]);
 
-            $card = $this->cardService->createCardFromImage($image, $validatedData);
+            // Map the data to match the service expectations
+            $cardData = [
+                'image_id' => $validatedData['image_id'],
+                'name' => $validatedData['name'],
+                'mana_cost' => $validatedData['manaCost'],
+                'card_type' => $validatedData['cardType'],
+                'abilities' => $validatedData['abilities'],
+                'flavor_text' => $validatedData['flavorText'],
+                'power_toughness' => $validatedData['powerToughness'],
+                'image_url' => $image->image_url
+            ];
+
+            $card = $this->cardService->createCardFromImage($image, $cardData);
 
             \Log::info('Card created successfully', [
                 'card_id' => $card->id,

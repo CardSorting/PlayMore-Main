@@ -19,22 +19,20 @@ class ImageGenerationRateLimiter
      */
     public function handle(Request $request, Closure $next): Response 
     {
-        // Use authenticated user ID for more precise rate limiting
         $key = 'generate:' . ($request->user()?->id ?: $request->ip());
-        
-        $limiter = RateLimiter::for($key, function () {
-            // Allow 1 generations per minute per user
+
+        // Create or get the rate limiter
+        RateLimiter::for($key, function() {
             return Limit::perMinute(1);
         });
-        
-        if ($limiter->tooManyAttempts($key, 1)) {
-            return response()->json([
-                'message' => 'Image generation rate limit exceeded. Please wait before generating more images.',
-                'retry_after' => $limiter->availableIn($key)
-            ], 429);
+
+        // Check if we've exceeded the rate limit
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $seconds = RateLimiter::availableIn($key);
+            abort(429, "Please wait {$seconds} seconds before generating another image.");
         }
-        
-        $limiter->hit($key);
+
+        RateLimiter::hit($key);
         return $next($request);
     }
 }

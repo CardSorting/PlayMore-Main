@@ -28,11 +28,6 @@ class RouteServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
 
         $this->routes(function () {
-            // API Routes
-            Route::middleware('api')
-                ->prefix('api')
-                ->group(base_path('routes/api.php'));
-
             // Web Routes - Load in specific order to ensure proper route resolution
             Route::middleware('web')
                 ->group(function () {
@@ -52,7 +47,7 @@ class RouteServiceProvider extends ServiceProvider
                         });
                         
                         // Marketplace routes with rate limiting
-                        Route::middleware('marketplace.rate.limit')->group(function () {
+                        Route::middleware(\App\Http\Middleware\MarketplaceRateLimiter::class)->group(function () {
                             require base_path('routes/marketplace.php');
                         });
                     });
@@ -68,11 +63,6 @@ class RouteServiceProvider extends ServiceProvider
         // API rate limiting
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-        });
-
-        // Marketplace rate limiting
-        RateLimiter::for('marketplace', function (Request $request) {
-            return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
         });
     }
 }

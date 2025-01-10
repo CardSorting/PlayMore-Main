@@ -16,7 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('generate')->name('images.')->group(function () {
         Route::get('/', [ImageController::class, 'index'])->name('create');
         Route::post('/', [ImageController::class, 'generate'])
-            ->middleware('generate.rate.limit')
+            ->middleware(\App\Http\Middleware\ImageGenerationRateLimiter::class)
             ->name('generate');
         Route::get('/status/{taskId}', [ImageController::class, 'status'])->name('status');
         Route::get('/gallery', [ImageController::class, 'gallery'])->name('gallery');

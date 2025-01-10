@@ -19,20 +19,20 @@ class MarketplaceRateLimiter
      */
     public function handle(Request $request, Closure $next): Response 
     {
-        $key = 'marketplace:' . $request->ip();
-        
-        $limiter = RateLimiter::for($key, function () {
+        $key = 'marketplace:' . ($request->user()?->id ?: $request->ip());
+
+        // Create or get the rate limiter
+        RateLimiter::for($key, function() {
             return Limit::perMinute(120);
         });
-        
-        if ($limiter->tooManyAttempts($key, 120)) {
-            return response()->json([
-                'message' => 'Too many requests. Please try again later.',
-                'retry_after' => $limiter->availableIn($key)
-            ], 429);
+
+        // Check if we've exceeded the rate limit
+        if (RateLimiter::tooManyAttempts($key, 120)) {
+            $seconds = RateLimiter::availableIn($key);
+            abort(429, "Too many marketplace requests. Please wait {$seconds} seconds before trying again.");
         }
-        
-        $limiter->hit($key);
+
+        RateLimiter::hit($key);
         return $next($request);
     }
 }

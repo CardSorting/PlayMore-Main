@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Card;
 use App\Models\Gallery;
 use App\Services\CardService;
 use App\ViewModels\CardViewModel;
 use Illuminate\Http\Request;
-use App\Http\Controllers\ImageController;
+use Illuminate\Support\Facades\DB;
 
 class CardController extends Controller
 {
@@ -26,38 +27,63 @@ class CardController extends Controller
         $view = $request->get('view', 'grid');
         $perPage = $view === 'grid' ? 15 : 20;
 
-        $cards = $this->cardService->getUserCards(
-            auth()->id(),
-            [
-                'newest' => $tab === 'newest',
-                'sort' => request('sort', 'created_at')
-            ]
-        );
+        // Get cards with eager loaded relationships
+        try {
+            $cards = $this->cardService->getUserCards(
+                auth()->id(),
+                [
+                    'newest' => $tab === 'newest',
+                    'sort' => request('sort', 'created_at')
+                ]
+            );
 
-        // Transform each card using the ViewModel
-        $transformedCards = $cards->map(function ($card) {
-            return CardViewModel::fromArray($card->toArray())->toArray();
-        });
+            // Transform each card using the ViewModel
+            $transformedCards = $cards->map(function ($card) {
+                $viewModel = CardViewModel::fromCard(
+                    $card,
+                    $card->user?->name ?? 'Unknown Author'
+                );
 
-        $cards = new \Illuminate\Pagination\LengthAwarePaginator(
-            $transformedCards->forPage(request('page', 1), $perPage),
-            $transformedCards->count(),
-            $perPage,
-            request('page', 1),
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
+                \Log::info('Card transformed:', [
+                    'card_id' => $card->id,
+                    'name' => $card->name,
+                    'abilities' => $card->abilities->pluck('ability_text'),
+                    'metadata' => $viewModel->toArray()
+                ]);
 
-        \Log::info('Cards data:', [
-            'first_card' => $cards->first(),
-            'total_cards' => $cards->count()
-        ]);
+                return $viewModel->toArray();
+            });
+
+            // Create paginator
+            $paginatedCards = new \Illuminate\Pagination\LengthAwarePaginator(
+                $transformedCards->forPage(request('page', 1), $perPage),
+                $transformedCards->count(),
+                $perPage,
+                request('page', 1),
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
+
+            \Log::info('Cards data:', [
+                'first_card' => $paginatedCards->first(),
+                'total_cards' => $paginatedCards->count(),
+                'page' => request('page', 1),
+                'per_page' => $perPage
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error loading cards:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors(['error' => 'Failed to load cards. Please try again.']);
+        }
 
         if ($request->has('opened')) {
             session()->flash('success', 'Pack opened successfully! The cards have been added to your collection.');
         }
 
         return view('dashboard.cards.index', [
-            'cards' => $cards,
+            'cards' => $paginatedCards,
             'currentTab' => $tab,
             'currentView' => $view
         ]);
@@ -68,6 +94,12 @@ class CardController extends Controller
         $image = Gallery::where('type', 'image')
             ->with('user')
             ->findOrFail($request->image_id);
+
+        \Log::info('Creating card from image', [
+            'image_id' => $image->id,
+            'user_id' => $image->user_id,
+            'image_url' => $image->image_url
+        ]);
 
         return view('dashboard.cards.create', [
             'image' => $image
@@ -135,21 +167,25 @@ class CardController extends Controller
 
             \Log::info('Card created successfully', [
                 'card_id' => $card->id,
-                'card_data' => $card->toArray(),
+                'card_data' => [
+                    'name' => $card->name,
+                    'abilities_count' => $card->abilities->count(),
+                    'metadata' => $card->getCardMetadata()->toArray()
+                ],
                 'original_image_id' => $image->id
             ]);
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'card' => $card,
+                    'card' => CardViewModel::fromCard($card, $card->user?->name)->toArray(),
                     'message' => 'Card created successfully!'
                 ]);
             }
 
             return redirect()->route('cards.index')
                 ->with('success', 'Card created successfully!')
-                ->with('last_card', $card);
+                ->with('last_card', CardViewModel::fromCard($card, $card->user?->name)->toArray());
 
         } catch (\Exception $e) {
             \Log::error('Card creation failed', [
@@ -172,31 +208,90 @@ class CardController extends Controller
         }
     }
 
-    public function show(Gallery $card)
+    public function show(Card $card)
     {
-        $viewModel = $this->cardService->getCardViewModel($card, optional($card->user)->name);
+        $viewModel = CardViewModel::fromCard($card, $card->user?->name);
         
         return view('dashboard.cards.show', [
             'card' => $viewModel->toArray(),
         ]);
     }
 
-    public function edit(Gallery $card)
+    public function edit(Card $card)
     {
-        $viewModel = $this->cardService->getCardViewModel($card, optional($card->user)->name);
+        $viewModel = CardViewModel::fromCard($card, $card->user?->name);
         
         return view('dashboard.cards.edit', [
             'card' => $viewModel->toArray(),
         ]);
     }
 
-    public function update(Request $request, Gallery $card)
+    public function update(Request $request, Card $card)
     {
-        return app(ImageController::class)->update($request, $card);
+        try {
+            DB::transaction(function () use ($request, $card) {
+                // Update basic card info
+                $card->update([
+                    'name' => $request->name,
+                    'mana_cost' => $request->mana_cost,
+                    'card_type' => $request->card_type,
+                    'flavor_text' => $request->flavor_text,
+                    'power_toughness' => $request->power_toughness,
+                    'rarity' => $request->rarity
+                ]);
+
+                // Update abilities
+                $card->abilities()->delete();
+                $abilities = array_filter(array_map('trim', explode("\n", $request->abilities)));
+                foreach ($abilities as $index => $ability) {
+                    $card->abilities()->create([
+                        'ability_text' => $ability,
+                        'order' => $index
+                    ]);
+                }
+            });
+
+            \Log::info('Card updated successfully', [
+                'card_id' => $card->id,
+                'updates' => $request->except(['_token', '_method'])
+            ]);
+
+            return redirect()->route('cards.show', $card)
+                ->with('success', 'Card updated successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Failed to update card', [
+                'card_id' => $card->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to update card: ' . $e->getMessage()]);
+        }
     }
 
-    public function destroy(Gallery $card)
+    public function destroy(Card $card)
     {
-        return app(ImageController::class)->destroy($card);
+        try {
+            DB::transaction(function () use ($card) {
+                // Delete abilities first due to foreign key constraint
+                $card->abilities()->delete();
+                $card->delete();
+            });
+
+            \Log::info('Card deleted successfully', [
+                'card_id' => $card->id
+            ]);
+
+            return redirect()->route('cards.index')
+                ->with('success', 'Card deleted successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Failed to delete card', [
+                'card_id' => $card->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->withErrors(['error' => 'Failed to delete card: ' . $e->getMessage()]);
+        }
     }
 }

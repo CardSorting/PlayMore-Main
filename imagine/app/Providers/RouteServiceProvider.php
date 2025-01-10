@@ -37,6 +37,7 @@ class RouteServiceProvider extends ServiceProvider
                 'admin.php',
                 'prints.php',
                 'public.php',
+                'cards.php',
             ];
 
             Route::middleware('web')->group(function () use ($routeFiles) {
@@ -56,6 +57,10 @@ class RouteServiceProvider extends ServiceProvider
 
         Route::bind('gallery', function ($value) {
             return \App\Models\Gallery::findOrFail($value);
+        });
+
+        Route::bind('card', function ($value) {
+            return \App\Models\Card::with(['abilities', 'user', 'gallery'])->findOrFail($value);
         });
 
         // Global patterns

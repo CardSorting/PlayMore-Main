@@ -48,22 +48,51 @@ return new class extends Migration
                 $powerToughness = count($parts) === 2 ? implode('/', $parts) : null;
             }
 
-            // Move card-specific data to metadata with proper formatting
-            $metadata['mana_cost'] = $mana_cost;
-            $metadata['card_type'] = $card->getRawOriginal('card_type') ?: 'Unknown Type';
-            $metadata['abilities'] = $abilitiesArray;
-            $metadata['flavor_text'] = $card->getRawOriginal('flavor_text') ?: '';
-            $metadata['power_toughness'] = $powerToughness;
-            $metadata['rarity'] = $card->getRawOriginal('rarity') ?: 'Common';
+            try {
+                // Move card-specific data to metadata with proper formatting
+                $newMetadata = [
+                    'mana_cost' => $mana_cost,
+                    'card_type' => $card->getRawOriginal('card_type') ?: 'Unknown Type',
+                    'abilities' => $abilitiesArray,
+                    'flavor_text' => $card->getRawOriginal('flavor_text') ?: '',
+                    'power_toughness' => $powerToughness,
+                    'rarity' => $card->getRawOriginal('rarity') ?: 'Common',
+                    'image_url' => $card->image_url
+                ];
 
-            \Log::info('Updated card metadata:', [
-                'card_id' => $card->id,
-                'new_metadata' => $metadata
-            ]);
+                // Ensure we're not losing any existing metadata
+                $metadata = array_merge($metadata, $newMetadata);
 
-            // Update the card with the new metadata
-            $card->metadata = $metadata;
-            $card->save();
+                \Log::info('Updating card metadata:', [
+                    'card_id' => $card->id,
+                    'old_metadata' => $card->metadata,
+                    'new_metadata' => $metadata,
+                    'json_encoded' => json_encode($metadata)
+                ]);
+
+                // Update using DB to bypass any model events/mutators
+                DB::table('galleries')
+                    ->where('id', $card->id)
+                    ->update([
+                        'metadata' => json_encode($metadata, JSON_THROW_ON_ERROR)
+                    ]);
+
+                // Verify the update
+                $updatedCard = Gallery::find($card->id);
+                \Log::info('Verified card metadata:', [
+                    'card_id' => $card->id,
+                    'raw_metadata' => $updatedCard->getRawOriginal('metadata'),
+                    'decoded_metadata' => $updatedCard->metadata
+                ]);
+
+            } catch (\Exception $e) {
+                \Log::error('Failed to update card metadata:', [
+                    'card_id' => $card->id,
+                    'error' => $e->getMessage(),
+                    'metadata' => $metadata
+                ]);
+                throw $e;
+            }
         }
     }
 

@@ -24,17 +24,34 @@ class CardService
     /**
      * Create a new card from an image with transaction safety
      */
-    public function createCardFromImage(Gallery $image, array $data): Gallery
+    public function createCardFromImage(Gallery $image, array $data): Card
     {
         return DB::transaction(function () use ($image, $data) {
-            // Validate and create card
             try {
-                $card = $this->cardFactory->createFromImage($image, $data);
+                // Create metadata
+                $metadata = new CardMetadata(
+                    mana_cost: $data['mana_cost'] ?? '',
+                    card_type: $data['card_type'] ?? 'Unknown Type',
+                    abilities: $this->formatAbilities($data['abilities'] ?? ''),
+                    flavor_text: $data['flavor_text'] ?? '',
+                    power_toughness: $this->formatPowerToughness($data['power_toughness'] ?? null),
+                    rarity: $data['rarity'] ?? 'Common',
+                    image_url: $image->image_url
+                );
+
+                // Create card using repository
+                $card = $this->cardRepository->createCard(
+                    userId: $image->user_id,
+                    name: $data['name'],
+                    imageUrl: $image->image_url,
+                    metadata: $metadata,
+                    galleryId: $image->id
+                );
 
                 Log::info('Card created successfully', [
                     'card_id' => $card->id,
                     'image_id' => $image->id,
-                    'metadata' => $card->getCardMetadata()->toArray()
+                    'metadata' => $metadata->toArray()
                 ]);
 
                 return $card;
@@ -49,24 +66,30 @@ class CardService
     }
 
     /**
-     * Convert a gallery card to a global card for packs
+     * Convert a card to a global card for packs
      */
-    public function convertToGlobalCard(Gallery $gallery, int $packId): GlobalCard
+    public function convertToGlobalCard(Card $card, int $packId): GlobalCard
     {
-        return DB::transaction(function () use ($gallery, $packId) {
+        return DB::transaction(function () use ($card, $packId) {
             try {
-                $globalCard = $this->cardFactory->createGlobalFromGallery($gallery, $packId);
+                $globalCard = $this->cardRepository->createGlobalCard(
+                    packId: $packId,
+                    originalUserId: $card->user_id,
+                    name: $card->name,
+                    imageUrl: $card->image_url,
+                    metadata: $card->getCardMetadata()
+                );
 
-                Log::info('Gallery card converted to global card', [
-                    'gallery_id' => $gallery->id,
+                Log::info('Card converted to global card', [
+                    'card_id' => $card->id,
                     'global_card_id' => $globalCard->id,
                     'pack_id' => $packId
                 ]);
 
                 return $globalCard;
             } catch (\Exception $e) {
-                Log::error('Failed to convert gallery card to global card', [
-                    'gallery_id' => $gallery->id,
+                Log::error('Failed to convert card to global card', [
+                    'card_id' => $card->id,
                     'pack_id' => $packId,
                     'error' => $e->getMessage()
                 ]);
@@ -76,18 +99,23 @@ class CardService
     }
 
     /**
-     * Get user's gallery cards with view models
+     * Get user's cards with view models
      */
     public function getUserCards(int $userId, array $filters = []): Collection
     {
-        $cards = $this->cardRepository->getUserGalleryCards($userId, $filters);
+        $cards = $this->cardRepository->getUserCards($userId, $filters);
 
-        return $cards->map(function (Gallery $card) {
-            return CardViewModel::fromCard(
-                $card,
-                optional($card->user)->name
-            );
-        });
+        Log::info('Retrieved user cards', [
+            'user_id' => $userId,
+            'count' => $cards->count(),
+            'first_card' => $cards->first() ? [
+                'id' => $cards->first()->id,
+                'name' => $cards->first()->name,
+                'abilities_count' => $cards->first()->abilities->count()
+            ] : null
+        ]);
+
+        return $cards;
     }
 
     /**
@@ -95,20 +123,13 @@ class CardService
      */
     public function getPackCards(int $packId): Collection
     {
-        $cards = $this->cardRepository->getPackGlobalCards($packId);
-
-        return $cards->map(function (GlobalCard $card) {
-            return CardViewModel::fromCard(
-                $card,
-                optional($card->originalUser)->name
-            );
-        });
+        return $this->cardRepository->getPackGlobalCards($packId);
     }
 
     /**
      * Find a card by ID and type with null safety
      */
-    public function findCard(int $id, string $type = 'gallery'): ?Card
+    public function findCard(int $id, string $type = 'card'): ?CardContract
     {
         try {
             $card = $this->cardRepository->findCard($id, $type);
@@ -149,40 +170,29 @@ class CardService
     }
 
     /**
-     * Get a view model for a card
+     * Format abilities into an array
      */
-    public function getCardViewModel(Card $card, ?string $author = null): CardViewModel
+    private function formatAbilities(?string $abilities): array
     {
-        return CardViewModel::fromCard($card, $author);
+        if (!$abilities) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            array_map('trim', explode("\n", $abilities))
+        ));
     }
 
     /**
-     * Update card metadata with validation
+     * Format power/toughness to consistent format
      */
-    public function updateCardMetadata(Card $card, CardMetadata $metadata): bool
+    private function formatPowerToughness(?string $powerToughness): ?string
     {
-        try {
-            if ($card instanceof Gallery) {
-                return DB::transaction(function () use ($card, $metadata) {
-                    $card->metadata = array_merge(
-                        $card->metadata ?? [],
-                        $metadata->toArray()
-                    );
-                    return $card->save();
-                });
-            }
-
-            Log::warning('Attempted to update metadata for non-gallery card', [
-                'card_type' => get_class($card),
-                'card_id' => $card->id
-            ]);
-            return false;
-        } catch (\Exception $e) {
-            Log::error('Failed to update card metadata', [
-                'card_id' => $card->id,
-                'error' => $e->getMessage()
-            ]);
-            return false;
+        if (!$powerToughness) {
+            return null;
         }
+
+        $parts = array_map('trim', explode('/', $powerToughness));
+        return count($parts) === 2 ? implode('/', $parts) : null;
     }
 }

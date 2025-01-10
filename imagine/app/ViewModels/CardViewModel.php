@@ -40,23 +40,57 @@ class CardViewModel
 
     public static function fromCard(Card $card, ?string $author = null): self
     {
-        return new self(
-            $card->getCardMetadata(),
-            $card->getName(),
-            $author ?? 'Unknown Author'
-        );
+        try {
+            $metadata = $card->getCardMetadata();
+            
+            \Log::info('Creating CardViewModel from card', [
+                'card_id' => $card->id ?? 'unknown',
+                'card_name' => $card->getName(),
+                'metadata' => $metadata->toArray(),
+                'author' => $author
+            ]);
+
+            return new self(
+                $metadata,
+                $card->getName(),
+                $author ?? 'Unknown Author'
+            );
+        } catch (\Exception $e) {
+            \Log::error('Error creating CardViewModel', [
+                'card_id' => $card->id ?? 'unknown',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Create a default metadata object
+            $defaultMetadata = new CardMetadata(
+                mana_cost: '',
+                card_type: 'Unknown Type',
+                abilities: [],
+                flavor_text: '',
+                power_toughness: null,
+                rarity: 'Common',
+                image_url: $card->image_url ?? '/static/images/placeholder.png'
+            );
+
+            return new self(
+                $defaultMetadata,
+                $card->getName(),
+                $author ?? 'Unknown Author'
+            );
+        }
     }
 
     public function toArray(): array
     {
         $metadata = $this->metadata->toArray();
         
-        return [
+        $result = [
             'name' => $this->name,
             'author' => $this->author,
             'mana_cost' => $metadata['mana_cost'] ?? '',
             'card_type' => $metadata['card_type'] ?? 'Unknown Type',
-            'abilities' => $this->formatAbilities($metadata['abilities']),
+            'abilities' => $this->formatAbilities($metadata['abilities'] ?? []),
             'abilities_array' => $metadata['abilities'] ?? [],
             'abilities_text' => $this->metadata->getAbilitiesAsString(),
             'flavor_text' => $metadata['flavor_text'] ?? '',
@@ -64,6 +98,14 @@ class CardViewModel
             'rarity' => $metadata['rarity'] ?? 'Common',
             'image_url' => $metadata['image_url'] ?? '/static/images/placeholder.png'
         ];
+
+        \Log::info('CardViewModel converted to array', [
+            'name' => $result['name'],
+            'metadata' => $metadata,
+            'result' => $result
+        ]);
+
+        return $result;
     }
 
     private function formatAbilities(?array $abilities): string

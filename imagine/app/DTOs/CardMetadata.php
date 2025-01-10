@@ -16,22 +16,48 @@ class CardMetadata
 
     public static function fromArray(array $data): self
     {
-        // Convert abilities string to array if needed
-        $abilities = isset($data['abilities']) 
-            ? (is_string($data['abilities']) 
-                ? array_map('trim', explode("\n", $data['abilities'])) 
-                : $data['abilities'])
-            : null;
+        \Log::info('Creating CardMetadata from array', [
+            'input_data' => $data
+        ]);
 
-        return new self(
-            mana_cost: $data['mana_cost'] ?? null,
-            card_type: $data['card_type'] ?? null,
-            abilities: $abilities,
-            flavor_text: $data['flavor_text'] ?? null,
-            power_toughness: $data['power_toughness'] ?? null,
-            rarity: $data['rarity'] ?? null,
-            image_url: $data['image_url'] ?? null
-        );
+        try {
+            // Convert abilities string to array if needed
+            $abilities = isset($data['abilities']) 
+                ? (is_string($data['abilities']) 
+                    ? array_map('trim', explode("\n", $data['abilities'])) 
+                    : $data['abilities'])
+                : [];
+
+            // Ensure abilities is always an array
+            if (!is_array($abilities)) {
+                \Log::warning('Invalid abilities format', [
+                    'abilities' => $abilities
+                ]);
+                $abilities = [];
+            }
+
+            $metadata = new self(
+                mana_cost: $data['mana_cost'] ?? '',
+                card_type: $data['card_type'] ?? 'Unknown Type',
+                abilities: $abilities,
+                flavor_text: $data['flavor_text'] ?? '',
+                power_toughness: $data['power_toughness'] ?? null,
+                rarity: $data['rarity'] ?? 'Common',
+                image_url: $data['image_url'] ?? null
+            );
+
+            \Log::info('Created CardMetadata', [
+                'result' => $metadata->toArray()
+            ]);
+
+            return $metadata;
+        } catch (\Exception $e) {
+            \Log::error('Error creating CardMetadata', [
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+            throw $e;
+        }
     }
 
     public function getAbilitiesAsString(): string

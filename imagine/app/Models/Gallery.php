@@ -20,7 +20,8 @@ class Gallery extends Model implements Card
         'type',
         'price',
         'is_available',
-        'views_count'
+        'views_count',
+        'metadata'
     ];
 
     protected $casts = [
@@ -28,6 +29,19 @@ class Gallery extends Model implements Card
         'views_count' => 'integer',
         'price' => 'integer',
         'metadata' => 'array'
+    ];
+
+    protected $attributes = [
+        'metadata' => '[]'
+    ];
+
+    protected $hidden = [
+        'mana_cost',
+        'card_type',
+        'abilities',
+        'flavor_text',
+        'power_toughness',
+        'rarity'
     ];
 
     // Card interface implementation

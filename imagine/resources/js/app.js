@@ -1,18 +1,10 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
-import StripePayment from './components/stripe-payment';
+import sizeSelectorData from './components/size-selector.js';
 
-// Initialize Alpine.js
-if (!window.Alpine) {
-    window.Alpine = Alpine;
-    
-    // Start Alpine after DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => Alpine.start());
-    } else {
-        Alpine.start();
-    }
-}
+// Register Alpine components
+window.Alpine = Alpine;
+window.sizeSelectorData = sizeSelectorData;
 
-// Export Stripe components
-window.StripePayment = StripePayment;
+// Start Alpine
+Alpine.start();

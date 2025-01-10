@@ -12,45 +12,46 @@
             style: 'currency',
             currency: 'USD'
         }).format(this.price);
+    },
+    get selectedSizeName() {
+        if (!this.selectedSize) return '';
+        return this.sizes[this.selectedSize].name;
     }
-}" class="sticky top-6 mt-6 space-y-6">
-    <!-- Order Summary Card -->
-    <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div class="p-6">
-            <!-- Price Display -->
-            <div class="flex items-center justify-between border-b border-gray-200 pb-4">
-                <h2 class="text-base font-medium text-gray-900">Base Price</h2>
-                <div class="text-xl font-medium text-gray-900" x-show="selectedSize" x-text="formattedPrice"></div>
-                <div class="text-sm text-gray-500 italic" x-show="!selectedSize">Select a size</div>
+}" class="w-full">
+    <div class="rounded-xl bg-white shadow-lg ring-1 ring-gray-900/5">
+        <!-- Selection Status -->
+        <div class="p-4 text-center border-b border-gray-100">
+            <div x-show="selectedSize" class="space-y-1">
+                <div class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-1">
+                    <svg class="h-4 w-4 text-indigo-600 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.414-1.414L9 10.586 7.707 9.293a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-sm font-medium text-indigo-700" x-text="selectedSizeName"></span>
+                </div>
+                <p class="text-2xl font-bold tracking-tight text-gray-900" x-text="formattedPrice"></p>
             </div>
-
-            <!-- Action Button -->
-            <div class="mt-6">
-                <button type="submit"
-                        x-bind:disabled="!selectedSize"
-                        x-bind:class="{'opacity-50 cursor-not-allowed': !selectedSize}"
-                        class="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    Continue to Material Selection
-                </button>
+            <div x-show="!selectedSize">
+                <p class="text-sm font-medium text-gray-500">Select a size</p>
             </div>
         </div>
 
-        <!-- Trust Badges -->
-        <div class="border-t border-gray-200 px-6 py-4">
-            <div class="grid grid-cols-2 gap-4">
-                <div class="flex items-center">
-                    <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        <!-- Action Button -->
+        <div class="p-4">
+            <button type="submit"
+                    x-bind:disabled="!selectedSize"
+                    x-bind:class="{
+                        'bg-indigo-600 hover:bg-indigo-500': selectedSize,
+                        'bg-gray-100 text-gray-400': !selectedSize
+                    }"
+                    class="w-full rounded-full py-2.5 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors duration-200">
+                <span x-show="!selectedSize">Choose Size</span>
+                <span x-show="selectedSize" class="flex items-center justify-center">
+                    Continue
+                    <svg class="ml-1 -mr-0.5 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
                     </svg>
-                    <p class="ml-2 text-xs text-gray-500">Secure checkout</p>
-                </div>
-                <div class="flex items-center">
-                    <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
-                    <p class="ml-2 text-xs text-gray-500">Free shipping</p>
-                </div>
-            </div>
+                </span>
+            </button>
         </div>
     </div>
 </div>

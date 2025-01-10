@@ -8,7 +8,6 @@ use Livewire\Component;
 class CardDisplay extends Component
 {
     public array $card;
-    public bool $showDetails = false;
     public bool $showFlipAnimation = false;
     private ?CardViewModel $viewModel = null;
 
@@ -76,14 +75,15 @@ class CardDisplay extends Component
         return $this->viewModel->getRarityClasses();
     }
 
-    public function toggleDetails(): void
+    public function showDetails(): void
     {
-        $this->showDetails = !$this->showDetails;
+        $this->dispatch('showCardDetails', $this->card);
     }
 
     public function flipCard(): void
     {
         $this->showFlipAnimation = !$this->showFlipAnimation;
+        $this->dispatch('cardFlipped');
     }
 
     public function render()

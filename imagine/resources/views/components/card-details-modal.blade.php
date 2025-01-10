@@ -1,3 +1,5 @@
+@props(['card'])
+
 <div class="space-y-6">
     <div class="flex justify-between items-center">
         <h3 class="text-xl font-bold text-gray-900">{{ $card['name'] }}</h3>
@@ -43,12 +45,12 @@
             <div>
                 <h4 class="text-sm font-medium text-gray-500">Abilities</h4>
                 <div class="text-gray-900 space-y-2">
-                    @if($this->hasAbilities())
+                    @if(isset($card['abilities_array']) && is_array($card['abilities_array']) && count($card['abilities_array']) > 0)
                         @foreach($card['abilities_array'] as $ability)
                             <p class="py-1 px-2 bg-gray-50 rounded-md">{{ $ability }}</p>
                         @endforeach
                     @else
-                        <p class="py-1 px-2 bg-gray-50 rounded-md">{{ $this->getAbilitiesDisplay() }}</p>
+                        <p class="py-1 px-2 bg-gray-50 rounded-md">{{ $card['abilities'] ?? 'No abilities' }}</p>
                     @endif
                 </div>
             </div>
@@ -71,9 +73,9 @@
                     <h4 class="text-sm font-medium text-gray-500">Rarity</h4>
                     <p class="text-gray-900 flex items-center space-x-2">
                         <span class="inline-block w-3 h-3 rounded-full
-                            @if($this->isMythicRare()) bg-orange-400
-                            @elseif($this->isRare()) bg-yellow-300
-                            @elseif($this->isUncommon()) bg-gray-400
+                            @if(strtolower($card['rarity']) === 'mythic rare') bg-orange-400
+                            @elseif(strtolower($card['rarity']) === 'rare') bg-yellow-300
+                            @elseif(strtolower($card['rarity']) === 'uncommon') bg-gray-400
                             @else bg-gray-600 @endif">
                         </span>
                         <span>{{ $card['rarity'] }}</span>

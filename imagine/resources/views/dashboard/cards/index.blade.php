@@ -220,7 +220,7 @@
 </div>
 
 <!-- Modals -->
-<x-card-details-modal />
+<livewire:card-details-modal />
 @endsection
 
 @push('scripts')

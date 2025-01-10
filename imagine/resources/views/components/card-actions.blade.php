@@ -1,3 +1,5 @@
+@props(['showFlipAnimation' => false])
+
 <div class="flex space-x-2">
     <!-- Info Button -->
     <button wire:click="toggleDetails" 
@@ -19,7 +21,8 @@
                    transform hover:scale-110 hover:-rotate-12
                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500
                    {{ $showFlipAnimation ? 'rotate-180' : '' }}">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 {{ $showFlipAnimation ? 'rotate-180' : '' }} transition-transform duration-700" 
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" 
                   stroke-linejoin="round" 
                   stroke-width="2" 
@@ -34,7 +37,7 @@
     </audio>
 </div>
 
-@push('scripts')
+@pushOnce('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const flipSound = document.getElementById('card-flip-sound');
@@ -49,4 +52,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
-@endpush
+@endPushOnce

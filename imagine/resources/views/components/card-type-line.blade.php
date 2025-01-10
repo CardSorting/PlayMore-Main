@@ -32,7 +32,9 @@
      style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMC41Ii8+Cjwvc3ZnPg==');">
 </div>
 
+@props(['type'])
+
 <!-- Type Line Content Container -->
 <div class="relative px-4 py-1.5 text-sm font-matrix bg-[#f8e7c9] text-[#171314] tracking-wide">
-    {{ $slot }}
+    {{ $type }}
 </div>

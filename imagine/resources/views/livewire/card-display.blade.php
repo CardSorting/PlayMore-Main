@@ -15,18 +15,18 @@
                         before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.25),transparent_70%)] before:mix-blend-overlay
                         after:absolute after:inset-0 after:bg-[linear-gradient(45deg,transparent,rgba(255,255,255,0.15),transparent)] after:mix-blend-overlay">
                 <!-- Card Frame Elements -->
-                @include('components.card-frame-elements')
+                <x-card-frame-elements />
                 
                 <!-- Title Bar -->
                 <div class="card-title-bar relative flex justify-between items-center px-4 py-3 bg-[#171314] text-[#d3ced9]">
-                    @include('components.card-title-bar')
+                    <x-card-title-bar />
                     <h2 class="card-name text-base font-bold font-matrix tracking-wide">
                         {{ $card['name'] }}
                     </h2>
                     <div class="mana-cost flex space-x-1">
                         @if(isset($card['mana_cost']))
                             @foreach(explode(',', $card['mana_cost']) as $symbol)
-                                @include('components.mana-symbol', ['symbol' => $symbol])
+                                <x-mana-symbol :symbol="$symbol" />
                             @endforeach
                         @endif
                     </div>
@@ -34,7 +34,7 @@
 
                 <!-- Art Box -->
                 <div class="relative mx-2 mt-2 mb-2 overflow-hidden group h-[180px]">
-                    @include('components.card-art-box')
+                    <x-card-art-box />
                     <img src="{{ $card['image_url'] }}" 
                          alt="{{ $card['name'] }}" 
                          class="w-full h-full object-cover object-center transform transition-all duration-700 ease-out
@@ -44,50 +44,21 @@
 
                 <!-- Type Line -->
                 <div class="card-type relative mx-2 mb-2">
-                    @include('components.card-type-line')
-                    <div class="relative px-4 py-1.5 text-sm font-matrix bg-[#f8e7c9] text-[#171314] tracking-wide">
-                        {{ $card['card_type'] }}
-                    </div>
+                    <x-card-type-line :type="$card['card_type']" />
                 </div>
 
                 <!-- Text Box -->
                 <div class="card-text relative mx-2 bg-[#f8e7c9] border-2 border-[#171314] text-[#171314] min-h-[120px] flex-grow rounded-sm">
-                    @include('components.card-text-box')
-                    <div class="relative p-4">
-                        <div class="space-y-2">
-                            <div class="abilities-text text-sm font-matrix leading-6 text-[#171314]">
-                                @if($this->hasAbilities())
-                                    @foreach($card['abilities_array'] as $ability)
-                                        <p class="mb-2">{{ $ability }}</p>
-                                    @endforeach
-                                @else
-                                    <p>{{ $this->getAbilitiesDisplay() }}</p>
-                                @endif
-                            </div>
-                            @if($card['flavor_text'])
-                                <div class="divider h-px bg-gradient-to-r from-transparent via-[#171314]/20 to-transparent my-2"></div>
-                                <p class="flavor-text italic text-sm font-mplantin leading-6 text-[#171314]/90">{{ $card['flavor_text'] }}</p>
-                            @endif
-                        </div>
-                    </div>
+                    <x-card-text-box 
+                        :abilities="$this->hasAbilities() ? $card['abilities_array'] : $this->getAbilitiesDisplay()"
+                        :flavor-text="$card['flavor_text']" />
                 </div>
 
                 <!-- Info Line -->
                 <div class="card-footer relative flex justify-between items-center mt-2 mx-2 mb-2 px-4 py-2 bg-[#171314] text-[#d3ced9] text-xs font-matrix tracking-wide">
-                    @include('components.card-info-line')
-                    <div class="relative flex justify-between items-center w-full z-10">
-                        <div class="flex items-center space-x-2">
-                            <span class="rarity-symbol text-xs {{ $this->getRarityClasses() }}">
-                                {{ $this->getNormalizedRarity() }}
-                            </span>
-                            <span class="rarity-details font-medium tracking-wide">{{ $card['rarity'] }}</span>
-                        </div>
-                        @if($card['power_toughness'])
-                            <span class="power-toughness font-bold">
-                                {{ $card['power_toughness'] }}
-                            </span>
-                        @endif
-                    </div>
+                    <x-card-info-line 
+                        :rarity="$card['rarity']"
+                        :power-toughness="$card['power_toughness']" />
                 </div>
             </div>
         </div>
@@ -96,21 +67,44 @@
         <div class="absolute inset-0 w-full h-full rounded-lg overflow-hidden transition-all duration-500
                     {{ $showFlipAnimation ? 'opacity-100 rotate-y-0' : 'opacity-0 rotate-y-180' }}"
              style="backface-visibility: hidden;">
-            @include('components.card-back')
+            <x-card-back :card="$card" />
         </div>
 
         <!-- Quick Actions Menu -->
         <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-            @include('components.card-actions')
+            <div class="flex space-x-2">
+                <!-- Info Button -->
+                <button wire:click="showDetails" 
+                        class="bg-gray-800/90 text-white p-2 rounded-full hover:bg-gray-700 transition-all duration-200 shadow-lg
+                               transform hover:scale-110 hover:rotate-12
+                               focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" 
+                              stroke-linejoin="round" 
+                              stroke-width="2" 
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="sr-only">Show Details</span>
+                </button>
+
+                <!-- Flip Button -->
+                <button wire:click="flipCard" 
+                        class="bg-purple-600/90 text-white p-2 rounded-full hover:bg-purple-500 transition-all duration-200 shadow-lg
+                               transform hover:scale-110 hover:-rotate-12
+                               focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500
+                               {{ $showFlipAnimation ? 'rotate-180' : '' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" 
+                              stroke-linejoin="round" 
+                              stroke-width="2" 
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span class="sr-only">Flip Card</span>
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Details Modal -->
-    @if($showDetails)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" wire:click.self="toggleDetails">
-            <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 transform transition-all duration-300 scale-95 hover:scale-100">
-                @include('components.card-details-modal')
-            </div>
-        </div>
-    @endif
+    <!-- Card Details Modal -->
+    <livewire:card-details-modal />
 </div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Gallery;
 use App\Services\CardService;
+use App\ViewModels\CardViewModel;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ImageController;
 
@@ -31,15 +32,25 @@ class CardController extends Controller
                 'newest' => $tab === 'newest',
                 'sort' => request('sort', 'created_at')
             ]
-        )->map->toArray();
+        );
+
+        // Transform each card using the ViewModel
+        $transformedCards = $cards->map(function ($card) {
+            return CardViewModel::fromArray($card->toArray())->toArray();
+        });
 
         $cards = new \Illuminate\Pagination\LengthAwarePaginator(
-            $cards->forPage(request('page', 1), $perPage),
-            $cards->count(),
+            $transformedCards->forPage(request('page', 1), $perPage),
+            $transformedCards->count(),
             $perPage,
             request('page', 1),
             ['path' => request()->url(), 'query' => request()->query()]
         );
+
+        \Log::info('Cards data:', [
+            'first_card' => $cards->first(),
+            'total_cards' => $cards->count()
+        ]);
 
         if ($request->has('opened')) {
             session()->flash('success', 'Pack opened successfully! The cards have been added to your collection.');

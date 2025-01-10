@@ -34,7 +34,23 @@
      style="background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMxNzEzMTQiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMC41Ii8+Cjwvc3ZnPg==');">
 </div>
 
+@props(['abilities', 'flavorText' => null])
+
 <!-- Text Box Content Container -->
 <div class="relative p-4">
-    {{ $slot }}
+    <div class="space-y-2">
+        <div class="abilities-text text-sm font-matrix leading-6 text-[#171314]">
+            @if(is_array($abilities))
+                @foreach($abilities as $ability)
+                    <p class="mb-2">{{ $ability }}</p>
+                @endforeach
+            @else
+                <p>{{ $abilities }}</p>
+            @endif
+        </div>
+        @if($flavorText)
+            <div class="divider h-px bg-gradient-to-r from-transparent via-[#171314]/20 to-transparent my-2"></div>
+            <p class="flavor-text italic text-sm font-mplantin leading-6 text-[#171314]/90">{{ $flavorText }}</p>
+        @endif
+    </div>
 </div>

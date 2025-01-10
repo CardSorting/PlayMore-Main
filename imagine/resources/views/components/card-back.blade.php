@@ -1,3 +1,5 @@
+@props(['card'])
+
 <div class="card-back h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 p-0.5">
     <div class="h-full bg-gradient-to-br from-indigo-800 via-purple-800 to-indigo-800 rounded-lg p-4">
         <!-- Decorative Pattern -->

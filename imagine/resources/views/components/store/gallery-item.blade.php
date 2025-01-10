@@ -52,14 +52,20 @@
         @if($gallery->type === 'card')
             <div class="space-y-1 mb-3">
                 <div class="flex items-center text-sm">
-                    <span class="font-medium text-gray-900">{{ $gallery->mana_cost }}</span>
+                    <span class="font-medium text-gray-900">{{ $gallery->metadata['mana_cost'] ?? '' }}</span>
                     <span class="mx-2 text-gray-500">•</span>
-                    <span class="text-gray-700">{{ $gallery->card_type }}</span>
+                    <span class="text-gray-700">{{ $gallery->metadata['card_type'] ?? 'Unknown Type' }}</span>
                 </div>
-                @if($gallery->power_toughness)
-                    <p class="text-sm text-gray-600">{{ $gallery->power_toughness }}</p>
+                @if(isset($gallery->metadata['power_toughness']))
+                    <p class="text-sm text-gray-600">{{ $gallery->metadata['power_toughness'] }}</p>
                 @endif
-                <p class="text-sm text-gray-500 line-clamp-2">{{ $gallery->abilities }}</p>
+                <p class="text-sm text-gray-500 line-clamp-2">
+                    @if(isset($gallery->metadata['abilities']) && is_array($gallery->metadata['abilities']))
+                        {{ implode(' • ', $gallery->metadata['abilities']) }}
+                    @else
+                        {{ $gallery->metadata['abilities'] ?? 'No abilities' }}
+                    @endif
+                </p>
             </div>
         @endif
 

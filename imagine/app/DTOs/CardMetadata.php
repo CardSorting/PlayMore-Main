@@ -16,15 +16,27 @@ class CardMetadata
 
     public static function fromArray(array $data): self
     {
+        // Convert abilities string to array if needed
+        $abilities = isset($data['abilities']) 
+            ? (is_string($data['abilities']) 
+                ? array_map('trim', explode("\n", $data['abilities'])) 
+                : $data['abilities'])
+            : null;
+
         return new self(
             mana_cost: $data['mana_cost'] ?? null,
             card_type: $data['card_type'] ?? null,
-            abilities: $data['abilities'] ?? null,
+            abilities: $abilities,
             flavor_text: $data['flavor_text'] ?? null,
             power_toughness: $data['power_toughness'] ?? null,
             rarity: $data['rarity'] ?? null,
             image_url: $data['image_url'] ?? null
         );
+    }
+
+    public function getAbilitiesAsString(): string
+    {
+        return $this->abilities ? implode("\n", $this->abilities) : '';
     }
 
     public function toArray(): array

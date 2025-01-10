@@ -40,7 +40,7 @@ class CardFactory
         $cardMetadata = new CardMetadata(
             mana_cost: $this->formatManaCount($data['mana_cost'] ?? ''),
             card_type: $data['card_type'] ?? 'Unknown Type',
-            abilities: $data['abilities'] ?? null,
+            abilities: $this->formatAbilities($data['abilities'] ?? ''),
             flavor_text: $data['flavor_text'] ?? null,
             power_toughness: $this->formatPowerToughness($data['power_toughness'] ?? null),
             rarity: $this->generateRarity(),
@@ -67,6 +67,21 @@ class CardFactory
             metadata: $cardMetadata,
             additionalMetadata: $additionalMetadata
         );
+    }
+
+    /**
+     * Format abilities into an array
+     */
+    private function formatAbilities(?string $abilities): array
+    {
+        if (!$abilities) {
+            return [];
+        }
+
+        // Split abilities by newlines and clean up
+        return array_values(array_filter(
+            array_map('trim', explode("\n", $abilities))
+        ));
     }
 
     /**

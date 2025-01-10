@@ -31,13 +31,29 @@ return new class extends Migration
                 'existing_metadata' => $metadata
             ]);
 
-            // Move card-specific data to metadata with proper defaults
+            // Format abilities as array
+            $abilities = $card->getRawOriginal('abilities');
+            $abilitiesArray = $abilities 
+                ? array_values(array_filter(array_map('trim', explode("\n", $abilities))))
+                : [];
+
+            // Format mana cost
             $mana_cost = $card->getRawOriginal('mana_cost') ?: '';
-            $metadata['mana_cost'] = implode(',', str_split($mana_cost));
+            $mana_cost = implode(',', array_filter(str_split(trim($mana_cost))));
+
+            // Format power/toughness
+            $powerToughness = $card->getRawOriginal('power_toughness');
+            if ($powerToughness) {
+                $parts = array_map('trim', explode('/', $powerToughness));
+                $powerToughness = count($parts) === 2 ? implode('/', $parts) : null;
+            }
+
+            // Move card-specific data to metadata with proper formatting
+            $metadata['mana_cost'] = $mana_cost;
             $metadata['card_type'] = $card->getRawOriginal('card_type') ?: 'Unknown Type';
-            $metadata['abilities'] = $card->getRawOriginal('abilities') ?: 'No abilities';
+            $metadata['abilities'] = $abilitiesArray;
             $metadata['flavor_text'] = $card->getRawOriginal('flavor_text') ?: '';
-            $metadata['power_toughness'] = $card->getRawOriginal('power_toughness');
+            $metadata['power_toughness'] = $powerToughness;
             $metadata['rarity'] = $card->getRawOriginal('rarity') ?: 'Common';
 
             \Log::info('Updated card metadata:', [
@@ -67,15 +83,20 @@ return new class extends Migration
                 'current_metadata' => $metadata
             ]);
 
+            // Convert abilities array back to string
+            $abilities = isset($metadata['abilities']) && is_array($metadata['abilities'])
+                ? implode("\n", $metadata['abilities'])
+                : $metadata['abilities'] ?? null;
+
             // Move metadata back to direct columns
             if (isset($metadata['mana_cost'])) {
-                $card->mana_cost = $metadata['mana_cost'];
+                $card->mana_cost = str_replace(',', '', $metadata['mana_cost']);
             }
             if (isset($metadata['card_type'])) {
                 $card->card_type = $metadata['card_type'];
             }
             if (isset($metadata['abilities'])) {
-                $card->abilities = $metadata['abilities'];
+                $card->abilities = $abilities;
             }
             if (isset($metadata['flavor_text'])) {
                 $card->flavor_text = $metadata['flavor_text'];

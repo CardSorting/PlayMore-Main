@@ -14,30 +14,56 @@ class CardDisplay extends Component
 
     public function mount($card)
     {
-        \Log::info('CardDisplay mount received card:', [
-            'raw_card' => $card,
-            'is_array' => is_array($card),
-            'is_object' => is_object($card)
-        ]);
-
-        if (!is_array($card)) {
-            \Log::error('CardDisplay expected array but received:', [
-                'type' => gettype($card),
-                'card' => $card
+        try {
+            \Log::info('CardDisplay mount received card:', [
+                'raw_card' => $card,
+                'is_array' => is_array($card),
+                'is_object' => is_object($card)
             ]);
-            $card = [];
+
+            if (!is_array($card)) {
+                throw new \InvalidArgumentException('CardDisplay expected array but received: ' . gettype($card));
+            }
+
+            $this->viewModel = CardViewModel::fromArray($card);
+            $this->card = $this->viewModel->toArray();
+
+            \Log::info('CardDisplay processed card data:', [
+                'card_id' => $card['id'] ?? null,
+                'name' => $this->card['name'],
+                'abilities' => $this->card['abilities_array']
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('CardDisplay mount failed:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Provide fallback data
+            $this->card = [
+                'name' => 'Error Loading Card',
+                'mana_cost' => '',
+                'card_type' => 'Unknown Type',
+                'abilities' => 'No abilities',
+                'abilities_array' => [],
+                'abilities_text' => '',
+                'flavor_text' => '',
+                'power_toughness' => null,
+                'rarity' => 'Common',
+                'image_url' => '/static/images/placeholder.png',
+                'author' => 'Unknown Author'
+            ];
         }
+    }
 
-        \Log::info('CardDisplay processing card data:', [
-            'card_data' => $card
-        ]);
+    public function getAbilitiesDisplay(): string
+    {
+        return $this->card['abilities_text'] ?? $this->card['abilities'] ?? 'No abilities';
+    }
 
-        $this->viewModel = CardViewModel::fromArray($card);
-        $this->card = $this->viewModel->toArray();
-
-        \Log::info('CardDisplay final card data:', [
-            'processed_card' => $this->card
-        ]);
+    public function hasAbilities(): bool
+    {
+        return !empty($this->card['abilities_array']);
     }
 
     public function getNormalizedRarity(): string

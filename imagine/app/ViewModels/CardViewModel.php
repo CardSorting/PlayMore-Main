@@ -56,12 +56,26 @@ class CardViewModel
             'author' => $this->author,
             'mana_cost' => $metadata['mana_cost'] ?? '',
             'card_type' => $metadata['card_type'] ?? 'Unknown Type',
-            'abilities' => $metadata['abilities'] ?? 'No abilities',
+            'abilities' => $this->formatAbilities($metadata['abilities']),
+            'abilities_array' => $metadata['abilities'] ?? [],
+            'abilities_text' => $this->metadata->getAbilitiesAsString(),
             'flavor_text' => $metadata['flavor_text'] ?? '',
             'power_toughness' => $metadata['power_toughness'] ?? null,
             'rarity' => $metadata['rarity'] ?? 'Common',
             'image_url' => $metadata['image_url'] ?? '/static/images/placeholder.png'
         ];
+    }
+
+    private function formatAbilities(?array $abilities): string
+    {
+        if (!$abilities || empty($abilities)) {
+            return 'No abilities';
+        }
+
+        return implode("\n", array_map(
+            fn($ability) => trim($ability),
+            $abilities
+        ));
     }
 
     public function getRarityClasses(): string

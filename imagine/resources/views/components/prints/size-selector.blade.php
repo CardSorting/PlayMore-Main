@@ -7,55 +7,63 @@
     getPrice(size) {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD'
-        }).format(this.sizes[size].price);
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(this.sizes[size].price / 100);
     },
     getDimensions(size) {
         return this.sizes[size].dimensions;
-    }
-}" class="space-y-6">
-    <!-- Size Selection Grid -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        @foreach($sizes as $size => $details)
-            <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none"
-                   :class="{
-                       'border-blue-500 ring-2 ring-blue-500': selected === '{{ $size }}',
-                       'border-gray-300': selected !== '{{ $size }}'
-                   }">
-                <input type="radio"
-                       name="size"
-                       value="{{ $size }}"
-                       x-model="selected"
-                       class="sr-only"
-                       aria-labelledby="size-choice-{{ $size }}-label"
-                       aria-describedby="size-choice-{{ $size }}-description">
-                <div class="flex flex-1">
-                    <div class="flex flex-col">
-                        <span id="size-choice-{{ $size }}-label" class="block text-sm font-medium text-gray-900">
-                            {{ $details['name'] }}
-                        </span>
-                        <span id="size-choice-{{ $size }}-description" class="mt-1 flex items-center text-sm text-gray-500">
-                            {{ $details['dimensions'] }}
-                        </span>
-                        <span class="mt-2 text-sm font-medium text-gray-900">
-                            ${{ number_format($details['price'], 2) }}
-                        </span>
-                        @if($details['popular'] ?? false)
-                            <span class="mt-2 inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                                Most Popular
-                            </span>
-                        @endif
-                    </div>
-                </div>
-                <svg class="h-5 w-5 text-blue-600" :class="{ 'invisible': selected !== '{{ $size }}' }"
-                     viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                          clip-rule="evenodd" />
-                </svg>
-            </label>
-        @endforeach
-    </div>
+    },
+    categories: @js(collect($sizes)->groupBy('category')->toArray())
+}" class="space-y-8">
+    @foreach(collect($sizes)->groupBy('category') as $category => $categorySizes)
+        <div class="space-y-4">
+            <h3 class="text-lg font-medium text-gray-900">{{ $category }}</h3>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach($categorySizes as $size => $details)
+                    <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none"
+                           :class="{
+                               'border-blue-500 ring-2 ring-blue-500': selected === '{{ $size }}',
+                               'border-gray-300': selected !== '{{ $size }}'
+                           }">
+                        <input type="radio"
+                               name="size"
+                               value="{{ $size }}"
+                               x-model="selected"
+                               class="sr-only"
+                               aria-labelledby="size-choice-{{ $size }}-label"
+                               aria-describedby="size-choice-{{ $size }}-description">
+                        <div class="flex flex-1">
+                            <div class="flex flex-col">
+                                <span id="size-choice-{{ $size }}-label" class="block text-sm font-medium text-gray-900">
+                                    {{ $details['name'] }}
+                                </span>
+                                <span id="size-choice-{{ $size }}-description" class="mt-1 flex items-center text-sm text-gray-500">
+                                    {{ $details['dimensions'] }}
+                                </span>
+                                <span class="mt-1 text-sm text-gray-500">
+                                    {{ $details['use_case'] }}
+                                </span>
+                                <span class="mt-2 text-sm font-medium text-gray-900" x-text="getPrice('{{ $size }}')"></span>
+                                @if($details['popular'] ?? false)
+                                    <span class="mt-2 inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                        Most Popular
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                        <svg class="h-5 w-5 text-blue-600" :class="{ 'invisible': selected !== '{{ $size }}' }"
+                             viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                                  clip-rule="evenodd" />
+                        </svg>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+    @endforeach
 
     <!-- Size Comparison Tool -->
     <div class="mt-6 p-4 bg-gray-50 rounded-lg">
@@ -112,20 +120,33 @@
                 <div class="sm:flex sm:items-start">
                     <div class="mt-3 text-center sm:mt-0 sm:text-left">
                         <h3 class="text-lg font-medium leading-6 text-gray-900">Print Size Guide</h3>
-                        <div class="mt-4 space-y-4">
-                            @foreach($sizes as $size => $details)
-                                <div class="flex items-center justify-between border-b border-gray-200 pb-4">
-                                    <div>
-                                        <h4 class="text-sm font-medium text-gray-900">{{ $details['name'] }}</h4>
-                                        <p class="text-sm text-gray-500">{{ $details['dimensions'] }}</p>
+                        <div class="mt-4">
+                            @foreach(collect($sizes)->groupBy('category') as $category => $categorySizes)
+                                <div class="mb-6">
+                                    <h4 class="text-base font-medium text-gray-900 mb-3">{{ $category }}</h4>
+                                    <div class="space-y-4">
+                                        @foreach($categorySizes as $size => $details)
+                                            <div class="border-b border-gray-200 pb-4">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <div>
+                                                        <h5 class="text-sm font-medium text-gray-900">{{ $details['name'] }}</h5>
+                                                        <p class="text-sm text-gray-500">{{ $details['dimensions'] }}</p>
+                                                    </div>
+                                                    <p class="text-sm font-medium text-gray-900" x-text="getPrice('{{ $size }}')"></p>
+                                                </div>
+                                                <p class="text-sm text-gray-600">{{ $details['use_case'] }}</p>
+                                            </div>
+                                        @endforeach
                                     </div>
-                                    <p class="text-sm font-medium text-gray-900">${{ number_format($details['price'], 2) }}</p>
                                 </div>
                             @endforeach
-                            <p class="mt-4 text-sm text-gray-500">
-                                All prints are produced on premium archival paper with museum-quality pigment inks.
-                                Prices include standard shipping.
-                            </p>
+                            <div class="mt-6 bg-gray-50 rounded-lg p-4">
+                                <h4 class="text-sm font-medium text-gray-900 mb-2">Print Quality</h4>
+                                <p class="text-sm text-gray-500">
+                                    All prints are produced on premium archival paper with museum-quality pigment inks.
+                                    Each print undergoes quality inspection and includes protective packaging.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

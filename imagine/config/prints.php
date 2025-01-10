@@ -11,11 +11,46 @@ return [
     |
     */
     'sizes' => [
+        '2.5x3.5' => [
+            'name' => '2.5" x 3.5"',
+            'dimensions' => '2.5x3.5',
+            'price' => 499, // $4.99
+            'description' => 'Trading card size - Perfect for collectible cards and small prints',
+            'category' => 'Mini Prints',
+            'use_case' => 'Trading cards, prayer cards, small keepsakes',
+            'shipping_weight' => 0.1, // lbs
+            'comparison_width' => 35,
+            'comparison_height' => 49,
+        ],
+        '3.5x2' => [
+            'name' => '3.5" x 2"',
+            'dimensions' => '3.5x2',
+            'price' => 499, // $4.99
+            'description' => 'Business card size - Ideal for professional cards and small art prints',
+            'category' => 'Mini Prints',
+            'use_case' => 'Business cards, appointment cards, mini art prints',
+            'shipping_weight' => 0.1, // lbs
+            'comparison_width' => 49,
+            'comparison_height' => 28,
+        ],
+        '4x6' => [
+            'name' => '4" x 6"',
+            'dimensions' => '4x6',
+            'price' => 999, // $9.99
+            'description' => 'Standard photo size - Perfect for photo prints and small artwork',
+            'category' => 'Photo Prints',
+            'use_case' => 'Photo prints, postcards, small artwork',
+            'shipping_weight' => 0.15, // lbs
+            'comparison_width' => 56,
+            'comparison_height' => 84,
+        ],
         '5x7' => [
             'name' => '5" x 7"',
             'dimensions' => '5x7',
             'price' => 1499, // $14.99
-            'description' => 'Perfect for desk displays and small frames',
+            'description' => 'Medium photo size - Ideal for desk displays and small frames',
+            'category' => 'Photo Prints',
+            'use_case' => 'Framed photos, greeting cards, desk displays',
             'shipping_weight' => 0.25, // lbs
             'comparison_width' => 70,  // scaled for visualization
             'comparison_height' => 98,
@@ -24,7 +59,9 @@ return [
             'name' => '8" x 10"',
             'dimensions' => '8x10',
             'price' => 2499, // $24.99
-            'description' => 'Standard size for wall art and framing',
+            'description' => 'Classic wall art size - Perfect for framed artwork',
+            'category' => 'Wall Art',
+            'use_case' => 'Framed artwork, professional portraits, wall displays',
             'shipping_weight' => 0.5, // lbs
             'comparison_width' => 96,
             'comparison_height' => 120,
@@ -33,7 +70,9 @@ return [
             'name' => '11" x 14"',
             'dimensions' => '11x14',
             'price' => 3499, // $34.99
-            'description' => 'Large format for statement pieces',
+            'description' => 'Large format size - Ideal for statement pieces',
+            'category' => 'Wall Art',
+            'use_case' => 'Statement pieces, large portraits, office artwork',
             'shipping_weight' => 0.75, // lbs
             'comparison_width' => 110,
             'comparison_height' => 140,
@@ -42,7 +81,9 @@ return [
             'name' => '16" x 20"',
             'dimensions' => '16x20',
             'price' => 4999, // $49.99
-            'description' => 'Gallery size for impressive wall displays',
+            'description' => 'Gallery size - Perfect for impressive wall displays',
+            'category' => 'Gallery Prints',
+            'use_case' => 'Gallery displays, large wall art, professional installations',
             'shipping_weight' => 1.25, // lbs
             'comparison_width' => 128,
             'comparison_height' => 160,
@@ -51,7 +92,9 @@ return [
             'name' => '24" x 36"',
             'dimensions' => '24x36',
             'price' => 8999, // $89.99
-            'description' => 'Poster size for maximum impact',
+            'description' => 'Poster size - Designed for maximum visual impact',
+            'category' => 'Gallery Prints',
+            'use_case' => 'Large format artwork, exhibition pieces, commercial displays',
             'shipping_weight' => 2.0, // lbs
             'comparison_width' => 144,
             'comparison_height' => 216,

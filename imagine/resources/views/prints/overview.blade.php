@@ -1,9 +1,6 @@
 <x-prints.layout>
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="px-4 py-6 sm:px-0">
-        <!-- Progress Stepper -->
-        <x-prints.progress-stepper :current-step="1" />
-
         <!-- Main Product Section -->
         <div class="mt-8 grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-2">
             <!-- Left Column: Product Gallery -->

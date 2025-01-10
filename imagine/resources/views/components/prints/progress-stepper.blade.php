@@ -3,20 +3,16 @@
 @php
 $steps = [
     1 => [
-        'name' => 'Overview',
-        'description' => 'View product details'
-    ],
-    2 => [
         'name' => 'Size',
         'description' => 'Choose print size'
     ],
-    3 => [
+    2 => [
         'name' => 'Material',
         'description' => 'Select material finish'
     ],
-    4 => [
-        'name' => 'Checkout',
-        'description' => 'Review and pay'
+    3 => [
+        'name' => 'Quantity',
+        'description' => 'Select print quantity'
     ]
 ];
 @endphp

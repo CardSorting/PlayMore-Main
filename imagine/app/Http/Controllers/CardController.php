@@ -193,12 +193,6 @@ class CardController extends Controller
             $card = auth()->user()->galleries()->create([
                 'type' => 'card',
                 'name' => $validatedData['name'],
-                'mana_cost' => implode(',', str_split($validatedData['mana_cost'])),
-                'card_type' => $validatedData['card_type'],
-                'abilities' => $validatedData['abilities'],
-                'flavor_text' => $validatedData['flavor_text'],
-                'power_toughness' => $validatedData['power_toughness'],
-                'rarity' => $selectedRarity,
                 'image_url' => $image->image_url,
                 'metadata' => [
                     'original_image_id' => $image->id,
@@ -208,7 +202,13 @@ class CardController extends Controller
                     'original_author' => [
                         'id' => $image->user->id,
                         'name' => $image->user->name
-                    ]
+                    ],
+                    'mana_cost' => implode(',', str_split($validatedData['mana_cost'])),
+                    'type' => $validatedData['card_type'],
+                    'abilities' => $validatedData['abilities'],
+                    'flavor_text' => $validatedData['flavor_text'],
+                    'power_toughness' => $validatedData['power_toughness'],
+                    'rarity' => $selectedRarity
                 ]
             ]);
 

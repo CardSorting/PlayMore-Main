@@ -3,61 +3,35 @@
 namespace App\Http\Controllers;
 
 use App\Models\Gallery;
+use App\Services\CardService;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ImageController;
 
 class CardController extends Controller
 {
-    /**
-     * Custom validation rule for unique cards
-     */
-    public function __construct()
+    public function __construct(
+        private CardService $cardService
+    )
     {
         \Validator::extend('unique_card', function ($attribute, $value, $parameters, $validator) {
             $data = $validator->getData();
-            return !(
-                Gallery::where('type', 'card')
-                    ->where('image_url', $data['image_url'])
-                    ->exists() ||
-                \App\Models\GlobalCard::where('image_url', $data['image_url'])
-                    ->exists()
-            );
+            return !$this->cardService->cardExistsForImage($data['image_url']);
         }, 'You have already created a card for this image.');
     }
 
-    /**
-     * Display a listing of the cards.
-     */
     public function index(Request $request)
     {
         $tab = $request->get('tab', 'all');
         $view = $request->get('view', 'grid');
-        $perPage = $view === 'grid' ? 15 : 20; // More cards per page in list view
+        $perPage = $view === 'grid' ? 15 : 20;
 
-        $query = Gallery::where('type', 'card')
-            ->where('user_id', auth()->id())
-            ->with('user');  // Eager load user information
-
-        if ($tab === 'newest') {
-            $query->where('created_at', '>=', now()->subDays(7));
-        }
-
-        $cards = $query->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($card) {
-                $metadata = $card->metadata ?? [];
-                return [
-                    'name' => $card->name,
-                    'image_url' => $card->image_url,
-                    'mana_cost' => $metadata['mana_cost'] ?? '',
-                    'card_type' => $metadata['type'] ?? 'Unknown Type',
-                    'abilities' => $metadata['abilities'] ?? 'No abilities',
-                    'flavor_text' => $metadata['flavor_text'] ?? '',
-                    'power_toughness' => $metadata['power_toughness'] ?? null,
-                    'rarity' => $metadata['rarity'] ?? 'Common',
-                    'author' => optional($card->user)->name ?? 'Unknown Author'
-                ];
-            });
+        $cards = $this->cardService->getUserCards(
+            auth()->id(),
+            [
+                'newest' => $tab === 'newest',
+                'sort' => request('sort', 'created_at')
+            ]
+        )->map->toArray();
 
         $cards = new \Illuminate\Pagination\LengthAwarePaginator(
             $cards->forPage(request('page', 1), $perPage),
@@ -67,7 +41,6 @@ class CardController extends Controller
             ['path' => request()->url(), 'query' => request()->query()]
         );
 
-        // Show success message if redirected from pack opening
         if ($request->has('opened')) {
             session()->flash('success', 'Pack opened successfully! The cards have been added to your collection.');
         }
@@ -79,9 +52,6 @@ class CardController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new card.
-     */
     public function create(Request $request)
     {
         $image = Gallery::where('type', 'image')
@@ -93,9 +63,6 @@ class CardController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created card in storage.
-     */
     public function store(Request $request)
     {
         try {
@@ -104,7 +71,6 @@ class CardController extends Controller
                 'user_id' => auth()->id()
             ]);
             
-            // Validate all data upfront
             try {
                 $validatedData = $request->validate([
                     'image_id' => ['required', 'exists:galleries,id'],
@@ -126,7 +92,6 @@ class CardController extends Controller
                     ->withInput();
             }
 
-            // Get the original image
             $image = Gallery::where('id', $validatedData['image_id'])
                 ->where('type', 'image')
                 ->first();
@@ -141,23 +106,8 @@ class CardController extends Controller
                     ->withErrors(['error' => 'Invalid image selected.']);
             }
 
-            // Check if a card already exists for this image in either Gallery or GlobalCard
-            $existingGalleryCard = Gallery::where('type', 'card')
-                ->where('image_url', $image->image_url)
-                ->first();
-            
-            $existingGlobalCard = \App\Models\GlobalCard::where('image_url', $image->image_url)
-                ->first();
-                
-            if ($existingGalleryCard || $existingGlobalCard) {
-                $existingCard = $existingGalleryCard ?? $existingGlobalCard;
-                \Log::warning('Attempted to create duplicate card', [
-                    'image_id' => $image->id,
-                    'image_url' => $image->image_url,
-                    'existing_card_id' => $existingCard->id,
-                    'existing_card_type' => $existingGalleryCard ? 'gallery' : 'global',
-                    'user_id' => auth()->id()
-                ]);
+            // Check for existing card
+            if ($this->cardService->cardExistsForImage($image->image_url)) {
                 return back()
                     ->withInput()
                     ->withErrors(['error' => 'A card already exists for this image.']);
@@ -165,73 +115,12 @@ class CardController extends Controller
 
             // Verify image URL matches
             if ($validatedData['image_url'] !== $image->image_url) {
-                \Log::error('Image URL mismatch', [
-                    'provided_url' => $validatedData['image_url'],
-                    'actual_url' => $image->image_url,
-                    'image_id' => $image->id,
-                    'user_id' => auth()->id()
-                ]);
                 return back()
                     ->withInput()
                     ->withErrors(['error' => 'Invalid image URL provided.']);
             }
 
-            // Randomly select rarity with weighted probabilities
-            $rarities = [
-            'Common' => 50,      // 50% chance
-            'Uncommon' => 30,    // 30% chance
-            'Rare' => 15,        // 15% chance
-            'Mythic Rare' => 5   // 5% chance
-        ];
-        
-        $total = array_sum($rarities);
-        $roll = rand(1, $total);
-        $selectedRarity = 'Common';
-        
-        foreach ($rarities as $rarity => $weight) {
-            if ($roll <= $weight) {
-                $selectedRarity = $rarity;
-                break;
-            }
-            $roll -= $weight;
-        }
-
-            // Format mana cost into comma-separated list
-            $manaCost = implode(',', str_split($request->mana_cost));
-            
-            \Log::info('Creating card with data', [
-                'type' => 'card',
-                'name' => $request->name,
-                'mana_cost' => $manaCost,
-                'card_type' => $request->card_type,
-                'abilities' => $request->abilities,
-                'flavor_text' => $request->flavor_text,
-                'power_toughness' => $request->power_toughness,
-                'image_url' => $request->image_url
-            ]);
-
-            // Create the card using the original image's data
-            $card = auth()->user()->galleries()->create([
-                'type' => 'card',
-                'name' => $validatedData['name'],
-                'image_url' => $image->image_url,
-                'metadata' => [
-                    'original_image_id' => $image->id,
-                    'created_from' => 'image',
-                    'created_at' => now()->toISOString(),
-                    'original_metadata' => $image->metadata,
-                    'original_author' => [
-                        'id' => $image->user->id,
-                        'name' => $image->user->name
-                    ],
-                    'mana_cost' => $validatedData['mana_cost'],
-                    'type' => $validatedData['card_type'],
-                    'abilities' => $validatedData['abilities'] ?: 'No abilities',
-                    'flavor_text' => $validatedData['flavor_text'] ?: '',
-                    'power_toughness' => $validatedData['power_toughness'],
-                    'rarity' => $selectedRarity ?: 'Common'
-                ]
-            ]);
+            $card = $this->cardService->createCardFromImage($image, $validatedData);
 
             \Log::info('Card created successfully', [
                 'card_id' => $card->id,
@@ -239,7 +128,6 @@ class CardController extends Controller
                 'original_image_id' => $image->id
             ]);
 
-            // Return JSON response with card data for animation
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
@@ -253,7 +141,7 @@ class CardController extends Controller
                 ->with('last_card', $card);
 
         } catch (\Exception $e) {
-            \Log::error('Validation or pre-creation check failed', [
+            \Log::error('Card creation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->all(),
@@ -273,41 +161,31 @@ class CardController extends Controller
         }
     }
 
-    /**
-     * Display the specified card.
-     */
     public function show(Gallery $card)
     {
+        $viewModel = $this->cardService->getCardViewModel($card, optional($card->user)->name);
+        
         return view('dashboard.cards.show', [
-            'card' => $card,
+            'card' => $viewModel->toArray(),
         ]);
     }
 
-    /**
-     * Show the form for editing the specified card.
-     */
     public function edit(Gallery $card)
     {
+        $viewModel = $this->cardService->getCardViewModel($card, optional($card->user)->name);
+        
         return view('dashboard.cards.edit', [
-            'card' => $card,
+            'card' => $viewModel->toArray(),
         ]);
     }
 
-    /**
-     * Update the specified card in storage.
-     */
     public function update(Request $request, Gallery $card)
     {
-        // Reuse existing update logic from ImageController
         return app(ImageController::class)->update($request, $card);
     }
 
-    /**
-     * Remove the specified card from storage.
-     */
     public function destroy(Gallery $card)
     {
-        // Reuse existing delete logic from ImageController
         return app(ImageController::class)->destroy($card);
     }
 }

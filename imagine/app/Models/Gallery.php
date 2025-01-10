@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Contracts\Card;
+use App\Models\Traits\HasCardMetadata;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Gallery extends Model
+class Gallery extends Model implements Card
 {
+    use HasCardMetadata;
+
     protected $fillable = [
         'user_id',
         'name',
@@ -26,35 +30,20 @@ class Gallery extends Model
         'metadata' => 'array'
     ];
 
-    // Card-specific accessors
-    public function getManaCountAttribute()
+    // Card interface implementation
+    public function getName(): string
     {
-        return $this->metadata['mana_cost'] ?? null;
+        return $this->name;
     }
 
-    public function getCardTypeAttribute()
+    public function getPrompt(): ?string
     {
-        return $this->metadata['type'] ?? null;
+        return $this->prompt;
     }
 
-    public function getAbilitiesAttribute()
+    public function getType(): string
     {
-        return $this->metadata['abilities'] ?? null;
-    }
-
-    public function getRarityAttribute()
-    {
-        return $this->metadata['rarity'] ?? null;
-    }
-
-    public function getPowerToughnessAttribute()
-    {
-        return $this->metadata['power_toughness'] ?? null;
-    }
-
-    public function getImageUrlAttribute()
-    {
-        return $this->metadata['image_url'] ?? $this->attributes['image_url'] ?? null;
+        return $this->type;
     }
 
     public function getFormattedPriceAttribute(): string

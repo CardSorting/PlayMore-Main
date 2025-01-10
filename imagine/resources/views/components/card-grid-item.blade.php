@@ -1,3 +1,10 @@
+@php
+\Log::info('card-grid-item received card:', [
+    'card_data' => $card,
+    'is_array' => is_array($card),
+    'keys' => is_array($card) ? array_keys($card) : null
+]);
+@endphp
 <div class="card-item transform transition-all duration-500 h-full w-full group"
      x-on:mouseenter="hoveredCard = $el"
      x-on:mouseleave="hoveredCard = null"

@@ -37,6 +37,7 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'marketplace.rate.limit' => \App\Http\Middleware\MarketplaceRateLimiter::class,
         'generate.rate.limit' => \App\Http\Middleware\ImageGenerationRateLimiter::class,
+        'admin' => \App\Http\Middleware\AdminMiddleware::class,
     ];
 
     /**

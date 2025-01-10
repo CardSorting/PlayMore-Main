@@ -6,55 +6,17 @@ use Monolog\Handler\SyslogUdpHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Log Channel
-    |--------------------------------------------------------------------------
-    |
-    | This option defines the default log channel that is utilized to write
-    | messages to your logs. The value provided here should match one of
-    | the channels present in the list of "channels" configured below.
-    |
-    */
-
     'default' => env('LOG_CHANNEL', 'stack'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Deprecations Log Channel
-    |--------------------------------------------------------------------------
-    |
-    | This option controls the log channel that should be used to log warnings
-    | regarding deprecated PHP and library features. This allows you to get
-    | your application ready for upcoming major versions of dependencies.
-    |
-    */
 
     'deprecations' => [
         'channel' => env('LOG_DEPRECATIONS_CHANNEL', 'null'),
-        'trace' => env('LOG_DEPRECATIONS_TRACE', false),
+        'trace' => false,
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Log Channels
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure the log channels for your application. Laravel
-    | utilizes the Monolog PHP logging library, which includes a variety
-    | of powerful log handlers and formatters that you're free to use.
-    |
-    | Available drivers: "single", "daily", "slack", "syslog",
-    |                    "errorlog", "monolog", "custom", "stack"
-    |
-    */
-
     'channels' => [
-
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', env('LOG_STACK', 'single')),
+            'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
 
@@ -69,15 +31,52 @@ return [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
-            'days' => env('LOG_DAILY_DAYS', 14),
+            'days' => 14,
             'replace_placeholders' => true,
+        ],
+
+        // Print Orders Channel
+        'orders' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/orders.log'),
+            'level' => 'info',
+            'days' => 90, // Keep order logs for 90 days
+            'replace_placeholders' => true,
+            'permission' => 0664,
+            'formatter' => \Monolog\Formatter\JsonFormatter::class,
+            'processors' => [
+                // Add additional context to each log entry
+                function ($record) {
+                    $record['extra']['user_id'] = auth()->id() ?? 'system';
+                    $record['extra']['ip'] = request()->ip();
+                    return $record;
+                },
+            ],
+        ],
+
+        // Print Production Channel
+        'production' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/production.log'),
+            'level' => 'info',
+            'days' => 90,
+            'replace_placeholders' => true,
+            'permission' => 0664,
+            'formatter' => \Monolog\Formatter\JsonFormatter::class,
+            'processors' => [
+                function ($record) {
+                    $record['extra']['environment'] = app()->environment();
+                    $record['extra']['server'] = gethostname();
+                    return $record;
+                },
+            ],
         ],
 
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
-            'username' => env('LOG_SLACK_USERNAME', 'Laravel Log'),
-            'emoji' => env('LOG_SLACK_EMOJI', ':boom:'),
+            'username' => env('APP_NAME', 'Laravel') . ' Log',
+            'emoji' => ':boom:',
             'level' => env('LOG_LEVEL', 'critical'),
             'replace_placeholders' => true,
         ],
@@ -108,7 +107,7 @@ return [
         'syslog' => [
             'driver' => 'syslog',
             'level' => env('LOG_LEVEL', 'debug'),
-            'facility' => env('LOG_SYSLOG_FACILITY', LOG_USER),
+            'facility' => LOG_USER,
             'replace_placeholders' => true,
         ],
 
@@ -126,7 +125,5 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
-
     ],
-
 ];

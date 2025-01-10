@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     protected $fillable = [
         'name',
@@ -42,6 +43,11 @@ class User extends Authenticatable
     public function creditTransactions(): HasMany
     {
         return $this->hasMany(CreditTransaction::class);
+    }
+
+    public function printOrders(): HasMany
+    {
+        return $this->hasMany(PrintOrder::class);
     }
 
     public function getCreditBalance(): int

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\{Route, Redis};
 
 // Public Routes
@@ -27,7 +28,11 @@ Route::prefix('dashboard')->middleware(['auth', 'verified'])->group(function () 
     require __DIR__.'/dashboard.php';
     require __DIR__.'/cards.php';
     require __DIR__.'/packs.php';
-    
+    require __DIR__.'/admin.php';
+
+    // Profile Routes
+    Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
+    Route::get('/profile/orders/{order}', [ProfileController::class, 'showOrder'])->name('profile.orders.show');
 });
 
 // Marketplace Routes

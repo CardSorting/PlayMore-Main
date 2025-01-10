@@ -4,6 +4,7 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CreditController;
 use App\Http\Controllers\PulseController;
+use App\Http\Controllers\PrintOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -44,5 +45,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->withoutMiddleware(['auth', 'verified']);
         Route::post('/payment-intent/{paymentIntentId}/confirm', [PulseController::class, 'confirmPayment'])
             ->withoutMiddleware(['auth', 'verified']);
+    });
+
+    // Print Order Routes
+    Route::prefix('prints')->name('prints.')->group(function () {
+        Route::get('/', [PrintOrderController::class, 'index'])->name('index');
+        Route::get('/gallery/{gallery}/create', [PrintOrderController::class, 'create'])->name('create');
+        Route::post('/gallery/{gallery}', [PrintOrderController::class, 'store'])->name('store');
+        Route::get('/orders/{printOrder}/checkout', [PrintOrderController::class, 'checkout'])->name('checkout');
+        Route::post('/orders/{printOrder}/confirm', [PrintOrderController::class, 'confirm'])->name('confirm');
+        Route::get('/orders/{printOrder}/success', [PrintOrderController::class, 'success'])->name('success');
     });
 });

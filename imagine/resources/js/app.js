@@ -1,10 +1,25 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
+import { utils } from './utils/print-dimensions';
 
 window.Alpine = Alpine;
+window.utils = utils;
 
 // Register Alpine components before starting
 document.addEventListener('alpine:init', () => {
+    Alpine.data('sizeSelectorData', (initialCategory = '', initialSize = '') => ({
+        activeTab: initialCategory,
+        selectedSize: initialSize,
+        
+        init() {
+            // Initialize with current size from hidden input if it exists
+            const sizeInput = document.querySelector('input[name="size"]');
+            if (sizeInput && sizeInput.value) {
+                this.selectedSize = sizeInput.value;
+            }
+        }
+    }));
+
     Alpine.data('quantitySelector', (unitPrice, presetData = {}) => ({
         selectedQuantity: null,
         unitPrice: unitPrice,

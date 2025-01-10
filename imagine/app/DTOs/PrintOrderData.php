@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 class PrintOrderData
 {
     public readonly string $size;
+    public readonly string $material;
     public readonly float $price;
     public readonly Gallery $gallery;
     public readonly string $shipping_name;
@@ -20,6 +21,7 @@ class PrintOrderData
 
     public function __construct(
         string $size,
+        string $material,
         float $price,
         Gallery $gallery,
         string $shipping_name,
@@ -31,6 +33,7 @@ class PrintOrderData
         ?string $notes = null
     ) {
         $this->size = $size;
+        $this->material = $material;
         $this->price = $price;
         $this->gallery = $gallery;
         $this->shipping_name = $shipping_name;
@@ -46,6 +49,7 @@ class PrintOrderData
     {
         return new self(
             size: $data['size'],
+            material: $data['material'] ?? 'premium_lustre',
             price: $data['price'],
             gallery: $gallery,
             shipping_name: $data['shipping_name'],
@@ -62,6 +66,7 @@ class PrintOrderData
     {
         return [
             'size' => $this->size,
+            'material' => $this->material,
             'price' => $this->price,
             'gallery_id' => $this->gallery->id,
             'shipping_name' => $this->shipping_name,
@@ -83,5 +88,34 @@ class PrintOrderData
             $this->shipping_zip,
             $this->shipping_country
         ])->filter()->join(', ');
+    }
+
+    public function getFormattedPrice(): string
+    {
+        return number_format($this->price / 100, 2);
+    }
+
+    public function getEstimatedDeliveryDays(): int
+    {
+        $baseDays = 7; // Standard shipping time
+
+        // Add extra days for international shipping
+        if (!in_array($this->shipping_country, ['US'])) {
+            $baseDays += 3;
+        }
+
+        // Add extra processing time for canvas prints
+        if ($this->material === 'canvas') {
+            $baseDays += 2;
+        }
+
+        return $baseDays;
+    }
+
+    public function getEstimatedDeliveryDate(): string
+    {
+        return now()
+            ->addWeekdays($this->getEstimatedDeliveryDays())
+            ->format('F j, Y');
     }
 }

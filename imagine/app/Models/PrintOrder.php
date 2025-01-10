@@ -5,43 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Carbon\Carbon;
 
 class PrintOrder extends Model
 {
     use HasFactory;
 
-    // Print sizes and their prices
-    public const SIZES = [
-        '2.5x3.5' => [
-            'name' => '2.5" x 3.5"',
-            'price' => 4.99
-        ],
-        '4x6' => [
-            'name' => '4" x 6"',
-            'price' => 7.99
-        ],
-        '8x10' => [
-            'name' => '8" x 10"',
-            'price' => 14.99
-        ],
-        '11x17' => [
-            'name' => '11" x 17"',
-            'price' => 24.99
-        ],
-        '18x24' => [
-            'name' => '18" x 24"',
-            'price' => 39.99
-        ],
-        '24x36' => [
-            'name' => '24" x 36"',
-            'price' => 59.99
-        ]
-    ];
-
     protected $fillable = [
         'user_id',
         'gallery_id',
         'size',
+        'material',
         'price',
         'status',
         'shipping_name',
@@ -50,7 +24,17 @@ class PrintOrder extends Model
         'shipping_state',
         'shipping_zip',
         'shipping_country',
-        'stripe_payment_intent_id'
+        'stripe_payment_intent_id',
+        'notes',
+        'tracking_number',
+        'shipping_carrier',
+    ];
+
+    protected $casts = [
+        'paid_at' => 'datetime',
+        'shipped_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -63,24 +47,115 @@ class PrintOrder extends Model
         return $this->belongsTo(Gallery::class);
     }
 
-    public static function getSizePrice(string $size): float
-    {
-        return self::SIZES[$size]['price'] ?? 0.00;
-    }
-
-    public static function getSizeName(string $size): string
-    {
-        return self::SIZES[$size]['name'] ?? $size;
-    }
-
     public function getFormattedAddressAttribute(): string
     {
-        return implode(', ', [
+        return implode(', ', array_filter([
             $this->shipping_address,
             $this->shipping_city,
             $this->shipping_state,
             $this->shipping_zip,
             $this->shipping_country
-        ]);
+        ]));
+    }
+
+    public function getFormattedPriceAttribute(): string
+    {
+        return number_format($this->price, 2);
+    }
+
+    public function getTrackingUrlAttribute(): ?string
+    {
+        if (!$this->tracking_number || !$this->shipping_carrier) {
+            return null;
+        }
+
+        $carriers = config('prints.shipping.carriers');
+        if (!isset($carriers[$this->shipping_carrier])) {
+            return null;
+        }
+
+        return $carriers[$this->shipping_carrier]['tracking_url'] . $this->tracking_number;
+    }
+
+    public function getMaterialNameAttribute(): string
+    {
+        $materials = config('prints.materials');
+        return $materials[$this->material]['name'] ?? $this->material;
+    }
+
+    public function getSizeNameAttribute(): string
+    {
+        $sizes = config('prints.sizes');
+        return $sizes[$this->size]['name'] ?? $this->size;
+    }
+
+    public function getEstimatedDeliveryDaysAttribute(): int
+    {
+        $baseDays = config('prints.shipping.carriers.usps.services.first_class.days', '3-5');
+        $baseDays = explode('-', $baseDays)[1] ?? 5; // Use the higher number
+
+        // Add extra days for international shipping
+        if ($this->shipping_country !== 'US') {
+            $baseDays += 3;
+        }
+
+        // Add extra processing time for canvas prints
+        if ($this->material === 'canvas') {
+            $baseDays += 2;
+        }
+
+        return (int) $baseDays;
+    }
+
+    public function getEstimatedDeliveryDateAttribute(): ?string
+    {
+        if (!$this->created_at) {
+            return null;
+        }
+
+        return $this->created_at
+            ->addWeekdays($this->estimated_delivery_days)
+            ->format('F j, Y');
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->paid_at !== null;
+    }
+
+    public function isShipped(): bool
+    {
+        return $this->shipped_at !== null;
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->completed_at !== null;
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->cancelled_at !== null;
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isProcessing(): bool
+    {
+        return $this->status === 'processing';
+    }
+
+    public function canBeCancelled(): bool
+    {
+        return in_array($this->status, ['pending', 'processing']) && !$this->isShipped();
+    }
+
+    public function canBeRefunded(): bool
+    {
+        return $this->isPaid() && !$this->isCancelled() && 
+               $this->paid_at->addDays(30)->isFuture();
     }
 }

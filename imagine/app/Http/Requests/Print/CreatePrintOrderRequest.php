@@ -15,10 +15,16 @@ class CreatePrintOrderRequest extends FormRequest
 
     public function rules(): array
     {
+        $printService = app(PrintOrderService::class);
+
         return [
             'size' => [
                 'required',
-                Rule::in(array_keys(app(PrintOrderService::class)->getSizes()))
+                Rule::in(array_keys($printService->getSizes()))
+            ],
+            'material' => [
+                'required',
+                Rule::in(array_keys($printService->getMaterials()))
             ],
             'shipping_name' => ['required', 'string', 'max:255'],
             'shipping_address' => ['required', 'string', 'max:255'],
@@ -38,6 +44,8 @@ class CreatePrintOrderRequest extends FormRequest
     {
         return [
             'size.in' => 'Please select a valid print size.',
+            'material.in' => 'Please select a valid print material.',
+            'material.required' => 'Please select a print material.',
             'shipping_country.in' => 'We currently only ship to the United States, Canada, United Kingdom, and Australia.',
         ];
     }
@@ -51,6 +59,7 @@ class CreatePrintOrderRequest extends FormRequest
             'shipping_state' => 'state/province',
             'shipping_zip' => 'ZIP/postal code',
             'shipping_country' => 'country',
+            'material' => 'print material',
         ];
     }
 
@@ -59,6 +68,26 @@ class CreatePrintOrderRequest extends FormRequest
         $this->merge([
             'shipping_zip' => strtoupper($this->shipping_zip),
             'shipping_country' => strtoupper($this->shipping_country),
+            'material' => $this->material ?? 'premium_lustre', // Default material
         ]);
+    }
+
+    /**
+     * Get the validated data from the request.
+     *
+     * @return array
+     */
+    public function validated($key = null, $default = null): array
+    {
+        $validated = parent::validated($key, $default);
+
+        // Calculate the price based on size and material
+        $printService = app(PrintOrderService::class);
+        $validated['price'] = $printService->calculatePrice(
+            $validated['size'],
+            $validated['material']
+        );
+
+        return $validated;
     }
 }

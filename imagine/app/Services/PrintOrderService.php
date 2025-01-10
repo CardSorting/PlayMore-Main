@@ -32,9 +32,19 @@ class PrintOrderService
             throw PrintOrderException::invalidConfiguration('Print sizes configuration is required');
         }
 
+        if (!isset($config['materials']) || empty($config['materials'])) {
+            throw PrintOrderException::invalidConfiguration('Print materials configuration is required');
+        }
+
         foreach ($config['sizes'] as $size => $details) {
             if (!isset($details['name'], $details['dimensions'], $details['price'])) {
                 throw PrintOrderException::invalidConfiguration("Invalid configuration for size: {$size}");
+            }
+        }
+
+        foreach ($config['materials'] as $material => $details) {
+            if (!isset($details['name'], $details['price_multiplier'])) {
+                throw PrintOrderException::invalidConfiguration("Invalid configuration for material: {$material}");
             }
         }
     }
@@ -54,6 +64,12 @@ class PrintOrderService
                 'domestic' => ['US'],
                 'international' => ['CA', 'GB', 'AU'],
             ],
+            'materials' => [
+                'premium_lustre' => [
+                    'name' => 'Premium Lustre',
+                    'price_multiplier' => 1.0,
+                ],
+            ],
         ], $config);
     }
 
@@ -62,13 +78,30 @@ class PrintOrderService
         return $this->config['sizes'];
     }
 
-    public function getPriceForSize(string $size): float
+    public function getMaterials(): array
+    {
+        return $this->config['materials'];
+    }
+
+    public function calculatePrice(string $size, string $material = 'premium_lustre'): float
     {
         if (!isset($this->config['sizes'][$size])) {
             throw PrintOrderException::invalidSize($size);
         }
 
-        return $this->config['sizes'][$size]['price'];
+        if (!isset($this->config['materials'][$material])) {
+            throw PrintOrderException::invalidMaterial($material);
+        }
+
+        $basePrice = $this->config['sizes'][$size]['price'];
+        $multiplier = $this->config['materials'][$material]['price_multiplier'];
+
+        return $basePrice * $multiplier;
+    }
+
+    public function getPriceForSize(string $size): float
+    {
+        return $this->calculatePrice($size);
     }
 
     public function createOrder(PrintOrderData $data): PrintOrder
@@ -76,6 +109,11 @@ class PrintOrderService
         // Validate size before creating order
         if (!isset($this->config['sizes'][$data->size])) {
             throw PrintOrderException::invalidSize($data->size);
+        }
+
+        // Validate material if provided
+        if (isset($data->material) && !isset($this->config['materials'][$data->material])) {
+            throw PrintOrderException::invalidMaterial($data->material);
         }
 
         // Validate shipping country
@@ -102,6 +140,11 @@ class PrintOrderService
         // Add extra days for international shipping
         if ($this->getShippingZoneType($order->shipping_country) === 'international') {
             $processingDays += 3;
+        }
+
+        // Add extra processing time for canvas prints
+        if ($order->material === 'canvas') {
+            $processingDays += 2;
         }
 
         return now()->addWeekdays($processingDays);

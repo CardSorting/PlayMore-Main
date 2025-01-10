@@ -39,9 +39,26 @@ class PrintOrderController extends Controller
             abort(403, 'You do not have permission to create prints from this gallery.');
         }
 
+        // Get sizes and materials from config
+        $sizes = config('prints.sizes');
+        $materials = config('prints.materials');
+
+        // Get prefilled values from query parameters
+        $prefill = request()->get('prefill', []);
+
         return view('prints.create', [
             'gallery' => $gallery,
-            'sizes' => $this->printOrderService->getSizes(),
+            'sizes' => $sizes,
+            'old' => [
+                'size' => old('size', $prefill['size'] ?? ''),
+                'material' => old('material', 'premium_lustre'),
+                'shipping_name' => old('shipping_name', $prefill['shipping_name'] ?? ''),
+                'shipping_address' => old('shipping_address', $prefill['shipping_address'] ?? ''),
+                'shipping_city' => old('shipping_city', $prefill['shipping_city'] ?? ''),
+                'shipping_state' => old('shipping_state', $prefill['shipping_state'] ?? ''),
+                'shipping_zip' => old('shipping_zip', $prefill['shipping_zip'] ?? ''),
+                'shipping_country' => old('shipping_country', $prefill['shipping_country'] ?? ''),
+            ],
         ]);
     }
 
@@ -50,7 +67,10 @@ class PrintOrderController extends Controller
         try {
             $data = PrintOrderData::fromRequest(
                 array_merge($request->validated(), [
-                    'price' => $this->printOrderService->getPriceForSize($request->size)
+                    'price' => $this->printOrderService->calculatePrice(
+                        $request->size,
+                        $request->material ?? 'premium_lustre'
+                    )
                 ]),
                 $gallery
             );
@@ -134,6 +154,7 @@ class PrintOrderController extends Controller
             'gallery' => $order->gallery_id,
             'prefill' => [
                 'size' => $order->size,
+                'material' => $order->material,
                 'shipping_name' => $order->shipping_name,
                 'shipping_address' => $order->shipping_address,
                 'shipping_city' => $order->shipping_city,

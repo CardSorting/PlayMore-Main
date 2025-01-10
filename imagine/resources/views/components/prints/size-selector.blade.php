@@ -1,95 +1,139 @@
-@props(['sizes', 'selectedSize' => null])
+@props(['sizes'])
 
 <div x-data="{ 
-    selected: '{{ $selectedSize }}',
     showSizeGuide: false,
-    sizes: @js($sizes),
-    getPrice(size) {
+    categories: @js(collect($sizes)->groupBy('category')->toArray()),
+    formatPrice(price) {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
-        }).format(this.sizes[size].price / 100);
-    },
-    getDimensions(size) {
-        return this.sizes[size].dimensions;
-    },
-    categories: @js(collect($sizes)->groupBy('category')->toArray())
+        }).format(price / 100);
+    }
 }" class="space-y-8">
-    @foreach(collect($sizes)->groupBy('category') as $category => $categorySizes)
-        <div class="space-y-4">
-            <h3 class="text-lg font-medium text-gray-900">{{ $category }}</h3>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach($categorySizes as $size => $details)
-                    <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none"
-                           :class="{
-                               'border-blue-500 ring-2 ring-blue-500': selected === '{{ $size }}',
-                               'border-gray-300': selected !== '{{ $size }}'
-                           }">
-                        <input type="radio"
-                               name="size"
-                               value="{{ $size }}"
-                               x-model="selected"
-                               class="sr-only"
-                               aria-labelledby="size-choice-{{ $size }}-label"
-                               aria-describedby="size-choice-{{ $size }}-description">
-                        <div class="flex flex-1">
-                            <div class="flex flex-col">
-                                <span id="size-choice-{{ $size }}-label" class="block text-sm font-medium text-gray-900">
-                                    {{ $details['name'] }}
-                                </span>
-                                <span id="size-choice-{{ $size }}-description" class="mt-1 flex items-center text-sm text-gray-500">
-                                    {{ $details['dimensions'] }}
-                                </span>
-                                <span class="mt-1 text-sm text-gray-500">
-                                    {{ $details['use_case'] }}
-                                </span>
-                                <span class="mt-2 text-sm font-medium text-gray-900" x-text="getPrice('{{ $size }}')"></span>
-                                @if($details['popular'] ?? false)
-                                    <span class="mt-2 inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                                        Most Popular
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-                        <svg class="h-5 w-5 text-blue-600" :class="{ 'invisible': selected !== '{{ $size }}' }"
-                             viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd"
-                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                                  clip-rule="evenodd" />
-                        </svg>
-                    </label>
-                @endforeach
-            </div>
-        </div>
-    @endforeach
-
-    <!-- Size Comparison Tool -->
-    <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-medium text-gray-900">Size Comparison</h3>
-            <button type="button"
-                    @click="showSizeGuide = true"
-                    class="text-sm text-blue-600 hover:text-blue-500">
-                View Size Guide
-            </button>
-        </div>
-        <div class="relative h-48 bg-white rounded border border-gray-200">
-            <!-- Visual size comparison here -->
-            <template x-for="(details, size) in sizes" :key="size">
-                <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 border-2"
-                     :class="{ 
-                         'border-blue-500': selected === size,
-                         'border-gray-200': selected !== size
-                     }"
-                     :style="`width: ${details.comparison_width}px; height: ${details.comparison_height}px`"
-                     x-show="selected === size || size === 'medium'">
+    <!-- Size Categories -->
+    <div class="space-y-8">
+        @foreach(collect($sizes)->groupBy('category') as $category => $categorySizes)
+            <div>
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-base font-medium text-gray-900">{{ $category }}</h3>
+                    <button type="button" 
+                            @click="showSizeGuide = true"
+                            class="text-sm text-blue-600 hover:text-blue-500">
+                        Size guide
+                    </button>
                 </div>
-            </template>
-            <div class="absolute bottom-2 right-2 text-xs text-gray-500">
-                Not to scale. For visualization only.
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    @foreach($categorySizes as $size => $details)
+                        <label class="group relative"
+                               :class="{ 'cursor-pointer': true }">
+                            <input type="radio"
+                                   name="size"
+                                   value="{{ $size }}"
+                                   x-model="$parent.selectedSize"
+                                   @change="$dispatch('size-selected', $event.target.value)"
+                                   class="peer sr-only"
+                                   aria-labelledby="size-choice-{{ $size }}-label"
+                                   aria-describedby="size-choice-{{ $size }}-description">
+                            
+                            <!-- Size Card -->
+                            <div class="flex flex-col rounded-lg border bg-white p-4 shadow-sm ring-1 ring-gray-200 transition-all duration-200 hover:border-blue-500 hover:ring-blue-500 peer-checked:border-blue-500 peer-checked:ring-2 peer-checked:ring-blue-500">
+                                <!-- Size Info -->
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 id="size-choice-{{ $size }}-label" class="text-sm font-medium text-gray-900">
+                                                {{ $details['name'] }}
+                                            </h4>
+                                            <p id="size-choice-{{ $size }}-description" class="mt-1 text-sm text-gray-500">
+                                                {{ $details['dimensions'] }}
+                                            </p>
+                                            <p class="mt-1 text-sm font-medium text-gray-900">
+                                                {{ '$' . number_format($details['price'] / 100, 2) }}
+                                            </p>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="relative aspect-[3/4] w-16 overflow-hidden rounded border border-gray-200">
+                                                <div class="absolute inset-0 flex items-center justify-center bg-gray-50">
+                                                    <div class="h-12 w-8 border border-gray-300"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Use Case -->
+                                    <p class="mt-2 text-sm text-gray-600">{{ $details['use_case'] }}</p>
+
+                                    <!-- Popular Badge -->
+                                    @if($details['popular'] ?? false)
+                                        <span class="mt-2 inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                                            Most Popular
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <!-- Selected Indicator -->
+                                <div class="absolute right-2 top-2 hidden text-blue-600 peer-checked:block">
+                                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.414-1.414L9 10.586 7.707 9.293a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </label>
+                    @endforeach
+                </div>
             </div>
+        @endforeach
+    </div>
+
+    <!-- Size Preview -->
+    <div class="mt-6 rounded-lg border border-gray-200 bg-white">
+        <div class="border-b border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-medium text-gray-900">Size Preview</h3>
+                <button type="button"
+                        @click="showSizeGuide = true"
+                        class="text-sm text-blue-600 hover:text-blue-500">
+                    View size guide
+                </button>
+            </div>
+            <p class="mt-1 text-sm text-gray-500">Compare print sizes with common objects</p>
+        </div>
+        
+        <div class="p-4">
+            <div class="relative h-48 rounded-lg bg-gray-50">
+                <!-- Reference Objects -->
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <!-- Credit Card -->
+                    <div class="absolute" style="left: 20%; transform: translateX(-50%)">
+                        <div class="h-[2.125rem] w-[3.375rem] rounded border border-gray-300 bg-white"></div>
+                        <p class="mt-2 text-center text-xs text-gray-500">Credit Card</p>
+                    </div>
+                    
+                    <!-- Letter Paper -->
+                    <div class="absolute" style="left: 50%; transform: translateX(-50%)">
+                        <div class="h-[11rem] w-[8.5rem] rounded border border-gray-300 bg-white"></div>
+                        <p class="mt-2 text-center text-xs text-gray-500">Letter Paper</p>
+                    </div>
+                    
+                    <!-- Selected Size -->
+                    <template x-if="$parent.selectedSize">
+                        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                            <div class="border-2 border-blue-500"
+                                 :style="{
+                                     width: sizes[$parent.selectedSize].comparison_width + 'px',
+                                     height: sizes[$parent.selectedSize].comparison_height + 'px'
+                                 }">
+                            </div>
+                            <p class="mt-2 text-center text-xs font-medium text-blue-600" 
+                               x-text="sizes[$parent.selectedSize].name"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <p class="mt-2 text-center text-xs text-gray-500">Not to scale. For visualization only.</p>
         </div>
     </div>
 
@@ -132,7 +176,9 @@
                                                         <h5 class="text-sm font-medium text-gray-900">{{ $details['name'] }}</h5>
                                                         <p class="text-sm text-gray-500">{{ $details['dimensions'] }}</p>
                                                     </div>
-                                                    <p class="text-sm font-medium text-gray-900" x-text="getPrice('{{ $size }}')"></p>
+                                                    <p class="text-sm font-medium text-gray-900">
+                                                        {{ '$' . number_format($details['price'] / 100, 2) }}
+                                                    </p>
                                                 </div>
                                                 <p class="text-sm text-gray-600">{{ $details['use_case'] }}</p>
                                             </div>

@@ -42,11 +42,38 @@ class PrintOrderException extends Exception
     /**
      * Static constructors for common error cases.
      */
+    public static function invalidConfiguration(string $reason): self
+    {
+        return new static(
+            "Invalid configuration: {$reason}",
+            ['configuration' => ["The configuration is invalid: {$reason}"]],
+            0,
+            null,
+            Response::HTTP_INTERNAL_SERVER_ERROR
+        );
+    }
+
     public static function invalidSize(string $size): self
     {
         return new static(
             "Invalid print size: {$size}",
             ['size' => ["The size '{$size}' is not available."]]
+        );
+    }
+
+    public static function invalidMaterial(string $material): self
+    {
+        return new static(
+            "Invalid print material: {$material}",
+            ['material' => ["The material '{$material}' is not available."]]
+        );
+    }
+
+    public static function materialUnavailable(string $material, string $size): self
+    {
+        return new static(
+            "Material not available for size: {$material} ({$size})",
+            ['material' => ["The material '{$material}' is not available for size {$size}."]]
         );
     }
 
@@ -88,11 +115,17 @@ class PrintOrderException extends Exception
         );
     }
 
-    public static function insufficientStock(string $size): self
+    public static function insufficientStock(string $size, ?string $material = null): self
     {
+        $message = "The selected size {$size}";
+        if ($material) {
+            $message .= " with {$material} material";
+        }
+        $message .= " is temporarily out of stock.";
+
         return new static(
-            "Insufficient stock for size: {$size}",
-            ['size' => ["The selected size {$size} is temporarily out of stock."]],
+            "Insufficient stock for size: {$size}" . ($material ? " ({$material})" : ""),
+            ['size' => [$message]],
             0,
             null,
             Response::HTTP_CONFLICT

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
 
 class PrintOrder extends Model
@@ -13,12 +14,15 @@ class PrintOrder extends Model
 
     protected $fillable = [
         'user_id',
+        'creator_id',
         'gallery_id',
         'size',
         'material',
         'quantity',
         'unit_price',
         'total_price',
+        'commission_rate',
+        'commission_amount',
         'status',
         'shipping_name',
         'shipping_address',
@@ -32,20 +36,6 @@ class PrintOrder extends Model
         'shipping_carrier',
         'order_number',
     ];
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($order) {
-            // Generate a unique order number if not set
-            if (!$order->order_number) {
-                do {
-                    $order->order_number = 'PRT' . strtoupper(substr(uniqid(), -6));
-                } while (static::where('order_number', $order->order_number)->exists());
-            }
-        });
-    }
 
     protected $casts = [
         'paid_at' => 'datetime',
@@ -62,6 +52,42 @@ class PrintOrder extends Model
     public function gallery(): BelongsTo
     {
         return $this->belongsTo(Gallery::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creator_id');
+    }
+
+    public function calculateCommission(): void
+    {
+        if ($this->total_price && $this->commission_rate) {
+            $this->commission_amount = round($this->total_price * ($this->commission_rate / 100), 2);
+        }
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($order) {
+            // Generate a unique order number if not set
+            if (!$order->order_number) {
+                do {
+                    $order->order_number = 'PRT' . strtoupper(substr(uniqid(), -6));
+                } while (static::where('order_number', $order->order_number)->exists());
+            }
+
+            // Calculate commission amount before saving
+            $order->calculateCommission();
+        });
+
+        static::updating(function ($order) {
+            // Recalculate commission if total price or rate changes
+            if ($order->isDirty(['total_price', 'commission_rate'])) {
+                $order->calculateCommission();
+            }
+        });
     }
 
     public function getFormattedAddressAttribute(): string
@@ -184,5 +210,10 @@ class PrintOrder extends Model
     {
         return $this->isPaid() && !$this->isCancelled() && 
                $this->paid_at->addDays(30)->isFuture();
+    }
+
+    public function scopeCompleted(Builder $query): Builder
+    {
+        return $query->where('status', 'completed');
     }
 }

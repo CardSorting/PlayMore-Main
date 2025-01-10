@@ -36,6 +36,7 @@ class RouteServiceProvider extends ServiceProvider
                 'dashboard.php',
                 'admin.php',
                 'prints.php',
+                'public.php',
             ];
 
             Route::middleware('web')->group(function () use ($routeFiles) {

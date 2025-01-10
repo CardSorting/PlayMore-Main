@@ -69,6 +69,8 @@ class PrintOrderData
             'material' => $this->material,
             'price' => $this->price,
             'gallery_id' => $this->gallery->id,
+            'creator_id' => $this->gallery->user_id,
+            'commission_rate' => 4.00, // 4% commission rate
             'shipping_name' => $this->shipping_name,
             'shipping_address' => $this->shipping_address,
             'shipping_city' => $this->shipping_city,

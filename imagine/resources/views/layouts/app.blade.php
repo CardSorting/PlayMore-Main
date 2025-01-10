@@ -47,6 +47,9 @@
                             <x-nav-link :href="route('prints.index')" :active="request()->routeIs('prints.*')">
                                 {{ __('Prints') }}
                             </x-nav-link>
+                            <x-nav-link :href="route('public.gallery.store', ['user' => Auth::user()->name])" :active="request()->routeIs('public.gallery.store')">
+                                {{ __('My Store') }}
+                            </x-nav-link>
                         </div>
                     </div>
 
@@ -96,6 +99,9 @@
                         </x-nav-link>
                         <x-nav-link :href="route('prints.index')" :active="request()->routeIs('prints.*')">
                             {{ __('Prints') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('public.gallery.store', ['user' => Auth::user()->name])" :active="request()->routeIs('public.gallery.store')">
+                            {{ __('My Store') }}
                         </x-nav-link>
                     </div>
 

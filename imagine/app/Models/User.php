@@ -2,22 +2,27 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Services\PulseService;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, Notifiable;
 
     protected $fillable = [
         'name',
         'email',
         'password',
+        'bio',
+        'country',
+        'shipping_countries',
+        'website',
+        'social_instagram',
+        'social_twitter',
+        'response_time',
+        'last_active_at'
     ];
 
     protected $hidden = [
@@ -27,7 +32,8 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'last_active_at' => 'datetime',
+        'shipping_countries' => 'array'
     ];
 
     public function galleries(): HasMany
@@ -35,38 +41,37 @@ class User extends Authenticatable
         return $this->hasMany(Gallery::class);
     }
 
-    public function packs(): HasMany
-    {
-        return $this->hasMany(Pack::class);
-    }
-
-    public function creditTransactions(): HasMany
-    {
-        return $this->hasMany(CreditTransaction::class);
-    }
-
     public function printOrders(): HasMany
     {
         return $this->hasMany(PrintOrder::class);
     }
 
-    public function getCreditBalance(): int
+    public function ratings(): HasMany
     {
-        return app(PulseService::class)->getCreditBalance($this);
+        return $this->hasMany(Rating::class, 'user_id');
     }
 
-    public function addCredits(int $amount, ?string $description = null, ?string $reference = null): void
+    public function isOnline(): bool
     {
-        app(PulseService::class)->addCredits($this, $amount, $description, $reference);
+        if (!$this->last_active_at) {
+            return false;
+        }
+
+        return $this->last_active_at->diffInMinutes(now()) <= 5;
     }
 
-    public function deductCredits(int $amount, ?string $description = null, ?string $reference = null): bool
+    public function updateLastActive(): void
     {
-        return app(PulseService::class)->deductCredits($this, $amount, $description, $reference);
+        $this->update(['last_active_at' => now()]);
     }
 
-    public function getCreditHistory(int $limit = 10)
+    public function getAverageRatingAttribute(): float
     {
-        return app(PulseService::class)->getTransactionHistory($this, $limit);
+        return $this->ratings()->avg('rating') ?? 0.0;
+    }
+
+    public function getTotalRatingsAttribute(): int
+    {
+        return $this->ratings()->count();
     }
 }

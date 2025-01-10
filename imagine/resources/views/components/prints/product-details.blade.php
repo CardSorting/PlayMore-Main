@@ -1,4 +1,4 @@
-@props(['title', 'description', 'nextStep', 'author'])
+@props(['title', 'description', 'nextStep', 'author', 'price', 'isAvailable' => true])
 
 <div x-data="{ showStickyBar: false }" class="relative">
     <!-- Product Header -->
@@ -8,15 +8,24 @@
         <!-- Price and Status -->
         <div class="mt-3 flex items-center space-x-4">
             <div class="flex items-baseline">
-                <span class="text-3xl font-bold tracking-tight text-gray-900">From $19.99</span>
+                <span class="text-3xl font-bold tracking-tight text-gray-900">${{ number_format($price, 2) }}</span>
                 <span class="ml-2 text-sm text-gray-500">USD</span>
             </div>
-            <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-0.5 text-sm font-medium text-green-800">
-                <svg class="mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
-                    <circle cx="4" cy="4" r="3" />
-                </svg>
-                In Stock
-            </span>
+            @if($isAvailable)
+                <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-0.5 text-sm font-medium text-green-800">
+                    <svg class="mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
+                        <circle cx="4" cy="4" r="3" />
+                    </svg>
+                    In Stock
+                </span>
+            @else
+                <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-0.5 text-sm font-medium text-gray-800">
+                    <svg class="mr-1.5 h-2 w-2 text-gray-400" fill="currentColor" viewBox="0 0 8 8">
+                        <circle cx="4" cy="4" r="3" />
+                    </svg>
+                    Sold Out
+                </span>
+            @endif
         </div>
 
         <!-- Creation Info -->
@@ -44,28 +53,38 @@
         </div>
 
         <!-- Quantity Form -->
-        <form action="{{ $nextStep }}" method="POST" class="mt-6">
-            @csrf
-            <div class="flex items-end gap-4">
-                <div>
-                    <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
-                    <div class="mt-1 max-w-[120px]">
-                        <input type="number" 
-                            name="quantity" 
-                            id="quantity"
-                            value="1"
-                            min="1"
-                            max="250"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                            required>
+        @if($isAvailable && $nextStep)
+            <form action="{{ $nextStep }}" method="POST" class="mt-6">
+                @csrf
+                <div class="flex items-end gap-4">
+                    <div>
+                        <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+                        <div class="mt-1 max-w-[120px]">
+                            <input type="number" 
+                                name="quantity" 
+                                id="quantity"
+                                value="1"
+                                min="1"
+                                max="250"
+                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                required>
+                        </div>
                     </div>
+                    <button type="submit" 
+                        class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Start Customizing
+                    </button>
                 </div>
-                <button type="submit" 
-                    class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    Start Customizing
+            </form>
+        @else
+            <div class="mt-6">
+                <button type="button" 
+                    disabled
+                    class="inline-flex items-center rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500 cursor-not-allowed">
+                    Currently Unavailable
                 </button>
             </div>
-        </form>
+        @endif
     </div>
 
     <!-- Sticky Bar -->
@@ -82,13 +101,21 @@
             <div class="flex h-16 items-center justify-between">
                 <div class="flex items-center">
                     <h2 class="text-lg font-medium text-gray-900">{{ $title }}</h2>
-                    <span class="ml-4 text-sm text-gray-500">From $19.99</span>
+                    <span class="ml-4 text-sm text-gray-500">${{ number_format($price, 2) }}</span>
                 </div>
-                <button type="button" 
-                    onclick="document.getElementById('quantity').focus()"
-                    class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    Select Quantity
-                </button>
+                @if($isAvailable && $nextStep)
+                    <button type="button" 
+                        onclick="document.getElementById('quantity').focus()"
+                        class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Select Quantity
+                    </button>
+                @else
+                    <button type="button" 
+                        disabled
+                        class="inline-flex items-center rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500 cursor-not-allowed">
+                        Currently Unavailable
+                    </button>
+                @endif
             </div>
         </div>
     </div>

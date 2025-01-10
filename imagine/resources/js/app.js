@@ -1,10 +1,9 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
-import sizeSelectorData from './components/size-selector.js';
+import quantitySelector from './components/quantity-selector';
 
 // Register Alpine components
-window.Alpine = Alpine;
-window.sizeSelectorData = sizeSelectorData;
+Alpine.data('quantitySelector', quantitySelector);
 
-// Start Alpine
+window.Alpine = Alpine;
 Alpine.start();

@@ -1,6 +1,11 @@
 @props(['preset', 'order'])
 
-<div class="relative cursor-pointer h-full" @click.stop="selectedQuantity = {{ $preset->amount }}">
+<button type="button"
+    class="relative cursor-pointer h-full w-full text-left" 
+    x-on:click="selectedQuantity = {{ $preset->amount }}"
+    :class="{
+        'ring-2 ring-indigo-600': selectedQuantity === {{ $preset->amount }}
+    }">
     <div class="relative p-5 rounded-xl border-2 transition-all duration-300 h-full flex flex-col"
         :class="{
             'border-indigo-600 ring-4 ring-indigo-600/20 bg-indigo-50/50': selectedQuantity === {{ $preset->amount }},
@@ -13,7 +18,8 @@
         @endif
         <div class="flex justify-between items-start mb-3">
             <div>
-                <p class="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors">
+                <p class="font-medium text-gray-900 transition-colors"
+                    :class="{ 'text-indigo-600': selectedQuantity === {{ $preset->amount }} }">
                     {{ $preset->label }}
                     @if($preset->popular)
                         <span class="ml-1 text-sm font-normal text-indigo-600">•</span>
@@ -69,7 +75,8 @@
                     </p>
                 @endif
             </div>
-            <span class="flex items-center justify-center w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 font-bold text-xl group-hover:bg-indigo-200 transition-colors shadow-md">
+            <span class="flex items-center justify-center w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 font-bold text-xl transition-colors shadow-md"
+                :class="{ 'bg-indigo-200': selectedQuantity === {{ $preset->amount }} }">
                 {{ $preset->amount }}
             </span>
         </div>
@@ -103,4 +110,4 @@
             @endif
         </div>
     </div>
-</div>
+</button>

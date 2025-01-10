@@ -23,9 +23,14 @@ use App\Http\Requests\Print\ReorderPrintRequest;
 use App\Http\Requests\Print\DownloadInvoiceRequest;
 use App\Http\Requests\Print\TrackPrintRequest;
 use App\Http\Requests\Print\UpdateQuantityRequest;
+use App\Services\PrintQuantityService;
 
 class PrintOrderController extends Controller
 {
+    public function __construct(
+        private PrintQuantityService $quantityService
+    ) {}
+
     public function create(InitiatePrintOrderRequest $request, Gallery $gallery)
     {
         // Start the print order process by redirecting to the overview page
@@ -104,18 +109,23 @@ class PrintOrderController extends Controller
 
     public function selectQuantity(PrintOrder $order)
     {
+        $presets = $this->quantityService->getPresets($order);
+
         return view('prints.select-quantity', [
             'order' => $order,
-            'maxQuantity' => config('prints.max_quantity', 10)
+            'presets' => $presets,
+            'maxQuantity' => $this->quantityService->getMaxQuantity()
         ]);
     }
 
     public function updateQuantity(UpdateQuantityRequest $request, PrintOrder $order)
     {
+        $quantity = $request->quantity;
+        $priceData = $this->quantityService->calculatePrice($order, $quantity);
 
         $order->update([
-            'quantity' => $request->quantity,
-            'total_price' => $order->unit_price * $request->quantity
+            'quantity' => $quantity,
+            'total_price' => $priceData['total']
         ]);
 
         return redirect()->route('prints.checkout', ['order' => $order]);

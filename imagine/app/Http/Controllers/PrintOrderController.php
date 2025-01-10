@@ -121,7 +121,7 @@ class PrintOrderController extends Controller
     public function updateQuantity(UpdateQuantityRequest $request, PrintOrder $order)
     {
         try {
-            $quantity = $request->quantity;
+            $quantity = $request->input('quantity');
             $priceData = $this->quantityService->calculatePrice($order, $quantity);
 
             $order->update([
@@ -131,8 +131,14 @@ class PrintOrderController extends Controller
 
             return redirect()->route('prints.checkout', ['order' => $order]);
         } catch (\Exception $e) {
-            \Log::error('Update quantity error: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'Failed to update quantity. Please try again.']);
+            \Log::error('Update quantity error: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'quantity' => $request->input('quantity'),
+                'final_price' => $request->input('final_price')
+            ]);
+            return back()
+                ->withInput()
+                ->withErrors(['quantity' => 'Failed to update quantity. Please try again.']);
         }
     }
 

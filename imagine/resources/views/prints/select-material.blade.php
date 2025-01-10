@@ -1,14 +1,14 @@
 <x-prints.layout>
     <!-- Progress Stepper - Full width for prominence -->
     <div class="border-b border-gray-200 bg-white">
-        <div class="mx-auto max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
             <x-prints.progress-stepper :currentStep="3" />
         </div>
     </div>
 
     <!-- Main Content -->
     <div class="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-        <div class="mx-auto max-w-[1600px] px-4 pt-12 pb-32 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-7xl px-4 pt-12 pb-32 sm:px-6 lg:px-8">
             <!-- Page Header -->
             <div class="text-center mb-12">
                 <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">Select Print Material</h1>

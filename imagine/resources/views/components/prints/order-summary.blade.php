@@ -47,28 +47,26 @@
         <!-- Price Summary -->
         <div class="border-t border-gray-200 pt-4">
             <dl class="space-y-3">
-                <template x-if="presetData[selectedQuantity]?.savingsAmount > 0">
+                <template x-if="getPresetData()?.savingsAmount > 0">
                     <div>
                         <div class="flex justify-between">
                             <dt class="text-sm text-gray-600">Original price</dt>
-                            <dd class="text-sm text-gray-500 line-through" x-text="'$' + (presetData[selectedQuantity].originalPrice / 100).toFixed(2)"></dd>
+                            <dd class="text-sm text-gray-500 line-through" 
+                                x-text="'$' + (getPresetData().originalPrice / 100).toFixed(2)">
+                            </dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-sm font-medium text-green-700">You save</dt>
-                            <dd class="text-sm font-bold text-green-700" x-text="'$' + (presetData[selectedQuantity].savingsAmount / 100).toFixed(2)"></dd>
+                            <dd class="text-sm font-bold text-green-700" 
+                                x-text="'$' + (getPresetData().savingsAmount / 100).toFixed(2)">
+                            </dd>
                         </div>
                     </div>
                 </template>
                 <div class="flex justify-between">
                     <dt class="text-sm text-gray-600">Subtotal</dt>
                     <dd class="text-sm font-medium text-gray-900">
-                        <span x-text="
-                            '$' + (
-                                presetData[selectedQuantity] 
-                                    ? (presetData[selectedQuantity].discountedPrice / 100) 
-                                    : (selectedQuantity * unitPrice / 100)
-                            ).toFixed(2)
-                        "></span>
+                        <span x-text="'$' + (calculateFinalPrice() / 100).toFixed(2)"></span>
                     </dd>
                 </div>
                 <div class="flex justify-between">
@@ -78,13 +76,7 @@
                 <div class="flex justify-between border-t border-gray-200 pt-3 mb-4">
                     <dt class="text-base font-medium text-gray-900">Total</dt>
                     <dd class="text-base font-medium text-gray-900">
-                        <span x-text="
-                            '$' + (
-                                presetData[selectedQuantity] 
-                                    ? (presetData[selectedQuantity].discountedPrice / 100) 
-                                    : (selectedQuantity * unitPrice / 100)
-                            ).toFixed(2)
-                        "></span>
+                        <span x-text="'$' + (calculateFinalPrice() / 100).toFixed(2)"></span>
                     </dd>
                 </div>
             </dl>

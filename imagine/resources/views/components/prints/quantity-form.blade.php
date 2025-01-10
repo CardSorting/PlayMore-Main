@@ -4,62 +4,66 @@
     <form id="quantity-form" 
         x-ref="quantityForm" 
         action="{{ route('prints.update-quantity', ['order' => $order]) }}" 
-        method="POST">
+        method="POST"
+        @submit.prevent="$el.submit()">
         @csrf
-        <input type="hidden" name="final_price" x-bind:value="presetData[selectedQuantity] ? presetData[selectedQuantity].discountedPrice : (selectedQuantity * unitPrice)">
-        <div>
-            <!-- Header -->
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-900">Select Quantity</h2>
-                    <p class="mt-2 text-sm text-gray-500">{{ $order->size }} - {{ ucfirst($order->material) }}</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-sm text-gray-500">Unit Price</p>
-                    <p class="text-lg font-medium text-gray-900">${{ number_format($order->unit_price / 100, 2) }}</p>
-                </div>
+        <input type="hidden" name="quantity" x-bind:value="selectedQuantity">
+        <input type="hidden" name="final_price" x-bind:value="calculateFinalPrice()">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Select Quantity</h2>
+                <p class="mt-2 text-sm text-gray-500">{{ $order->size }} - {{ ucfirst($order->material) }}</p>
             </div>
-
-            <!-- Quantity Tabs -->
-            @php
-                $activeTab = 'personal';
-                if ($order->quantity > 5 && $order->quantity <= 50) {
-                    $activeTab = 'professional';
-                } elseif ($order->quantity > 50) {
-                    $activeTab = 'wholesale';
-                }
-            @endphp
-            <x-prints.quantity-tabs :activeTab="$activeTab">
-                <x-slot name="personal">
-                    @foreach ($presets as $preset)
-                        @if($preset->amount <= 5)
-                            <x-prints.quantity-preset-card :preset="$preset" :order="$order" />
-                        @endif
-                    @endforeach
-                </x-slot>
-
-                <x-slot name="professional">
-                    @foreach ($presets as $preset)
-                        @if($preset->amount > 5 && $preset->amount <= 50)
-                            <x-prints.quantity-preset-card :preset="$preset" :order="$order" />
-                        @endif
-                    @endforeach
-                </x-slot>
-
-                <x-slot name="wholesale">
-                    @foreach ($presets as $preset)
-                        @if($preset->amount > 50)
-                            <x-prints.quantity-preset-card :preset="$preset" :order="$order" />
-                        @endif
-                    @endforeach
-                </x-slot>
-            </x-prints.quantity-tabs>
+            <div class="text-right">
+                <p class="text-sm text-gray-500">Unit Price</p>
+                <p class="text-lg font-medium text-gray-900">${{ number_format($order->unit_price / 100, 2) }}</p>
+            </div>
         </div>
 
-        <!-- Custom Quantity Input -->
-        <div class="mt-6">
-            <x-prints.custom-quantity-input :maxQuantity="$maxQuantity" />
-        </div>
+        <!-- Quantity Tabs -->
+        @php
+            $activeTab = 'personal';
+            if ($order->quantity > 5 && $order->quantity <= 50) {
+                $activeTab = 'professional';
+            } elseif ($order->quantity > 50) {
+                $activeTab = 'wholesale';
+            }
+        @endphp
+        <x-prints.quantity-tabs :activeTab="$activeTab">
+            <x-slot name="personal">
+                @foreach ($presets as $preset)
+                    @if($preset->amount <= 5)
+                        <x-prints.quantity-preset-card :preset="$preset" :order="$order" />
+                    @endif
+                @endforeach
+            </x-slot>
+
+            <x-slot name="professional">
+                @foreach ($presets as $preset)
+                    @if($preset->amount > 5 && $preset->amount <= 50)
+                        <x-prints.quantity-preset-card :preset="$preset" :order="$order" />
+                    @endif
+                @endforeach
+            </x-slot>
+
+            <x-slot name="wholesale">
+                @foreach ($presets as $preset)
+                    @if($preset->amount > 50)
+                        <x-prints.quantity-preset-card :preset="$preset" :order="$order" />
+                    @endif
+                @endforeach
+            </x-slot>
+        </x-prints.quantity-tabs>
+
+        <!-- Error Messages -->
+        @error('quantity')
+            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+        @enderror
+        @error('final_price')
+            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+        @enderror
 
         <!-- Continue Button -->
         <div class="mt-6">

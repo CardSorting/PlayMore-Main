@@ -2,14 +2,14 @@
 
 <button type="button"
     class="relative cursor-pointer h-full w-full text-left" 
-    x-on:click="selectedQuantity = {{ $preset->amount }}"
+    x-on:click="selectedQuantity = parseInt({{ $preset->amount }})"
     :class="{
-        'ring-2 ring-indigo-600': selectedQuantity === {{ $preset->amount }}
+        'ring-2 ring-indigo-600': parseInt(selectedQuantity) === {{ $preset->amount }}
     }">
     <div class="relative p-5 rounded-xl border-2 transition-all duration-300 h-full flex flex-col"
         :class="{
-            'border-indigo-600 ring-4 ring-indigo-600/20 bg-indigo-50/50': selectedQuantity === {{ $preset->amount }},
-            'hover:border-indigo-300 hover:bg-indigo-50/30 hover:shadow-md': selectedQuantity !== {{ $preset->amount }}
+            'border-indigo-600 ring-4 ring-indigo-600/20 bg-indigo-50/50': parseInt(selectedQuantity) === {{ $preset->amount }},
+            'hover:border-indigo-300 hover:bg-indigo-50/30 hover:shadow-md': parseInt(selectedQuantity) !== {{ $preset->amount }}
         }">
         @if($preset->savings)
             <span class="absolute -top-3 -right-3 inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-800 shadow-md ring-1 ring-green-100/50">
@@ -19,7 +19,7 @@
         <div class="flex justify-between items-start mb-3">
             <div>
                 <p class="font-medium text-gray-900 transition-colors"
-                    :class="{ 'text-indigo-600': selectedQuantity === {{ $preset->amount }} }">
+                    :class="{ 'text-indigo-600': parseInt(selectedQuantity) === {{ $preset->amount }} }">
                     {{ $preset->label }}
                     @if($preset->popular)
                         <span class="ml-1 text-sm font-normal text-indigo-600">•</span>
@@ -76,7 +76,7 @@
                 @endif
             </div>
             <span class="flex items-center justify-center w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 font-bold text-xl transition-colors shadow-md"
-                :class="{ 'bg-indigo-200': selectedQuantity === {{ $preset->amount }} }">
+                :class="{ 'bg-indigo-200': parseInt(selectedQuantity) === {{ $preset->amount }} }">
                 {{ $preset->amount }}
             </span>
         </div>

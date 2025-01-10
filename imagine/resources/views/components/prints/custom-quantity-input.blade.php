@@ -9,8 +9,7 @@
     </div>
     <div class="flex items-center space-x-3">
         <div class="relative flex-1">
-            <input type="number" 
-                name="quantity" 
+            <input type="number"
                 id="custom_quantity" 
                 min="1" 
                 max="{{ $maxQuantity }}"

@@ -23,29 +23,42 @@ class StoreMaterialRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'size' => [
-                'required',
-                'string',
-                Rule::in(array_keys(config('prints.sizes'))),
-            ],
             'material' => [
                 'required',
                 'string',
                 Rule::in(array_keys(config('prints.materials'))),
-            ],
-            'gallery_id' => [
-                'required',
-                'exists:galleries,id',
-                function ($attribute, $value, $fail) {
-                    $gallery = $this->route('gallery');
-                    if ($gallery->id != $value) {
-                        $fail('Invalid gallery selected.');
-                    }
-                    if ($gallery->user_id !== auth()->id()) {
-                        $fail('You do not have permission to create prints from this gallery.');
-                    }
-                },
-            ],
+            ]
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('material')) {
+            $this->merge([
+                'material' => trim($this->material)
+            ]);
+        }
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            // Ensure gallery belongs to current user
+            $gallery = $this->route('gallery');
+            if ($gallery->user_id !== auth()->id()) {
+                $validator->errors()->add('gallery', 'You do not have permission to create prints from this gallery.');
+            }
+
+            // Ensure size is selected in session
+            if (!session()->has('print_order.size')) {
+                $validator->errors()->add('size', 'Please select a size first.');
+            }
+        });
     }
 }

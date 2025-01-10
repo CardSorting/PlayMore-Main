@@ -22,25 +22,43 @@ class StoreSizeRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Get all valid sizes from config
+        $validSizes = collect(config('prints.sizes'))->flatMap(function ($category) {
+            return array_keys($category['sizes']);
+        })->all();
+
         return [
             'size' => [
                 'required',
                 'string',
-                Rule::in(array_keys(config('prints.sizes'))),
-            ],
-            'gallery_id' => [
-                'required',
-                'exists:galleries,id',
-                function ($attribute, $value, $fail) {
-                    $gallery = $this->route('gallery');
-                    if ($gallery->id != $value) {
-                        $fail('Invalid gallery selected.');
-                    }
-                    if ($gallery->user_id !== auth()->id()) {
-                        $fail('You do not have permission to create prints from this gallery.');
-                    }
-                },
-            ],
+                Rule::in($validSizes)
+            ]
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('size')) {
+            $this->merge([
+                'size' => trim($this->size)
+            ]);
+        }
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            // Ensure gallery belongs to current user
+            $gallery = $this->route('gallery');
+            if ($gallery->user_id !== auth()->id()) {
+                $validator->errors()->add('gallery', 'You do not have permission to create prints from this gallery.');
+            }
+        });
     }
 }

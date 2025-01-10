@@ -17,7 +17,7 @@ class ProcessPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'payment_method_id' => ['required', 'string'],
+            'payment_intent_id' => ['required', 'string'],
             'save_payment_method' => ['boolean'],
             'billing_email' => ['required', 'email'],
             'billing_name' => ['required', 'string', 'max:255'],
@@ -36,7 +36,7 @@ class ProcessPaymentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'payment_method_id.required' => 'Payment method information is required.',
+            'payment_intent_id.required' => 'Payment intent information is required.',
             'billing_country.in' => 'We currently only accept billing addresses from the United States, Canada, United Kingdom, and Australia.',
         ];
     }

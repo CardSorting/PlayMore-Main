@@ -76,7 +76,7 @@
                 <!-- Payment Form -->
                 <div class="lg:col-span-1">
                     <div class="bg-white rounded-lg shadow-sm p-6">
-                        <form id="payment-form" action="{{ route('prints.confirm', $printOrder) }}" method="POST">
+                        <form id="payment-form" action="{{ route('prints.process-payment', $printOrder) }}" method="POST">
                             @csrf
                             <div class="mb-8">
                                 <h3 class="text-lg font-medium text-gray-900 mb-4">Payment Details</h3>

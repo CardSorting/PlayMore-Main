@@ -34,37 +34,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('store');
 
         // Print order management
-        Route::middleware('print.access')->group(function () {
-            // View print order
-            Route::get('/{order}', [PrintOrderController::class, 'show'])
-                ->name('show');
+        // View print order
+        Route::get('/{order}', [PrintOrderController::class, 'show'])
+            ->name('show');
 
-            // Checkout process
-            Route::get('/{order}/checkout', [PrintOrderController::class, 'checkout'])
-                ->name('checkout');
-            Route::post('/{order}/process-payment', [PrintOrderController::class, 'processPayment'])
-                ->name('process-payment');
-            Route::get('/{order}/success', [PrintOrderController::class, 'success'])
-                ->name('success');
+        // Checkout process
+        Route::get('/{order}/checkout', [PrintOrderController::class, 'checkout'])
+            ->name('checkout');
+        Route::post('/{order}/shipping', [PrintOrderController::class, 'storeShippingAddress'])
+            ->name('store-shipping-address');
+        Route::post('/{order}/process-payment', [PrintOrderController::class, 'processPayment'])
+            ->name('process-payment');
+        Route::get('/{order}/success', [PrintOrderController::class, 'success'])
+            ->name('success');
 
-            // Order actions
-            Route::post('/{order}/cancel', [PrintOrderController::class, 'cancel'])
-                ->name('cancel')
-                ->middleware('can:cancel,order');
+        // Order actions
+        Route::post('/{order}/cancel', [PrintOrderController::class, 'cancel'])
+            ->name('cancel');
 
-            Route::post('/{order}/reorder', [PrintOrderController::class, 'reorder'])
-                ->name('reorder')
-                ->middleware('can:reorder,order');
+        Route::post('/{order}/reorder', [PrintOrderController::class, 'reorder'])
+            ->name('reorder');
 
-            // Tracking and documents
-            Route::get('/{order}/track', [PrintOrderController::class, 'track'])
-                ->name('track')
-                ->middleware('can:track,order');
+        // Tracking and documents
+        Route::get('/{order}/track', [PrintOrderController::class, 'track'])
+            ->name('track');
 
-            Route::get('/{order}/invoice', [PrintOrderController::class, 'downloadInvoice'])
-                ->name('invoice')
-                ->middleware('can:downloadInvoice,order');
-        });
+        Route::get('/{order}/invoice', [PrintOrderController::class, 'downloadInvoice'])
+            ->name('invoice');
     });
 });
 

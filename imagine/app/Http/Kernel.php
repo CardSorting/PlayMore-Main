@@ -65,7 +65,6 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
-        'print.access' => \App\Http\Middleware\PrintOrderAccess::class,
         'image.rate-limit' => \App\Http\Middleware\ImageGenerationRateLimiter::class,
         'marketplace.rate-limit' => \App\Http\Middleware\MarketplaceRateLimiter::class,
     ];

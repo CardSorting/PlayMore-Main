@@ -26,8 +26,6 @@
                 }
             }" method="POST" action="{{ route('prints.store-material', $gallery) }}" class="relative">
                 @csrf
-                <input type="hidden" name="gallery_id" value="{{ $gallery->id }}">
-                <input type="hidden" name="size" value="{{ $selectedSize }}">
 
                 <!-- Selected Size Info -->
                 <div class="mb-8 bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 overflow-hidden">

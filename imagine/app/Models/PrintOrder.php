@@ -28,7 +28,22 @@ class PrintOrder extends Model
         'notes',
         'tracking_number',
         'shipping_carrier',
+        'order_number',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($order) {
+            // Generate a unique order number if not set
+            if (!$order->order_number) {
+                do {
+                    $order->order_number = 'PRT' . strtoupper(substr(uniqid(), -6));
+                } while (static::where('order_number', $order->order_number)->exists());
+            }
+        });
+    }
 
     protected $casts = [
         'paid_at' => 'datetime',

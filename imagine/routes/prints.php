@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PrintOrderController;
+use App\Http\Controllers\Admin\PrintOrderController as AdminPrintOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -12,9 +13,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Create new print order
         Route::get('/gallery/{gallery}/create', [PrintOrderController::class, 'create'])
-            ->name('create');
+            ->name('create')
+            ->middleware('can:create,App\Models\PrintOrder');
+
         Route::post('/gallery/{gallery}', [PrintOrderController::class, 'store'])
-            ->name('store');
+            ->name('store')
+            ->middleware('can:create,App\Models\PrintOrder');
 
         // Print order management
         Route::middleware('print.access')->group(function () {
@@ -32,9 +36,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             // Order actions
             Route::post('/{order}/cancel', [PrintOrderController::class, 'cancel'])
-                ->name('cancel');
+                ->name('cancel')
+                ->middleware('can:cancel,order');
+
             Route::post('/{order}/reorder', [PrintOrderController::class, 'reorder'])
-                ->name('reorder');
+                ->name('reorder')
+                ->middleware('can:reorder,order');
+
+            // Tracking and documents
+            Route::get('/{order}/track', [PrintOrderController::class, 'track'])
+                ->name('track')
+                ->middleware('can:track,order');
+
+            Route::get('/{order}/invoice', [PrintOrderController::class, 'downloadInvoice'])
+                ->name('invoice')
+                ->middleware('can:downloadInvoice,order');
         });
     });
 });
@@ -42,15 +58,40 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Admin Routes
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::prefix('admin/prints')->name('admin.prints.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\PrintOrderController::class, 'index'])
+        // List and search orders
+        Route::get('/', [AdminPrintOrderController::class, 'index'])
             ->name('index');
-        Route::get('/{order}', [\App\Http\Controllers\Admin\PrintOrderController::class, 'show'])
+
+        // View order details
+        Route::get('/{order}', [AdminPrintOrderController::class, 'show'])
             ->name('show');
-        Route::post('/{order}/update-status', [\App\Http\Controllers\Admin\PrintOrderController::class, 'updateStatus'])
+
+        // Order management
+        Route::post('/{order}/update-status', [AdminPrintOrderController::class, 'updateStatus'])
             ->name('update-status');
-        Route::post('/{order}/add-tracking', [\App\Http\Controllers\Admin\PrintOrderController::class, 'addTracking'])
+
+        Route::post('/{order}/add-tracking', [AdminPrintOrderController::class, 'addTracking'])
             ->name('add-tracking');
-        Route::post('/{order}/refund', [\App\Http\Controllers\Admin\PrintOrderController::class, 'refund'])
+
+        Route::post('/{order}/refund', [AdminPrintOrderController::class, 'refund'])
             ->name('refund');
+
+        // Batch operations
+        Route::post('/batch/update-status', [AdminPrintOrderController::class, 'batchUpdateStatus'])
+            ->name('batch.update-status');
+
+        Route::post('/batch/export', [AdminPrintOrderController::class, 'batchExport'])
+            ->name('batch.export');
+    });
+});
+
+// API Routes (for admin dashboard)
+Route::middleware(['auth:sanctum', 'verified', 'admin'])->group(function () {
+    Route::prefix('api/admin/prints')->name('api.admin.prints.')->group(function () {
+        Route::get('/stats', [AdminPrintOrderController::class, 'stats'])
+            ->name('stats');
+            
+        Route::get('/search', [AdminPrintOrderController::class, 'search'])
+            ->name('search');
     });
 });

@@ -16,7 +16,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['daily', 'slack'],
             'ignore_exceptions' => false,
         ],
 
@@ -33,43 +33,6 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
             'replace_placeholders' => true,
-        ],
-
-        // Print Orders Channel
-        'orders' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/orders.log'),
-            'level' => 'info',
-            'days' => 90, // Keep order logs for 90 days
-            'replace_placeholders' => true,
-            'permission' => 0664,
-            'formatter' => \Monolog\Formatter\JsonFormatter::class,
-            'processors' => [
-                // Add additional context to each log entry
-                function ($record) {
-                    $record['extra']['user_id'] = auth()->id() ?? 'system';
-                    $record['extra']['ip'] = request()->ip();
-                    return $record;
-                },
-            ],
-        ],
-
-        // Print Production Channel
-        'production' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/production.log'),
-            'level' => 'info',
-            'days' => 90,
-            'replace_placeholders' => true,
-            'permission' => 0664,
-            'formatter' => \Monolog\Formatter\JsonFormatter::class,
-            'processors' => [
-                function ($record) {
-                    $record['extra']['environment'] = app()->environment();
-                    $record['extra']['server'] = gethostname();
-                    return $record;
-                },
-            ],
         ],
 
         'slack' => [
@@ -124,6 +87,79 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        // Custom channels for print orders
+        'orders' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/orders.log'),
+            'level' => 'debug',
+            'days' => 90, // Keep order logs for 90 days
+            'permission' => 0664,
+            'replace_placeholders' => true,
+        ],
+
+        'orders-error' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/orders-error.log'),
+            'level' => 'error',
+            'days' => 90,
+            'permission' => 0664,
+            'replace_placeholders' => true,
+        ],
+
+        'metrics' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/metrics.log'),
+            'level' => 'info',
+            'days' => 30, // Keep metrics for 30 days
+            'permission' => 0664,
+            'replace_placeholders' => true,
+        ],
+
+        'exports' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/exports.log'),
+            'level' => 'debug',
+            'days' => 30,
+            'permission' => 0664,
+            'replace_placeholders' => true,
+        ],
+
+        'refunds' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/refunds.log'),
+            'level' => 'debug',
+            'days' => 365, // Keep refund logs for a year
+            'permission' => 0664,
+            'replace_placeholders' => true,
+        ],
+
+        'production' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/production.log'),
+            'level' => 'debug',
+            'days' => 90,
+            'permission' => 0664,
+            'replace_placeholders' => true,
+        ],
+
+        'shipping' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/shipping.log'),
+            'level' => 'debug',
+            'days' => 90,
+            'permission' => 0664,
+            'replace_placeholders' => true,
+        ],
+
+        'notifications' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/notifications.log'),
+            'level' => 'debug',
+            'days' => 30,
+            'permission' => 0664,
+            'replace_placeholders' => true,
         ],
     ],
 ];

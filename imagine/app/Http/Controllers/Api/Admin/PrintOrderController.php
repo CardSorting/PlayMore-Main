@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PrintOrder;
 use App\Services\PrintOrderService;
-use App\ViewModels\PrintOrderViewModel;
-use App\Exceptions\PrintOrderException;
+use App\Http\Resources\PrintOrderResource;
 use App\Http\Requests\Admin\Print\{
     UpdateStatusRequest,
     AddTrackingRequest,
@@ -15,49 +14,87 @@ use App\Http\Requests\Admin\Print\{
     BatchExportRequest
 };
 use App\Jobs\ExportPrintOrders;
-use Illuminate\Http\{JsonResponse, Request, Response};
-use Illuminate\View\View;
+use App\Events\PrintOrderRefunded;
+use App\Exceptions\PrintOrderException;
+use Illuminate\Http\{JsonResponse, Request};
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response;
 
 class PrintOrderController extends Controller
 {
     public function __construct(
         protected PrintOrderService $printOrderService
     ) {
-        $this->middleware(['auth', 'verified', 'admin']);
+        $this->middleware(['auth:sanctum', 'verified', 'admin']);
     }
 
-    public function index(Request $request): View
+    /**
+     * Get print order statistics.
+     */
+    public function stats(): JsonResponse
+    {
+        $stats = [
+            'orders' => [
+                'total' => PrintOrder::count(),
+                'by_status' => [
+                    'pending' => PrintOrder::where('status', 'pending')->count(),
+                    'processing' => PrintOrder::where('status', 'processing')->count(),
+                    'shipped' => PrintOrder::where('status', 'shipped')->count(),
+                    'completed' => PrintOrder::where('status', 'completed')->count(),
+                    'cancelled' => PrintOrder::where('status', 'cancelled')->count(),
+                ],
+            ],
+            'revenue' => [
+                'total' => PrintOrder::whereNotNull('paid_at')->sum('price'),
+                'refunded' => PrintOrder::whereNotNull('refunded_at')->sum('refunded_amount'),
+                'net' => PrintOrder::whereNotNull('paid_at')->sum('price') - 
+                        PrintOrder::whereNotNull('refunded_at')->sum('refunded_amount'),
+            ],
+            'popular_sizes' => PrintOrder::selectRaw('size, count(*) as count')
+                ->groupBy('size')
+                ->orderByDesc('count')
+                ->limit(5)
+                ->get(),
+            'processing_times' => [
+                'avg_to_ship' => DB::table('print_orders')
+                    ->whereNotNull('shipped_at')
+                    ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, shipped_at)) as hours')
+                    ->value('hours'),
+                'avg_to_complete' => DB::table('print_orders')
+                    ->whereNotNull('completed_at')
+                    ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, completed_at)) as hours')
+                    ->value('hours'),
+            ],
+        ];
+
+        return response()->json($stats);
+    }
+
+    /**
+     * Search print orders.
+     */
+    public function search(Request $request): JsonResponse
     {
         $orders = PrintOrder::with(['gallery', 'user'])
-            ->when($request->status, fn($query, $status) => $query->where('status', $status))
-            ->when($request->search, function($query, $search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('order_number', 'like', "%{$search}%")
-                        ->orWhere('shipping_name', 'like', "%{$search}%")
-                        ->orWhereHas('user', fn($q) => $q->where('email', 'like', "%{$search}%"));
+            ->when($request->term, function($query, $term) {
+                $query->where(function($q) use ($term) {
+                    $q->where('order_number', 'like', "%{$term}%")
+                        ->orWhere('shipping_name', 'like', "%{$term}%")
+                        ->orWhereHas('user', fn($q) => $q->where('email', 'like', "%{$term}%"));
                 });
             })
             ->latest()
-            ->paginate(20)
-            ->withQueryString();
+            ->limit(10)
+            ->get();
 
-        $stats = [
-            'total' => PrintOrder::count(),
-            'pending' => PrintOrder::where('status', 'pending')->count(),
-            'processing' => PrintOrder::where('status', 'processing')->count(),
-            'shipped' => PrintOrder::where('status', 'shipped')->count(),
-            'completed' => PrintOrder::where('status', 'completed')->count(),
-            'cancelled' => PrintOrder::where('status', 'cancelled')->count(),
-        ];
-
-        return view('admin.prints.index', compact('orders', 'stats'));
+        return response()->json([
+            'orders' => PrintOrderResource::collection($orders),
+        ]);
     }
 
-    public function show(PrintOrder $order): View
-    {
-        return view('admin.prints.show', new PrintOrderViewModel($order));
-    }
-
+    /**
+     * Update order status.
+     */
     public function updateStatus(UpdateStatusRequest $request, PrintOrder $order): JsonResponse
     {
         try {
@@ -76,7 +113,7 @@ class PrintOrderController extends Controller
 
             return response()->json([
                 'message' => 'Order status updated successfully',
-                'order' => new PrintOrderViewModel($order->fresh()),
+                'order' => new PrintOrderResource($order->fresh()),
             ]);
 
         } catch (PrintOrderException $e) {
@@ -87,6 +124,9 @@ class PrintOrderController extends Controller
         }
     }
 
+    /**
+     * Add tracking information.
+     */
     public function addTracking(AddTrackingRequest $request, PrintOrder $order): JsonResponse
     {
         $order->update([
@@ -104,13 +144,18 @@ class PrintOrderController extends Controller
 
         return response()->json([
             'message' => 'Tracking information added successfully',
-            'order' => new PrintOrderViewModel($order->fresh()),
+            'order' => new PrintOrderResource($order->fresh()),
         ]);
     }
 
+    /**
+     * Process refund.
+     */
     public function refund(ProcessRefundRequest $request, PrintOrder $order): JsonResponse
     {
         try {
+            DB::beginTransaction();
+
             // Process refund through payment gateway...
             // This would typically use a payment service
 
@@ -118,16 +163,26 @@ class PrintOrderController extends Controller
                 'refunded_amount' => $request->amount,
                 'refund_reason' => $request->reason,
                 'refunded_at' => now(),
+                'refunded_by' => $request->user()->id,
             ]);
 
-            event(new \App\Events\PrintOrderRefunded($order, $request->amount, $request->reason));
+            event(new PrintOrderRefunded(
+                order: $order,
+                amount: $request->amount,
+                reason: $request->reason,
+                processedBy: $request->user()
+            ));
+
+            DB::commit();
 
             return response()->json([
                 'message' => 'Refund processed successfully',
-                'order' => new PrintOrderViewModel($order->fresh()),
+                'order' => new PrintOrderResource($order->fresh()),
             ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
+
             return response()->json([
                 'message' => 'Failed to process refund',
                 'error' => $e->getMessage(),
@@ -135,6 +190,9 @@ class PrintOrderController extends Controller
         }
     }
 
+    /**
+     * Batch update order statuses.
+     */
     public function batchUpdateStatus(BatchUpdateStatusRequest $request): JsonResponse
     {
         $orders = PrintOrder::whereIn('id', $request->orders)->get();
@@ -164,9 +222,14 @@ class PrintOrderController extends Controller
 
         return response()->json([
             'message' => "{$updated} orders updated successfully",
+            'updated_count' => $updated,
+            'total_orders' => $orders->count(),
         ]);
     }
 
+    /**
+     * Export orders.
+     */
     public function batchExport(BatchExportRequest $request): JsonResponse
     {
         $validated = $request->validated();
@@ -186,52 +249,7 @@ class PrintOrderController extends Controller
 
         return response()->json([
             'message' => 'Export started. You will be notified when it\'s ready.',
+            'job_id' => ExportPrintOrders::$jobId ?? null,
         ]);
-    }
-
-    public function stats(): JsonResponse
-    {
-        $stats = [
-            'orders' => [
-                'total' => PrintOrder::count(),
-                'by_status' => [
-                    'pending' => PrintOrder::where('status', 'pending')->count(),
-                    'processing' => PrintOrder::where('status', 'processing')->count(),
-                    'shipped' => PrintOrder::where('status', 'shipped')->count(),
-                    'completed' => PrintOrder::where('status', 'completed')->count(),
-                    'cancelled' => PrintOrder::where('status', 'cancelled')->count(),
-                ],
-            ],
-            'revenue' => [
-                'total' => PrintOrder::whereNotNull('paid_at')->sum('price'),
-                'refunded' => PrintOrder::whereNotNull('refunded_at')->sum('refunded_amount'),
-                'net' => PrintOrder::whereNotNull('paid_at')->sum('price') - 
-                        PrintOrder::whereNotNull('refunded_at')->sum('refunded_amount'),
-            ],
-            'popular_sizes' => PrintOrder::selectRaw('size, count(*) as count')
-                ->groupBy('size')
-                ->orderByDesc('count')
-                ->limit(5)
-                ->get(),
-        ];
-
-        return response()->json($stats);
-    }
-
-    public function search(Request $request): JsonResponse
-    {
-        $orders = PrintOrder::with(['gallery', 'user'])
-            ->when($request->term, function($query, $term) {
-                $query->where(function($q) use ($term) {
-                    $q->where('order_number', 'like', "%{$term}%")
-                        ->orWhere('shipping_name', 'like', "%{$term}%")
-                        ->orWhereHas('user', fn($q) => $q->where('email', 'like', "%{$term}%"));
-                });
-            })
-            ->latest()
-            ->limit(10)
-            ->get();
-
-        return response()->json($orders);
     }
 }

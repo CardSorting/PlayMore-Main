@@ -1,146 +1,246 @@
 <?php
 
 return [
-    'states' => [
-        'us' => [
-            'AL' => 'Alabama',
-            'AK' => 'Alaska',
-            'AZ' => 'Arizona',
-            'AR' => 'Arkansas',
-            'CA' => 'California',
-            'CO' => 'Colorado',
-            'CT' => 'Connecticut',
-            'DE' => 'Delaware',
-            'FL' => 'Florida',
-            'GA' => 'Georgia',
-            'HI' => 'Hawaii',
-            'ID' => 'Idaho',
-            'IL' => 'Illinois',
-            'IN' => 'Indiana',
-            'IA' => 'Iowa',
-            'KS' => 'Kansas',
-            'KY' => 'Kentucky',
-            'LA' => 'Louisiana',
-            'ME' => 'Maine',
-            'MD' => 'Maryland',
-            'MA' => 'Massachusetts',
-            'MI' => 'Michigan',
-            'MN' => 'Minnesota',
-            'MS' => 'Mississippi',
-            'MO' => 'Missouri',
-            'MT' => 'Montana',
-            'NE' => 'Nebraska',
-            'NV' => 'Nevada',
-            'NH' => 'New Hampshire',
-            'NJ' => 'New Jersey',
-            'NM' => 'New Mexico',
-            'NY' => 'New York',
-            'NC' => 'North Carolina',
-            'ND' => 'North Dakota',
-            'OH' => 'Ohio',
-            'OK' => 'Oklahoma',
-            'OR' => 'Oregon',
-            'PA' => 'Pennsylvania',
-            'RI' => 'Rhode Island',
-            'SC' => 'South Carolina',
-            'SD' => 'South Dakota',
-            'TN' => 'Tennessee',
-            'TX' => 'Texas',
-            'UT' => 'Utah',
-            'VT' => 'Vermont',
-            'VA' => 'Virginia',
-            'WA' => 'Washington',
-            'WV' => 'West Virginia',
-            'WI' => 'Wisconsin',
-            'WY' => 'Wyoming',
-            'DC' => 'District of Columbia',
-        ],
-        'ca' => [
-            'AB' => 'Alberta',
-            'BC' => 'British Columbia',
-            'MB' => 'Manitoba',
-            'NB' => 'New Brunswick',
-            'NL' => 'Newfoundland and Labrador',
-            'NS' => 'Nova Scotia',
-            'NT' => 'Northwest Territories',
-            'NU' => 'Nunavut',
-            'ON' => 'Ontario',
-            'PE' => 'Prince Edward Island',
-            'QC' => 'Quebec',
-            'SK' => 'Saskatchewan',
-            'YT' => 'Yukon',
-        ],
-        'au' => [
-            'ACT' => 'Australian Capital Territory',
-            'NSW' => 'New South Wales',
-            'NT' => 'Northern Territory',
-            'QLD' => 'Queensland',
-            'SA' => 'South Australia',
-            'TAS' => 'Tasmania',
-            'VIC' => 'Victoria',
-            'WA' => 'Western Australia',
-        ],
-        'gb' => [
-            'ENG' => 'England',
-            'SCT' => 'Scotland',
-            'WLS' => 'Wales',
-            'NIR' => 'Northern Ireland',
-        ],
-    ],
-
+    /*
+    |--------------------------------------------------------------------------
+    | Shipping Zones
+    |--------------------------------------------------------------------------
+    |
+    | Define shipping zones and their associated countries. Each country is
+    | mapped to a zone type that determines shipping rates and delivery times.
+    |
+    */
     'shipping_zones' => [
-        'domestic' => ['US'],
-        'international' => ['CA', 'GB', 'AU'],
+        // North America
+        'US' => 'domestic',
+        'CA' => 'canada',
+        'MX' => 'mexico',
+
+        // Europe
+        'GB' => 'europe',
+        'DE' => 'europe',
+        'FR' => 'europe',
+        'IT' => 'europe',
+        'ES' => 'europe',
+        'NL' => 'europe',
+        'BE' => 'europe',
+        'CH' => 'europe',
+        'AT' => 'europe',
+        'SE' => 'europe',
+        'NO' => 'europe',
+        'DK' => 'europe',
+        'FI' => 'europe',
+        'IE' => 'europe',
+        'PT' => 'europe',
+
+        // Asia Pacific
+        'AU' => 'asia_pacific',
+        'NZ' => 'asia_pacific',
+        'JP' => 'asia_pacific',
+        'KR' => 'asia_pacific',
+        'SG' => 'asia_pacific',
+        'HK' => 'asia_pacific',
+
+        // Default for unlisted countries
+        '*' => 'international',
     ],
 
-    'shipping_methods' => [
+    /*
+    |--------------------------------------------------------------------------
+    | Zone Types
+    |--------------------------------------------------------------------------
+    |
+    | Configure shipping rates and delivery estimates for each zone type.
+    | Rates are in USD cents.
+    |
+    */
+    'zone_types' => [
+        'domestic' => [
+            'name' => 'United States',
+            'base_rate' => 599, // $5.99
+            'per_pound_rate' => 50, // $0.50
+            'free_shipping_threshold' => 7500, // $75.00
+            'available_services' => ['ground', 'two_day', 'overnight'],
+            'requires_customs' => false,
+        ],
+        'canada' => [
+            'name' => 'Canada',
+            'base_rate' => 1499, // $14.99
+            'per_pound_rate' => 100, // $1.00
+            'free_shipping_threshold' => 15000, // $150.00
+            'available_services' => ['standard', 'express'],
+            'requires_customs' => true,
+        ],
+        'mexico' => [
+            'name' => 'Mexico',
+            'base_rate' => 1999, // $19.99
+            'per_pound_rate' => 150, // $1.50
+            'free_shipping_threshold' => 20000, // $200.00
+            'available_services' => ['standard', 'express'],
+            'requires_customs' => true,
+        ],
+        'europe' => [
+            'name' => 'Europe',
+            'base_rate' => 2499, // $24.99
+            'per_pound_rate' => 200, // $2.00
+            'free_shipping_threshold' => 25000, // $250.00
+            'available_services' => ['standard', 'express'],
+            'requires_customs' => true,
+        ],
+        'asia_pacific' => [
+            'name' => 'Asia Pacific',
+            'base_rate' => 2999, // $29.99
+            'per_pound_rate' => 250, // $2.50
+            'free_shipping_threshold' => 30000, // $300.00
+            'available_services' => ['standard', 'express'],
+            'requires_customs' => true,
+        ],
+        'international' => [
+            'name' => 'International',
+            'base_rate' => 3499, // $34.99
+            'per_pound_rate' => 300, // $3.00
+            'free_shipping_threshold' => null, // No free shipping
+            'available_services' => ['standard'],
+            'requires_customs' => true,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Shipping Services
+    |--------------------------------------------------------------------------
+    |
+    | Define available shipping services and their properties.
+    |
+    */
+    'shipping_services' => [
+        'ground' => [
+            'name' => 'Ground',
+            'rate_multiplier' => 1.0,
+            'delivery_days' => [3, 7],
+        ],
+        'two_day' => [
+            'name' => '2-Day Air',
+            'rate_multiplier' => 2.0,
+            'delivery_days' => [2, 2],
+        ],
+        'overnight' => [
+            'name' => 'Overnight',
+            'rate_multiplier' => 3.0,
+            'delivery_days' => [1, 1],
+        ],
         'standard' => [
-            'name' => 'Standard Shipping',
-            'description' => '5-7 business days',
-            'price' => 0, // Free shipping
-            'delivery_days' => 7,
+            'name' => 'Standard International',
+            'rate_multiplier' => 1.0,
+            'delivery_days' => [7, 14],
         ],
         'express' => [
-            'name' => 'Express Shipping',
-            'description' => '2-3 business days',
-            'price' => 15.00,
-            'delivery_days' => 3,
+            'name' => 'Express International',
+            'rate_multiplier' => 2.0,
+            'delivery_days' => [3, 5],
         ],
     ],
 
-    'address_format' => [
-        'US' => [
-            'zip_label' => 'ZIP Code',
-            'zip_format' => '\d{5}(-\d{4})?',
-            'state_label' => 'State',
-            'required_fields' => ['address', 'city', 'state', 'zip'],
+    /*
+    |--------------------------------------------------------------------------
+    | Shipping Estimates
+    |--------------------------------------------------------------------------
+    |
+    | Define estimated delivery times in business days for each zone type.
+    |
+    */
+    'shipping_estimates' => [
+        'domestic' => [
+            'processing' => 1,
+            'transit' => [
+                'ground' => [3, 7],
+                'two_day' => [2, 2],
+                'overnight' => [1, 1],
+            ],
         ],
-        'CA' => [
-            'zip_label' => 'Postal Code',
-            'zip_format' => '[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d',
-            'state_label' => 'Province',
-            'required_fields' => ['address', 'city', 'state', 'zip'],
+        'canada' => [
+            'processing' => 1,
+            'transit' => [
+                'standard' => [5, 10],
+                'express' => [2, 4],
+            ],
+            'customs' => [1, 3],
         ],
-        'GB' => [
-            'zip_label' => 'Postcode',
-            'zip_format' => '[A-Za-z]{1,2}\d[A-Za-z\d]? \d[A-Za-z]{2}',
-            'state_label' => 'Country',
-            'required_fields' => ['address', 'city', 'state', 'zip'],
+        'mexico' => [
+            'processing' => 1,
+            'transit' => [
+                'standard' => [7, 14],
+                'express' => [3, 5],
+            ],
+            'customs' => [2, 5],
         ],
-        'AU' => [
-            'zip_label' => 'Postcode',
-            'zip_format' => '\d{4}',
-            'state_label' => 'State/Territory',
-            'required_fields' => ['address', 'city', 'state', 'zip'],
+        'europe' => [
+            'processing' => 1,
+            'transit' => [
+                'standard' => [7, 14],
+                'express' => [3, 5],
+            ],
+            'customs' => [1, 4],
+        ],
+        'asia_pacific' => [
+            'processing' => 1,
+            'transit' => [
+                'standard' => [10, 21],
+                'express' => [4, 7],
+            ],
+            'customs' => [2, 5],
+        ],
+        'international' => [
+            'processing' => 1,
+            'transit' => [
+                'standard' => [14, 30],
+            ],
+            'customs' => [3, 7],
         ],
     ],
 
-    'validation' => [
-        'phone_formats' => [
-            'US' => '^\+?1?\d{10}$',
-            'CA' => '^\+?1?\d{10}$',
-            'GB' => '^\+?44\d{10}$',
-            'AU' => '^\+?61\d{9}$',
+    /*
+    |--------------------------------------------------------------------------
+    | Address Validation
+    |--------------------------------------------------------------------------
+    |
+    | Configure address validation rules and formatting.
+    |
+    */
+    'address_validation' => [
+        'postal_code_formats' => [
+            'US' => '^\d{5}(-\d{4})?$',
+            'CA' => '^[A-Z]\d[A-Z] \d[A-Z]\d$',
+            'GB' => '^[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}$',
+            '*' => '^[A-Z0-9- ]{3,10}$',
         ],
+        'state_required' => ['US', 'CA', 'AU'],
+        'state_label' => [
+            'US' => 'State',
+            'CA' => 'Province',
+            'AU' => 'State/Territory',
+            '*' => 'State/Region',
+        ],
+        'postal_label' => [
+            'US' => 'ZIP Code',
+            'GB' => 'Postcode',
+            '*' => 'Postal Code',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Restricted Destinations
+    |--------------------------------------------------------------------------
+    |
+    | Define countries where shipping is not available.
+    |
+    */
+    'restricted_destinations' => [
+        'CU', // Cuba
+        'IR', // Iran
+        'KP', // North Korea
+        'SY', // Syria
+        // Add other restricted countries as needed
     ],
 ];

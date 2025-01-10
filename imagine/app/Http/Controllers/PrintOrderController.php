@@ -9,23 +9,22 @@ use App\ViewModels\PrintOrderViewModel;
 use App\DTOs\PrintOrderData;
 use App\Http\Requests\Print\CreatePrintOrderRequest;
 use App\Http\Requests\Print\ProcessPaymentRequest;
-use App\Exceptions\PaymentException;
+use App\Exceptions\{PrintOrderException, PaymentException};
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class PrintOrderController extends Controller
 {
-    protected PrintOrderService $printOrderService;
-
-    public function __construct(PrintOrderService $printOrderService)
-    {
-        $this->printOrderService = $printOrderService;
+    public function __construct(
+        protected PrintOrderService $printOrderService
+    ) {
         $this->middleware(['auth', 'verified']);
+        $this->authorizeResource(PrintOrder::class, 'order');
     }
 
     public function index(): View
     {
-        $orders = PrintOrder::with('gallery')
+        $orders = PrintOrder::with(['gallery'])
             ->where('user_id', auth()->id())
             ->latest()
             ->paginate(10);
@@ -35,40 +34,57 @@ class PrintOrderController extends Controller
 
     public function create(Gallery $gallery): View
     {
-        $sizes = $this->printOrderService->getSizes();
-        return view('prints.create', compact('gallery', 'sizes'));
+        // Ensure the gallery belongs to the user
+        if ($gallery->user_id !== auth()->id()) {
+            abort(403, 'You do not have permission to create prints from this gallery.');
+        }
+
+        return view('prints.create', [
+            'gallery' => $gallery,
+            'sizes' => $this->printOrderService->getSizes(),
+        ]);
     }
 
     public function store(CreatePrintOrderRequest $request, Gallery $gallery): RedirectResponse
     {
-        $data = PrintOrderData::fromRequest(
-            array_merge($request->validated(), [
-                'price' => $this->printOrderService->getPriceForSize($request->size)
-            ]),
-            $gallery
-        );
+        try {
+            $data = PrintOrderData::fromRequest(
+                array_merge($request->validated(), [
+                    'price' => $this->printOrderService->getPriceForSize($request->size)
+                ]),
+                $gallery
+            );
 
-        $order = $this->printOrderService->createOrder($data);
+            $order = $this->printOrderService->createOrder($data);
 
-        return redirect()->route('prints.checkout', $order);
+            return redirect()
+                ->route('prints.checkout', $order)
+                ->with('success', 'Order created successfully.');
+
+        } catch (PrintOrderException $e) {
+            return back()
+                ->withErrors($e->getErrors())
+                ->withInput();
+        }
     }
 
     public function show(PrintOrder $order): View
     {
-        $this->authorize('view', $order);
-        
         return view('prints.show', new PrintOrderViewModel($order));
     }
 
-    public function checkout(PrintOrder $order): View
+    public function checkout(PrintOrder $order): View|RedirectResponse
     {
-        $this->authorize('view', $order);
+        try {
+            $this->printOrderService->validateOrderStatus($order, ['pending']);
 
-        if ($order->status !== 'pending') {
-            return redirect()->route('prints.show', $order);
+            return view('prints.checkout', new PrintOrderViewModel($order));
+
+        } catch (PrintOrderException $e) {
+            return redirect()
+                ->route('prints.show', $order)
+                ->with('error', $e->getMessage());
         }
-
-        return view('prints.checkout', new PrintOrderViewModel($order));
     }
 
     public function processPayment(ProcessPaymentRequest $request, PrintOrder $order): RedirectResponse
@@ -76,18 +92,23 @@ class PrintOrderController extends Controller
         try {
             $this->printOrderService->processPayment($order, $request->payment_method_id);
 
-            return redirect()->route('prints.success', $order);
-        } catch (PaymentException $e) {
-            return back()->withErrors(['payment' => $e->getMessage()]);
+            return redirect()
+                ->route('prints.success', $order)
+                ->with('success', 'Payment processed successfully.');
+
+        } catch (PaymentException|PrintOrderException $e) {
+            return back()
+                ->withErrors(['payment' => $e->getMessage()])
+                ->withInput();
         }
     }
 
-    public function success(PrintOrder $order): View
+    public function success(PrintOrder $order): View|RedirectResponse
     {
-        $this->authorize('view', $order);
-
         if ($order->status === 'pending') {
-            return redirect()->route('prints.checkout', $order);
+            return redirect()
+                ->route('prints.checkout', $order)
+                ->with('error', 'Payment is required to complete this order.');
         }
 
         return view('prints.success', new PrintOrderViewModel($order));
@@ -95,23 +116,20 @@ class PrintOrderController extends Controller
 
     public function cancel(PrintOrder $order): RedirectResponse
     {
-        $this->authorize('cancel', $order);
+        try {
+            $this->printOrderService->cancelOrder($order);
 
-        if (!in_array($order->status, ['pending', 'processing'])) {
-            return back()->with('error', 'This order cannot be cancelled.');
+            return redirect()
+                ->route('prints.index')
+                ->with('success', 'Order cancelled successfully.');
+
+        } catch (PrintOrderException $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        $order->update(['status' => 'cancelled']);
-
-        return redirect()
-            ->route('prints.index')
-            ->with('success', 'Order cancelled successfully.');
     }
 
     public function reorder(PrintOrder $order): RedirectResponse
     {
-        $this->authorize('view', $order);
-
         return redirect()->route('prints.create', [
             'gallery' => $order->gallery_id,
             'prefill' => [
@@ -124,5 +142,30 @@ class PrintOrderController extends Controller
                 'shipping_country' => $order->shipping_country,
             ]
         ]);
+    }
+
+    public function track(PrintOrder $order): View|RedirectResponse
+    {
+        try {
+            $this->printOrderService->validateOrderStatus($order, ['shipped']);
+
+            return view('prints.track', new PrintOrderViewModel($order));
+
+        } catch (PrintOrderException $e) {
+            return redirect()
+                ->route('prints.show', $order)
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    public function downloadInvoice(PrintOrder $order): RedirectResponse
+    {
+        if (!$order->paid_at) {
+            return back()->with('error', 'Invoice is not available for unpaid orders.');
+        }
+
+        // Generate and return invoice...
+        // This would typically use a service to generate a PDF invoice
+        return back()->with('error', 'Invoice download is not yet implemented.');
     }
 }

@@ -2,112 +2,138 @@
 
 namespace App\Providers;
 
-use App\Services\PrintOrderService;
-use App\Services\PrintProductionService;
+use App\Models\PrintOrder;
+use App\Services\{PrintOrderService, StripeService};
+use App\Observers\PrintOrderObserver;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\{Config, Validator};
 
 class PrintServiceProvider extends ServiceProvider
 {
     /**
-     * Register any print-related services.
+     * Register any application services.
      */
     public function register(): void
     {
-        // Register PrintOrderService as a singleton
+        // Register PrintOrderService
         $this->app->singleton(PrintOrderService::class, function ($app) {
-            return new PrintOrderService([
-                'sizes' => [
-                    'small' => [
-                        'name' => 'Small (8" × 10")',
-                        'dimensions' => '8" × 10" (20.3cm × 25.4cm)',
-                        'price' => 29.99,
-                        'comparison_width' => 80,
-                        'comparison_height' => 100,
-                        'popular' => false,
-                    ],
-                    'medium' => [
-                        'name' => 'Medium (12" × 16")',
-                        'dimensions' => '12" × 16" (30.5cm × 40.6cm)',
-                        'price' => 49.99,
-                        'comparison_width' => 120,
-                        'comparison_height' => 160,
-                        'popular' => true,
-                    ],
-                    'large' => [
-                        'name' => 'Large (18" × 24")',
-                        'dimensions' => '18" × 24" (45.7cm × 61.0cm)',
-                        'price' => 79.99,
-                        'comparison_width' => 180,
-                        'comparison_height' => 240,
-                        'popular' => false,
-                    ],
-                    'xlarge' => [
-                        'name' => 'Extra Large (24" × 36")',
-                        'dimensions' => '24" × 36" (61.0cm × 91.4cm)',
-                        'price' => 129.99,
-                        'comparison_width' => 240,
-                        'comparison_height' => 360,
-                        'popular' => false,
-                    ],
-                ],
-                'shipping_methods' => config('location.shipping_methods'),
-                'shipping_zones' => config('location.shipping_zones'),
-            ]);
+            return new PrintOrderService(
+                $app->make(StripeService::class),
+                Config::get('prints'),
+                Config::get('location')
+            );
         });
 
-        // Register PrintProductionService
-        $this->app->singleton(PrintProductionService::class, function ($app) {
-            return new PrintProductionService([
-                'production_queue' => config('queue.connections.redis.queue'),
-                'notification_channel' => config('services.slack.print_notifications_webhook'),
-                'quality_settings' => [
-                    'dpi' => 300,
-                    'color_profile' => 'Adobe RGB (1998)',
-                    'paper_type' => 'Premium Lustre',
-                ],
-                'production_facilities' => [
-                    'us' => [
-                        'name' => 'US Production Facility',
-                        'timezone' => 'America/New_York',
-                        'cutoff_time' => '14:00',
-                        'processing_days' => 2,
-                    ],
-                    'eu' => [
-                        'name' => 'EU Production Facility',
-                        'timezone' => 'Europe/London',
-                        'cutoff_time' => '14:00',
-                        'processing_days' => 2,
-                    ],
-                ],
-            ]);
-        });
+        // Register config files
+        $this->mergeConfigFrom(
+            __DIR__.'/../../config/prints.php', 'prints'
+        );
+        $this->mergeConfigFrom(
+            __DIR__.'/../../config/location.php', 'location'
+        );
     }
 
     /**
-     * Bootstrap any print-related services.
+     * Bootstrap any application services.
      */
     public function boot(): void
     {
+        // Register model observers
+        PrintOrder::observe(PrintOrderObserver::class);
+
         // Register custom validation rules
-        \Illuminate\Support\Facades\Validator::extend('print_size', function ($attribute, $value, $parameters, $validator) {
-            $service = $this->app->make(PrintOrderService::class);
-            return array_key_exists($value, $service->getSizes());
+        Validator::extend('valid_print_size', function ($attribute, $value, $parameters, $validator) {
+            return array_key_exists($value, Config::get('prints.sizes', []));
         }, 'The selected print size is invalid.');
 
-        // Register custom blade components
-        \Illuminate\Support\Facades\Blade::componentNamespace('App\\View\\Components\\Prints', 'prints');
+        Validator::extend('valid_shipping_country', function ($attribute, $value, $parameters, $validator) {
+            $restrictedCountries = Config::get('location.restricted_destinations', []);
+            return !in_array(strtoupper($value), $restrictedCountries);
+        }, 'We do not ship to this country.');
 
-        // Register custom view composers
-        \Illuminate\Support\Facades\View::composer('prints.*', function ($view) {
-            $service = $this->app->make(PrintOrderService::class);
-            $view->with('sizes', $service->getSizes());
+        Validator::extend('valid_postal_code', function ($attribute, $value, $parameters, $validator) {
+            $data = $validator->getData();
+            $country = $data['shipping_country'] ?? '*';
+            $format = Config::get("location.address_validation.postal_code_formats.{$country}") ??
+                     Config::get('location.address_validation.postal_code_formats.*');
+
+            return preg_match("/{$format}/", $value);
+        }, 'The postal code format is invalid for the selected country.');
+
+        // Register custom blade components
+        $this->loadViewComponentsAs('prints', [
+            'progress-stepper' => \App\View\Components\Prints\ProgressStepper::class,
+            'image-preview' => \App\View\Components\Prints\ImagePreview::class,
+            'size-selector' => \App\View\Components\Prints\SizeSelector::class,
+            'address-form' => \App\View\Components\Prints\AddressForm::class,
+        ]);
+
+        // Register view composers
+        view()->composer('prints.*', function ($view) {
+            $view->with('printSizes', Config::get('prints.sizes'));
+            $view->with('printMaterials', Config::get('prints.materials'));
+            $view->with('shippingServices', Config::get('location.shipping_services'));
         });
+
+        // Register custom artisan commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \App\Console\Commands\GeneratePrintOrderReport::class,
+                \App\Console\Commands\CleanupPendingOrders::class,
+                \App\Console\Commands\SyncPrintOrderStatuses::class,
+            ]);
+        }
 
         // Register custom middleware
         $this->app['router']->aliasMiddleware('print.access', \App\Http\Middleware\PrintOrderAccess::class);
 
         // Register custom policies
-        $this->app['router']->model('print', \App\Models\PrintOrder::class);
-        \Illuminate\Support\Facades\Gate::policy(\App\Models\PrintOrder::class, \App\Policies\PrintOrderPolicy::class);
+        $this->app['router']->model('print_order', PrintOrder::class);
+        $this->app->make('policy')->register([
+            PrintOrder::class => \App\Policies\PrintOrderPolicy::class,
+        ]);
+
+        // Register custom macros
+        PrintOrder::macro('timeline', function () {
+            /** @var PrintOrder $this */
+            return collect([
+                'created' => [
+                    'date' => $this->created_at,
+                    'message' => 'Order created',
+                ],
+                'paid' => $this->when($this->paid_at, fn() => [
+                    'date' => $this->paid_at,
+                    'message' => 'Payment processed',
+                ]),
+                'production' => $this->when($this->production_started_at, fn() => [
+                    'date' => $this->production_started_at,
+                    'message' => 'Print production started',
+                ]),
+                'shipped' => $this->when($this->shipped_at, fn() => [
+                    'date' => $this->shipped_at,
+                    'message' => "Shipped via {$this->shipping_carrier}",
+                ]),
+                'completed' => $this->when($this->completed_at, fn() => [
+                    'date' => $this->completed_at,
+                    'message' => 'Order completed',
+                ]),
+                'cancelled' => $this->when($this->cancelled_at, fn() => [
+                    'date' => $this->cancelled_at,
+                    'message' => $this->cancellation_reason ?? 'Order cancelled',
+                ]),
+            ])->filter()->values();
+        });
+    }
+
+    /**
+     * Get the services provided by the provider.
+     *
+     * @return array<string>
+     */
+    public function provides(): array
+    {
+        return [
+            PrintOrderService::class,
+        ];
     }
 }

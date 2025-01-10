@@ -2,12 +2,18 @@
 
 namespace App\Providers;
 
-use App\Events\PrintOrderCreated;
-use App\Events\PrintOrderStatusChanged;
-use App\Listeners\PrintOrder\SendOrderConfirmation;
-use App\Listeners\PrintOrder\NotifyStatusChange;
-use App\Listeners\PrintOrder\LogOrderActivity;
-use App\Listeners\PrintOrder\InitiatePrintProduction;
+use App\Events\{
+    PrintOrderCreated,
+    PrintOrderRefunded,
+    PrintOrderStatusChanged
+};
+use App\Listeners\PrintOrder\{
+    HandleRefund,
+    InitiatePrintProduction,
+    LogOrderActivity,
+    NotifyStatusChange,
+    SendOrderConfirmation
+};
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -24,16 +30,31 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
         ],
 
+        // Print Order Events
         PrintOrderCreated::class => [
             SendOrderConfirmation::class,
+            InitiatePrintProduction::class,
             LogOrderActivity::class,
         ],
 
         PrintOrderStatusChanged::class => [
             NotifyStatusChange::class,
             LogOrderActivity::class,
-            InitiatePrintProduction::class,
         ],
+
+        PrintOrderRefunded::class => [
+            HandleRefund::class,
+            LogOrderActivity::class,
+        ],
+    ];
+
+    /**
+     * The subscriber classes to register.
+     *
+     * @var array<int, class-string>
+     */
+    protected $subscribe = [
+        \App\Listeners\PrintOrder\PrintOrderEventSubscriber::class,
     ];
 
     /**
@@ -41,7 +62,11 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register model observers here if needed
+        // Register custom event discovery paths
+        $this->discoverEventsWithin([
+            app_path('Events/Print'),
+            app_path('Events/Marketplace'),
+        ]);
     }
 
     /**
@@ -49,6 +74,27 @@ class EventServiceProvider extends ServiceProvider
      */
     public function shouldDiscoverEvents(): bool
     {
-        return false;
+        return true;
     }
+
+    /**
+     * Get the listener directories that should be used to discover events.
+     *
+     * @return array<int, string>
+     */
+    protected function discoverEventsWithin(): array
+    {
+        return [
+            $this->app->path('Listeners'),
+        ];
+    }
+
+    /**
+     * The model observers to register.
+     *
+     * @var array<class-string, class-string>
+     */
+    protected $observers = [
+        \App\Models\PrintOrder::class => \App\Observers\PrintOrderObserver::class,
+    ];
 }

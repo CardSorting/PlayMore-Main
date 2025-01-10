@@ -12,6 +12,9 @@ use App\Http\Requests\Print\ProcessPaymentRequest;
 use App\Exceptions\{PrintOrderException, PaymentException};
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use App\Http\Requests\Print\StoreSizeRequest;
+use App\Http\Requests\Print\StoreMaterialRequest;
+use Illuminate\Http\Request;
 
 class PrintOrderController extends Controller
 {
@@ -32,37 +35,59 @@ class PrintOrderController extends Controller
         return view('prints.index', compact('orders'));
     }
 
-    public function create(Gallery $gallery): View
+    public function selectSize(Gallery $gallery): View
     {
         // Ensure the gallery belongs to the user
         if ($gallery->user_id !== auth()->id()) {
             abort(403, 'You do not have permission to create prints from this gallery.');
         }
 
+        // Get sizes from config
+        $sizes = config('prints.sizes');
+
+        return view('prints.select-size', [
+            'gallery' => $gallery,
+            'sizes' => $sizes,
+        ]);
+    }
+
+    public function storeSize(StoreSizeRequest $request, Gallery $gallery): RedirectResponse
+    {
+        return redirect()
+            ->route('prints.select-material', [
+                'gallery' => $gallery,
+                'size' => $request->validated('size'),
+            ]);
+    }
+
+    public function selectMaterial(Request $request, Gallery $gallery): View|RedirectResponse
+    {
+        // Ensure the gallery belongs to the user
+        if ($gallery->user_id !== auth()->id()) {
+            abort(403, 'You do not have permission to create prints from this gallery.');
+        }
+
+        // Validate size is present
+        $size = $request->query('size');
+        if (!$size || !array_key_exists($size, config('prints.sizes'))) {
+            return redirect()
+                ->route('prints.select-size', $gallery)
+                ->with('error', 'Please select a size first.');
+        }
+
         // Get sizes and materials from config
         $sizes = config('prints.sizes');
         $materials = config('prints.materials');
 
-        // Get prefilled values from query parameters
-        $prefill = request()->get('prefill', []);
-
-        return view('prints.create', [
+        return view('prints.select-material', [
             'gallery' => $gallery,
             'sizes' => $sizes,
-            'old' => [
-                'size' => old('size', $prefill['size'] ?? ''),
-                'material' => old('material', 'premium_lustre'),
-                'shipping_name' => old('shipping_name', $prefill['shipping_name'] ?? ''),
-                'shipping_address' => old('shipping_address', $prefill['shipping_address'] ?? ''),
-                'shipping_city' => old('shipping_city', $prefill['shipping_city'] ?? ''),
-                'shipping_state' => old('shipping_state', $prefill['shipping_state'] ?? ''),
-                'shipping_zip' => old('shipping_zip', $prefill['shipping_zip'] ?? ''),
-                'shipping_country' => old('shipping_country', $prefill['shipping_country'] ?? ''),
-            ],
+            'materials' => $materials,
+            'size' => $size,
         ]);
     }
 
-    public function store(CreatePrintOrderRequest $request, Gallery $gallery): RedirectResponse
+    public function store(StoreMaterialRequest $request, Gallery $gallery): RedirectResponse
     {
         try {
             $data = PrintOrderData::fromRequest(
@@ -150,18 +175,8 @@ class PrintOrderController extends Controller
 
     public function reorder(PrintOrder $order): RedirectResponse
     {
-        return redirect()->route('prints.create', [
+        return redirect()->route('prints.select-size', [
             'gallery' => $order->gallery_id,
-            'prefill' => [
-                'size' => $order->size,
-                'material' => $order->material,
-                'shipping_name' => $order->shipping_name,
-                'shipping_address' => $order->shipping_address,
-                'shipping_city' => $order->shipping_city,
-                'shipping_state' => $order->shipping_state,
-                'shipping_zip' => $order->shipping_zip,
-                'shipping_country' => $order->shipping_country,
-            ]
         ]);
     }
 

@@ -19,6 +19,8 @@
                     description="Transform your space with this unique AI-generated artwork. Each print is crafted with premium materials and expert attention to detail, ensuring museum-quality results that will last a lifetime."
                     :nextStep="route('prints.store', ['gallery' => $gallery])"
                     :author="$gallery->user->name"
+                    :price="$gallery->price"
+                    :isAvailable="$gallery->is_available"
                 />
             </div>
 

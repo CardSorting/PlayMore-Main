@@ -39,7 +39,7 @@ class StoreDataSeeder extends Seeder
             // Update galleries with prices and availability
             foreach ($user->galleries as $gallery) {
                 $gallery->update([
-                    'price' => rand(1999, 9999) / 100,
+                    'price' => rand(1999, 9999) * 100,
                     'is_available' => true,
                     'views_count' => rand(50, 500)
                 ]);

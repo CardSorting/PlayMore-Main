@@ -9,7 +9,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('galleries', function (Blueprint $table) {
-            $table->decimal('price', 8, 2)->nullable();
+            $table->unsignedInteger('price')->nullable();
             $table->boolean('is_available')->default(true);
             $table->integer('views_count')->default(0);
         });

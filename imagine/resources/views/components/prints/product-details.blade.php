@@ -5,29 +5,6 @@
     <div class="border-b border-gray-200 pb-8">
         <h1 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">{{ $title }}</h1>
         
-        <!-- Price and Status -->
-        <div class="mt-3 flex items-center space-x-4">
-            <div class="flex items-baseline">
-                <span class="text-3xl font-bold tracking-tight text-gray-900">${{ number_format($price, 2) }}</span>
-                <span class="ml-2 text-sm text-gray-500">USD</span>
-            </div>
-            @if($isAvailable)
-                <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-0.5 text-sm font-medium text-green-800">
-                    <svg class="mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
-                        <circle cx="4" cy="4" r="3" />
-                    </svg>
-                    In Stock
-                </span>
-            @else
-                <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-0.5 text-sm font-medium text-gray-800">
-                    <svg class="mr-1.5 h-2 w-2 text-gray-400" fill="currentColor" viewBox="0 0 8 8">
-                        <circle cx="4" cy="4" r="3" />
-                    </svg>
-                    Sold Out
-                </span>
-            @endif
-        </div>
-
         <!-- Creation Info -->
         <div class="mt-4 flex items-center space-x-3">
             <!-- AI Badge -->
@@ -52,39 +29,72 @@
             <p>{{ $description }}</p>
         </div>
 
-        <!-- Quantity Form -->
-        @if($isAvailable && $nextStep)
-            <form action="{{ $nextStep }}" method="POST" class="mt-6">
-                @csrf
-                <div class="flex items-end gap-4">
-                    <div>
-                        <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
-                        <div class="mt-1 max-w-[120px]">
-                            <input type="number" 
-                                name="quantity" 
-                                id="quantity"
-                                value="1"
-                                min="1"
-                                max="250"
-                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                required>
+        <!-- Price and Status -->
+        <div class="mt-6 flex flex-col space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-baseline">
+                    <span class="text-3xl font-bold tracking-tight text-gray-900">${{ number_format($price / 100, 2) }}</span>
+                    <span class="ml-2 text-sm text-gray-500">USD</span>
+                </div>
+                @if($isAvailable)
+                    <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-0.5 text-sm font-medium text-green-800">
+                        <svg class="mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
+                            <circle cx="4" cy="4" r="3" />
+                        </svg>
+                        In Stock
+                    </span>
+                @else
+                    <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-0.5 text-sm font-medium text-gray-800">
+                        <svg class="mr-1.5 h-2 w-2 text-gray-400" fill="currentColor" viewBox="0 0 8 8">
+                            <circle cx="4" cy="4" r="3" />
+                        </svg>
+                        Sold Out
+                    </span>
+                @endif
+            </div>
+
+            <!-- Shipping Info -->
+            <div class="flex items-center text-sm text-gray-500">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                2-5 business days shipping
+            </div>
+
+            <!-- Quantity Form -->
+            @if($isAvailable && $nextStep)
+                <form action="{{ $nextStep }}" method="POST" class="mt-2">
+                    @csrf
+                    <div class="flex flex-col space-y-4">
+                        <div>
+                            <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+                            <div class="mt-1 max-w-[120px]">
+                                <input type="number" 
+                                    name="quantity" 
+                                    id="quantity"
+                                    value="1"
+                                    min="1"
+                                    max="250"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    required>
+                            </div>
                         </div>
+                        <button type="submit" 
+                            class="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            Start Customizing
+                        </button>
                     </div>
-                    <button type="submit" 
-                        class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        Start Customizing
+                </form>
+            @else
+                <div class="mt-2">
+                    <button type="button" 
+                        disabled
+                        class="w-full inline-flex items-center justify-center rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500 cursor-not-allowed">
+                        Currently Unavailable
                     </button>
                 </div>
-            </form>
-        @else
-            <div class="mt-6">
-                <button type="button" 
-                    disabled
-                    class="inline-flex items-center rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500 cursor-not-allowed">
-                    Currently Unavailable
-                </button>
-            </div>
-        @endif
+            @endif
+        </div>
     </div>
 
     <!-- Sticky Bar -->
@@ -101,7 +111,7 @@
             <div class="flex h-16 items-center justify-between">
                 <div class="flex items-center">
                     <h2 class="text-lg font-medium text-gray-900">{{ $title }}</h2>
-                    <span class="ml-4 text-sm text-gray-500">${{ number_format($price, 2) }}</span>
+                    <span class="ml-4 text-sm text-gray-500">${{ number_format($price / 100, 2) }}</span>
                 </div>
                 @if($isAvailable && $nextStep)
                     <button type="button" 

@@ -21,9 +21,14 @@ class Gallery extends Model
 
     protected $casts = [
         'is_available' => 'boolean',
-        'price' => 'decimal:2',
-        'views_count' => 'integer'
+        'views_count' => 'integer',
+        'price' => 'integer'
     ];
+
+    public function getFormattedPriceAttribute(): string
+    {
+        return number_format($this->price / 100, 2);
+    }
 
     public function user(): BelongsTo
     {

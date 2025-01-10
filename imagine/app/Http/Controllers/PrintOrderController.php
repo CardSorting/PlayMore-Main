@@ -80,14 +80,16 @@ class PrintOrderController extends Controller
     {
         // Calculate unit price based on size and material
         $selectedSize = session('print_order.size');
+        // Get base price in cents from config
         $basePrice = collect(config('prints.sizes'))->flatMap(function ($category) {
             return collect($category['sizes']);
         })->get($selectedSize)['price'];
 
+        // Apply material multiplier to get unit price in cents
         $materialMultiplier = config('prints.materials')[$request->material]['price_multiplier'];
-        $unitPrice = (int) ($basePrice * $materialMultiplier);
+        $unitPrice = (int) round($basePrice * $materialMultiplier);
 
-        // Get quantity from session or default to 1
+        // Calculate total price in cents based on quantity
         $quantity = session('print_order.quantity', 1);
         $totalPrice = $unitPrice * $quantity;
 
@@ -217,13 +219,13 @@ class PrintOrderController extends Controller
 
     public function reorder(ReorderPrintRequest $request, PrintOrder $order)
     {
-        // Calculate unit price based on size and material
+        // Calculate unit price in cents based on size and material
         $basePrice = collect(config('prints.sizes'))->flatMap(function ($category) {
             return collect($category['sizes']);
         })->get($order->size)['price'];
 
         $materialMultiplier = config('prints.materials')[$order->material]['price_multiplier'];
-        $unitPrice = (int) ($basePrice * $materialMultiplier);
+        $unitPrice = (int) round($basePrice * $materialMultiplier);
 
         // Create a new order with the same details
         $newOrder = PrintOrder::create([

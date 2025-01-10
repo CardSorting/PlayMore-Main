@@ -1,7 +1,7 @@
-export default function quantitySelector(presetData, unitPrice) {
+export default function quantitySelector(unitPrice) {
     return {
         selectedQuantity: null,
-        presetData: presetData,
+        unitPrice: unitPrice,
         customQuantityValid: false,
 
         init() {
@@ -41,26 +41,26 @@ export default function quantitySelector(presetData, unitPrice) {
         },
 
         calculateTotal() {
-            const preset = this.presetData[this.selectedQuantity];
-            if (preset) {
-                return preset.discountedPrice / 100;
-            }
-            return (this.selectedQuantity * unitPrice) / 100;
+            // Calculate price based on selected quantity and unit price
+            const total = (this.selectedQuantity * this.unitPrice) / 100;
+            return Math.round(total * 100) / 100;
         },
 
         validateCustomQuantity(input) {
             const value = parseInt(input.value);
-            const maxQuantity = input.max;
+            const maxQuantity = parseInt(input.max);
             
-            if (value && value >= 1 && value <= maxQuantity) {
+            if (!isNaN(value) && value >= 1 && value <= maxQuantity) {
                 input.classList.remove('border-red-300');
                 input.classList.add('border-green-300');
                 this.customQuantityValid = true;
-            } else {
-                input.classList.remove('border-green-300');
-                input.classList.add('border-red-300');
-                this.customQuantityValid = false;
+                return true;
             }
+            
+            input.classList.remove('border-green-300');
+            input.classList.add('border-red-300');
+            this.customQuantityValid = false;
+            return false;
         },
 
         applyCustomQuantity() {

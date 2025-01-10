@@ -11,6 +11,7 @@
                         <!-- Quantity Selection -->
                         <form action="{{ route('prints.update-quantity', $order) }}" method="POST">
                             @csrf
+                            <input type="hidden" name="final_price" id="final_price">
                             <div>
                                 <!-- Header -->
                                 <div class="flex items-center justify-between mb-6">
@@ -165,6 +166,16 @@
             const applyCustomBtn = document.getElementById('apply_custom');
             const quantityInputs = document.querySelectorAll('input[name="quantity"]');
             const unitPrice = {{ $order->unit_price }};
+            const presetData = {
+                @foreach ($presets as $preset)
+                    {{ $preset->amount }}: {
+                        originalPrice: {{ $preset->originalPrice }},
+                        discountedPrice: {{ $preset->discountedPrice }},
+                        savingsAmount: {{ $preset->savingsAmount }},
+                        savings: "{{ $preset->savings }}"
+                    },
+                @endforeach
+            };
 
             function animateNumber(element, start, end, duration = 500) {
                 const startTime = performance.now();
@@ -189,11 +200,56 @@
             }
 
             function updateTotal(quantity, animate = true) {
-                const newTotal = (quantity * unitPrice / 100);
-                const currentTotal = parseFloat(subtotalElement.textContent.replace('$', ''));
+                let newTotal;
+                const preset = presetData[quantity];
                 
                 // Update quantity display
                 document.getElementById('quantity-display').textContent = quantity;
+
+                if (preset) {
+                    newTotal = preset.discountedPrice / 100;
+                    
+                    // Show savings if available
+                    const savingsRow = document.getElementById('savings-row');
+                    const originalRow = document.getElementById('original-row');
+                    
+                    if (preset.savingsAmount > 0) {
+                        if (!savingsRow) {
+                            // Insert savings row before total
+                            const dl = document.querySelector('dl.space-y-3');
+                            const savingsHTML = `
+                                <div id="original-row" class="flex justify-between">
+                                    <dt class="text-sm text-gray-600">Original price</dt>
+                                    <dd class="text-sm text-gray-500 line-through">$${(preset.originalPrice / 100).toFixed(2)}</dd>
+                                </div>
+                                <div id="savings-row" class="flex justify-between">
+                                    <dt class="text-sm font-medium text-green-700">You save</dt>
+                                    <dd class="text-sm font-bold text-green-700">$${(preset.savingsAmount / 100).toFixed(2)}</dd>
+                                </div>
+                            `;
+                            dl.insertAdjacentHTML('afterbegin', savingsHTML);
+                        } else {
+                            // Update existing savings rows
+                            originalRow.querySelector('dd').textContent = '$' + (preset.originalPrice / 100).toFixed(2);
+                            savingsRow.querySelector('dd').textContent = '$' + (preset.savingsAmount / 100).toFixed(2);
+                        }
+                    } else {
+                        // Remove savings rows if they exist
+                        savingsRow?.remove();
+                        originalRow?.remove();
+                    }
+                } else {
+                    // No preset discount, calculate regular price
+                    newTotal = (quantity * unitPrice / 100);
+                    // Remove any existing savings rows
+                    document.getElementById('savings-row')?.remove();
+                    document.getElementById('original-row')?.remove();
+                }
+
+                const currentTotal = parseFloat(subtotalElement.textContent.replace('$', ''));
+
+                // Update hidden price input
+                document.getElementById('final_price').value = Math.round(newTotal * 100);
 
                 if (animate) {
                     animateNumber(subtotalElement, currentTotal, newTotal);

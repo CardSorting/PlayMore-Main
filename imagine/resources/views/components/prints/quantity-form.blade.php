@@ -1,18 +1,12 @@
-@props(['order', 'presets'])
+@props(['order', 'presets', 'maxQuantity'])
 
 <div>
     <form id="quantity-form" 
         x-ref="quantityForm" 
         action="{{ route('prints.update-quantity', ['order' => $order]) }}" 
-        method="POST"
-        @submit.prevent="
-            const price = presetData[selectedQuantity] ? presetData[selectedQuantity].discountedPrice : (selectedQuantity * unitPrice);
-            $refs.finalPrice.value = price;
-            $event.target.submit();
-        ">
+        method="POST">
         @csrf
-        <input type="hidden" name="final_price" id="final_price" x-ref="finalPrice">
-        <input type="hidden" name="quantity" x-bind:value="selectedQuantity">
+        <input type="hidden" name="final_price" x-bind:value="presetData[selectedQuantity] ? presetData[selectedQuantity].discountedPrice : (selectedQuantity * unitPrice)">
         <div>
             <!-- Header -->
             <div class="flex items-center justify-between mb-6">
@@ -60,6 +54,11 @@
                     @endforeach
                 </x-slot>
             </x-prints.quantity-tabs>
+        </div>
+
+        <!-- Custom Quantity Input -->
+        <div class="mt-6">
+            <x-prints.custom-quantity-input :maxQuantity="$maxQuantity" />
         </div>
 
         <!-- Continue Button -->

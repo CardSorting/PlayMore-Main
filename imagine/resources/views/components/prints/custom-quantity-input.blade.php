@@ -10,7 +10,7 @@
     <div class="flex items-center space-x-3">
         <div class="relative flex-1">
             <input type="number" 
-                name="custom_quantity" 
+                name="quantity" 
                 id="custom_quantity" 
                 min="1" 
                 max="{{ $maxQuantity }}"
@@ -28,7 +28,8 @@
                     }
                 "
                 class="block w-full rounded-md border-gray-300 pl-4 pr-12 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="Enter amount">
+                placeholder="Enter amount"
+                x-bind:value="selectedQuantity">
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                 <span class="text-gray-500 sm:text-sm">qty</span>
             </div>

@@ -1,32 +1,6 @@
 <x-app-layout>
-    <!-- Progress Bar -->
-    <div class="border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <nav class="flex justify-center" aria-label="Progress">
-                <ol role="list" class="flex items-center space-x-16 py-4">
-                    <li class="flex items-center text-green-600">
-                        <span class="relative flex h-8 w-8 items-center justify-center rounded-full bg-green-600">
-                            <svg class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
-                        </span>
-                        <span class="ml-3 text-sm font-medium">Details</span>
-                    </li>
-                    <li class="flex items-center text-blue-600">
-                        <span class="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-blue-600 bg-white">
-                            <span class="h-2.5 w-2.5 rounded-full bg-blue-600"></span>
-                        </span>
-                        <span class="ml-3 text-sm font-medium">Payment</span>
-                    </li>
-                    <li class="flex items-center text-gray-400">
-                        <span class="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-gray-300 bg-white">
-                            <span class="text-sm">3</span>
-                        </span>
-                        <span class="ml-3 text-sm font-medium">Confirmation</span>
-                    </li>
-                </ol>
-            </nav>
-        </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <x-prints.progress-stepper :currentStep="4" />
     </div>
 
     <div class="min-h-screen bg-gray-50 py-8">

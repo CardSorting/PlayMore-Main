@@ -59,7 +59,7 @@
                             }
                         }">
                         <!-- Quantity Selection -->
-                        <x-prints.quantity-form :order="$order" :presets="$presets" />
+                        <x-prints.quantity-form :order="$order" :presets="$presets" :maxQuantity="$maxQuantity" />
 
                         <!-- Order Summary -->
                         <x-prints.order-summary :order="$order" :maxQuantity="$maxQuantity" />

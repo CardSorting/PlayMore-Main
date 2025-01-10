@@ -44,9 +44,6 @@
             </div>
         </div>
 
-        <!-- Custom Quantity Input -->
-        <x-prints.custom-quantity-input :maxQuantity="$maxQuantity" />
-
         <!-- Price Summary -->
         <div class="border-t border-gray-200 pt-4">
             <dl class="space-y-3">

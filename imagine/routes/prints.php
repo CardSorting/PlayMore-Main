@@ -27,6 +27,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/gallery/{gallery}/material', [PrintOrderController::class, 'selectMaterial'])
             ->name('select-material');
 
+        Route::post('/gallery/{gallery}/material', [PrintOrderController::class, 'storeMaterial'])
+            ->name('store-material');
+
         Route::post('/gallery/{gallery}', [PrintOrderController::class, 'store'])
             ->name('store');
 

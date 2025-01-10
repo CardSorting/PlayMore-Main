@@ -24,45 +24,41 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Configure rate limiters
-        $this->configureRateLimiting();
-
-        $this->routes(function () {
-            // Web Routes - Load in specific order to ensure proper route resolution
-            Route::middleware('web')
-                ->group(function () {
-                    // Public routes first
-                    require base_path('routes/web.php');
-                    
-                    // Authentication routes
-                    require base_path('routes/auth.php');
-                    
-                    // Protected routes
-                    Route::middleware(['auth', 'verified'])->group(function () {
-                        // Dashboard routes (including cards and packs)
-                        Route::prefix('dashboard')->group(function () {
-                            require base_path('routes/dashboard.php');
-                            require base_path('routes/cards.php');
-                            require base_path('routes/packs.php');
-                        });
-                        
-                        // Marketplace routes with rate limiting
-                        Route::middleware(\App\Http\Middleware\MarketplaceRateLimiter::class)->group(function () {
-                            require base_path('routes/marketplace.php');
-                        });
-                    });
-                });
-        });
-    }
-
-    /**
-     * Configure the rate limiters for the application.
-     */
-    protected function configureRateLimiting(): void
-    {
-        // API rate limiting
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        $this->routes(function () {
+            // Load route files only if they exist
+            $routeFiles = [
+                'web.php',
+                'auth.php',
+                'dashboard.php',
+                'admin.php',
+                'prints.php',
+            ];
+
+            Route::middleware('web')->group(function () use ($routeFiles) {
+                foreach ($routeFiles as $file) {
+                    $path = base_path('routes/' . $file);
+                    if (file_exists($path)) {
+                        require $path;
+                    }
+                }
+            });
+        });
+
+        // Custom route model bindings
+        Route::bind('order', function ($value) {
+            return \App\Models\PrintOrder::findOrFail($value);
+        });
+
+        Route::bind('gallery', function ($value) {
+            return \App\Models\Gallery::findOrFail($value);
+        });
+
+        // Global patterns
+        Route::pattern('id', '[0-9]+');
+        Route::pattern('slug', '[a-z0-9-]+');
     }
 }

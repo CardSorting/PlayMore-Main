@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <x-prints.progress-stepper :currentStep="4" />
+        <x-prints.progress-stepper :currentStep="3" />
     </div>
 
     <div class="min-h-screen bg-gray-50 py-8">
@@ -8,51 +8,7 @@
             <div class="lg:grid lg:grid-cols-2 lg:gap-x-12 xl:gap-x-16">
                 <!-- Order Summary -->
                 <div class="lg:col-span-1">
-                    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-lg font-medium text-gray-900">Order Summary</h2>
-                            <img src="{{ $printOrder->gallery->image_url }}" alt="{{ $printOrder->gallery->prompt }}" class="w-24 h-24 object-cover rounded-lg shadow">
-                        </div>
-                        <dl class="divide-y divide-gray-200">
-                            <div class="py-4 flex justify-between">
-                                <dt class="text-sm text-gray-600">Print Size</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ \App\Models\PrintOrder::getSizeName($printOrder->size) }}</dd>
-                            </div>
-                            <div class="py-4 flex justify-between">
-                                <dt class="text-sm text-gray-600">Quantity</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ $printOrder->quantity }}</dd>
-                            </div>
-                            <div class="py-4 flex justify-between">
-                                <dt class="text-sm text-gray-600">Unit Price</dt>
-                                <dd class="text-sm font-medium text-gray-900">${{ $printOrder->formatted_unit_price }}</dd>
-                            </div>
-                            <div class="py-4">
-                                <dt class="text-sm text-gray-600 mb-1">Shipping To</dt>
-                                <dd class="text-sm text-gray-900">
-                                    <address class="not-italic">
-                                        {{ $printOrder->shipping_name }}<br>
-                                        {{ $printOrder->shipping_address }}<br>
-                                        {{ $printOrder->shipping_city }}, {{ $printOrder->shipping_state }} {{ $printOrder->shipping_zip }}<br>
-                                        {{ $printOrder->shipping_country }}
-                                    </address>
-                                </dd>
-                            </div>
-                            <div class="py-4">
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Subtotal</span>
-                                    <span class="font-medium text-gray-900">${{ $printOrder->formatted_total_price }}</span>
-                                </div>
-                                <div class="flex justify-between text-sm mt-2">
-                                    <span class="text-gray-600">Shipping</span>
-                                    <span class="font-medium text-gray-900">Free</span>
-                                </div>
-                                <div class="flex justify-between text-base font-medium mt-4 pt-4 border-t border-gray-200">
-                                    <span class="text-gray-900">Total</span>
-                                    <span class="text-gray-900">${{ $printOrder->formatted_total_price }}</span>
-                                </div>
-                            </div>
-                        </dl>
-                    </div>
+                    <x-prints.order-summary :order="$printOrder" :maxQuantity="250" />
                 </div>
 
                 <!-- Payment Form -->

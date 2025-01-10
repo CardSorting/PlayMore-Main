@@ -2,7 +2,7 @@
     <!-- Progress Stepper - Full width for prominence -->
     <div class="border-b border-gray-200 bg-white">
         <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-            <x-prints.progress-stepper :currentStep="3" />
+            <x-prints.progress-stepper :currentStep="2" />
         </div>
     </div>
 

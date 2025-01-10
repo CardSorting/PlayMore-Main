@@ -36,38 +36,20 @@
             </div>
             <div class="flex justify-between">
                 <dt class="text-sm text-gray-600">Quantity</dt>
-                <dd class="text-sm font-medium text-gray-900" x-text="selectedQuantity" x-effect="$el.textContent = selectedQuantity">{{ $order->quantity ?? 1 }}</dd>
+                <dd class="text-sm font-medium text-gray-900">{{ $order->quantity }}</dd>
             </div>
             <div class="flex justify-between">
                 <dt class="text-sm text-gray-600">Price per print</dt>
-                <dd class="text-sm font-medium text-gray-900">${{ number_format($order->unit_price / 100, 2) }}</dd>
+                <dd class="text-sm font-medium text-gray-900">${{ $order->formatted_unit_price }}</dd>
             </div>
         </div>
 
         <!-- Price Summary -->
         <div class="border-t border-gray-200 pt-4">
             <dl class="space-y-3">
-                <template x-if="getPresetData() && getPresetData().savingsAmount > 0" x-effect="console.log('Preset data:', getPresetData())">
-                    <div>
-                        <div class="flex justify-between">
-                            <dt class="text-sm text-gray-600">Original price</dt>
-                            <dd class="text-sm text-gray-500 line-through" 
-                                x-text="'$' + (getPresetData().originalPrice / 100).toFixed(2)">
-                            </dd>
-                        </div>
-                        <div class="flex justify-between">
-                            <dt class="text-sm font-medium text-green-700">You save</dt>
-                            <dd class="text-sm font-bold text-green-700" 
-                                x-text="'$' + (getPresetData().savingsAmount / 100).toFixed(2)">
-                            </dd>
-                        </div>
-                    </div>
-                </template>
                 <div class="flex justify-between">
                     <dt class="text-sm text-gray-600">Subtotal</dt>
-                    <dd class="text-sm font-medium text-gray-900">
-                        <span x-text="'$' + (calculateFinalPrice() / 100).toFixed(2)" x-effect="console.log('Final price:', calculateFinalPrice())"></span>
-                    </dd>
+                    <dd class="text-sm font-medium text-gray-900">${{ $order->formatted_total_price }}</dd>
                 </div>
                 <div class="flex justify-between">
                     <dt class="text-sm text-gray-600">Shipping</dt>
@@ -75,9 +57,7 @@
                 </div>
                 <div class="flex justify-between border-t border-gray-200 pt-3 mb-4">
                     <dt class="text-base font-medium text-gray-900">Total</dt>
-                    <dd class="text-base font-medium text-gray-900">
-                        <span x-text="'$' + (calculateFinalPrice() / 100).toFixed(2)"></span>
-                    </dd>
+                    <dd class="text-base font-medium text-gray-900">${{ $order->formatted_total_price }}</dd>
                 </div>
             </dl>
         </div>

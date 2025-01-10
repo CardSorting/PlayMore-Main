@@ -13,43 +13,48 @@ return [
     'sizes' => [
         '5x7' => [
             'name' => '5" x 7"',
-            'width' => 5,
-            'height' => 7,
+            'dimensions' => '5x7',
             'price' => 1499, // $14.99
             'description' => 'Perfect for desk displays and small frames',
             'shipping_weight' => 0.25, // lbs
+            'comparison_width' => 70,  // scaled for visualization
+            'comparison_height' => 98,
         ],
         '8x10' => [
             'name' => '8" x 10"',
-            'width' => 8,
-            'height' => 10,
+            'dimensions' => '8x10',
             'price' => 2499, // $24.99
             'description' => 'Standard size for wall art and framing',
             'shipping_weight' => 0.5, // lbs
+            'comparison_width' => 96,
+            'comparison_height' => 120,
         ],
         '11x14' => [
             'name' => '11" x 14"',
-            'width' => 11,
-            'height' => 14,
+            'dimensions' => '11x14',
             'price' => 3499, // $34.99
             'description' => 'Large format for statement pieces',
             'shipping_weight' => 0.75, // lbs
+            'comparison_width' => 110,
+            'comparison_height' => 140,
         ],
         '16x20' => [
             'name' => '16" x 20"',
-            'width' => 16,
-            'height' => 20,
+            'dimensions' => '16x20',
             'price' => 4999, // $49.99
             'description' => 'Gallery size for impressive wall displays',
             'shipping_weight' => 1.25, // lbs
+            'comparison_width' => 128,
+            'comparison_height' => 160,
         ],
         '24x36' => [
             'name' => '24" x 36"',
-            'width' => 24,
-            'height' => 36,
+            'dimensions' => '24x36',
             'price' => 8999, // $89.99
             'description' => 'Poster size for maximum impact',
             'shipping_weight' => 2.0, // lbs
+            'comparison_width' => 144,
+            'comparison_height' => 216,
         ],
     ],
 

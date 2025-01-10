@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\PrintOrder;
 use App\Services\{PrintOrderService, StripeService};
 use App\Observers\PrintOrderObserver;
+use App\Actions\Print\{CreatePrintOrderAction, ProcessPaymentAction};
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\{Config, Validator};
 
@@ -17,10 +18,31 @@ class PrintServiceProvider extends ServiceProvider
     {
         // Register PrintOrderService
         $this->app->singleton(PrintOrderService::class, function ($app) {
+            $printsConfig = Config::get('prints', []);
+            $locationConfig = Config::get('location', []);
+            
+            // Restructure shipping zones to match expected format
+            $shippingZones = [
+                'domestic' => [],
+                'international' => []
+            ];
+            
+            foreach ($locationConfig['shipping_zones'] ?? [] as $country => $type) {
+                if ($type === 'domestic') {
+                    $shippingZones['domestic'][] = $country;
+                } else if ($country !== '*') {
+                    $shippingZones['international'][] = $country;
+                }
+            }
+            
+            $config = array_merge($printsConfig, [
+                'shipping_zones' => $shippingZones
+            ]);
+
             return new PrintOrderService(
-                $app->make(StripeService::class),
-                Config::get('prints'),
-                Config::get('location')
+                $config,
+                $app->make(\App\Actions\Print\CreatePrintOrderAction::class),
+                $app->make(\App\Actions\Print\ProcessPaymentAction::class)
             );
         });
 
@@ -87,11 +109,8 @@ class PrintServiceProvider extends ServiceProvider
         // Register custom middleware
         $this->app['router']->aliasMiddleware('print.access', \App\Http\Middleware\PrintOrderAccess::class);
 
-        // Register custom policies
+        // Register model binding
         $this->app['router']->model('print_order', PrintOrder::class);
-        $this->app->make('policy')->register([
-            PrintOrder::class => \App\Policies\PrintOrderPolicy::class,
-        ]);
 
         // Register custom macros
         PrintOrder::macro('timeline', function () {

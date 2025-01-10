@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Pack;
+use App\Models\PrintOrder;
 use App\Policies\PackPolicy;
+use App\Policies\PrintOrderPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -15,6 +17,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Pack::class => PackPolicy::class,
+        PrintOrder::class => PrintOrderPolicy::class,
     ];
 
     /**

@@ -11,10 +11,6 @@ $steps = [
         'description' => 'Select material finish'
     ],
     3 => [
-        'name' => 'Quantity',
-        'description' => 'Select print quantity'
-    ],
-    4 => [
         'name' => 'Checkout',
         'description' => 'Review and complete order'
     ]

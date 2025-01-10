@@ -12,11 +12,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('index');
 
         // Multi-step print order creation
-        Route::get('/gallery/{gallery}/create', [PrintOrderController::class, 'create'])
-            ->name('create');
-
         Route::get('/gallery/{gallery}', [PrintOrderController::class, 'overview'])
             ->name('overview');
+
+        Route::get('/gallery/{gallery}/create', [PrintOrderController::class, 'create'])
+            ->name('create');
+        Route::post('/gallery/{gallery}/create', [PrintOrderController::class, 'store'])
+            ->name('store');
 
         Route::get('/gallery/{gallery}/size', [PrintOrderController::class, 'selectSize'])
             ->name('select-size');
@@ -29,15 +31,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('/gallery/{gallery}/material', [PrintOrderController::class, 'storeMaterial'])
             ->name('store-material');
-
-        // Quantity selection
-        Route::get('/orders/{order}/quantity', [PrintOrderController::class, 'selectQuantity'])
-            ->name('select-quantity');
-        Route::post('/orders/{order}/quantity', [PrintOrderController::class, 'updateQuantity'])
-            ->name('update-quantity');
-
-        Route::post('/gallery/{gallery}', [PrintOrderController::class, 'store'])
-            ->name('store');
 
         // Print order management
         // View print order

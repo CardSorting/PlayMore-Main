@@ -18,6 +18,14 @@
                                 <dt class="text-sm text-gray-600">Print Size</dt>
                                 <dd class="text-sm font-medium text-gray-900">{{ \App\Models\PrintOrder::getSizeName($printOrder->size) }}</dd>
                             </div>
+                            <div class="py-4 flex justify-between">
+                                <dt class="text-sm text-gray-600">Quantity</dt>
+                                <dd class="text-sm font-medium text-gray-900">{{ $printOrder->quantity }}</dd>
+                            </div>
+                            <div class="py-4 flex justify-between">
+                                <dt class="text-sm text-gray-600">Unit Price</dt>
+                                <dd class="text-sm font-medium text-gray-900">${{ $printOrder->formatted_unit_price }}</dd>
+                            </div>
                             <div class="py-4">
                                 <dt class="text-sm text-gray-600 mb-1">Shipping To</dt>
                                 <dd class="text-sm text-gray-900">
@@ -32,7 +40,7 @@
                             <div class="py-4">
                                 <div class="flex justify-between text-sm">
                                     <span class="text-gray-600">Subtotal</span>
-                                    <span class="font-medium text-gray-900">${{ number_format($printOrder->price, 2) }}</span>
+                                    <span class="font-medium text-gray-900">${{ $printOrder->formatted_total_price }}</span>
                                 </div>
                                 <div class="flex justify-between text-sm mt-2">
                                     <span class="text-gray-600">Shipping</span>
@@ -40,7 +48,7 @@
                                 </div>
                                 <div class="flex justify-between text-base font-medium mt-4 pt-4 border-t border-gray-200">
                                     <span class="text-gray-900">Total</span>
-                                    <span class="text-gray-900">${{ number_format($printOrder->price, 2) }}</span>
+                                    <span class="text-gray-900">${{ $printOrder->formatted_total_price }}</span>
                                 </div>
                             </div>
                         </dl>
@@ -60,7 +68,7 @@
                             <div>
                                 <button type="submit" id="submit-button" 
                                         class="w-full flex justify-center items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <span id="button-text">Pay ${{ number_format($printOrder->price, 2) }}</span>
+                                    <span id="button-text">Pay ${{ $printOrder->formatted_total_price }}</span>
                                     <div id="spinner" class="hidden">
                                         <svg class="animate-spin ml-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

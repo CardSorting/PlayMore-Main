@@ -38,11 +38,28 @@ document.addEventListener('alpine:init', () => {
         },
 
         calculateFinalPrice() {
-            const preset = this.getPresetData();
-            if (preset) {
-                return preset.discountedPrice;
+            // Match server-side calculation exactly
+            const preset = Object.entries(this.presetData).find(([amount]) => parseInt(amount) === parseInt(this.selectedQuantity));
+            if (!preset) {
+                return parseInt(this.selectedQuantity) * parseInt(this.unitPrice);
             }
-            return parseInt(this.selectedQuantity) * parseInt(this.unitPrice);
+            
+            const presetData = preset[1];
+            if (!presetData.savings) {
+                return parseInt(this.selectedQuantity) * parseInt(this.unitPrice);
+            }
+            
+            const originalPrice = parseInt(this.selectedQuantity) * parseInt(this.unitPrice);
+            const discount = parseInt(presetData.savings.replace('% off', ''));
+            return Math.floor(originalPrice * (100 - discount) / 100);
+        },
+        debug() {
+            console.log({
+                selectedQuantity: this.selectedQuantity,
+                unitPrice: this.unitPrice,
+                preset: this.getPresetData(),
+                finalPrice: this.calculateFinalPrice()
+            });
         }
     }));
 });

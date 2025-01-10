@@ -84,34 +84,10 @@ class PrintQuantityService
 
     public function calculatePrice(PrintOrder $order, int $quantity): array
     {
-        $preset = collect(self::QUANTITY_PRESETS)
-            ->firstWhere('amount', $quantity);
-
-        if (!$preset) {
-            return [
-                'total' => $order->unit_price * $quantity,
-                'savings' => null,
-                'originalPrice' => null
-            ];
-        }
-
-        $originalPrice = $order->unit_price * $quantity;
-        
-        if (!$preset['savings']) {
-            return [
-                'total' => $originalPrice,
-                'savings' => null,
-                'originalPrice' => null
-            ];
-        }
-
-        $discount = (int) rtrim($preset['savings'], '% off');
-        $discountedPrice = (int) ($originalPrice * (100 - $discount) / 100);
-
         return [
-            'total' => $discountedPrice,
-            'savings' => $preset['savings'],
-            'originalPrice' => $originalPrice
+            'total' => $order->unit_price * $quantity,
+            'savings' => null,
+            'originalPrice' => null
         ];
     }
 

@@ -17,14 +17,8 @@
                 <x-prints.product-details 
                     :title="$gallery->prompt"
                     description="Transform your space with this unique AI-generated artwork. Each print is crafted with premium materials and expert attention to detail, ensuring museum-quality results that will last a lifetime."
-                    :next-step="route('prints.select-size', ['gallery' => $gallery])"
+                    :nextStep="route('prints.store', ['gallery' => $gallery])"
                 />
-
-                <div class="mt-8">
-                    <x-prints.purchase-actions
-                        :nextStep="route('prints.select-size', ['gallery' => $gallery])"
-                    />
-                </div>
             </div>
 
         </div>

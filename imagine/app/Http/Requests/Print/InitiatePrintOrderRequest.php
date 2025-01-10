@@ -23,7 +23,7 @@ class InitiatePrintOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // No additional validation needed as gallery is already validated through route model binding
+            'quantity' => ['required', 'integer', 'min:1', 'max:250']
         ];
     }
 }

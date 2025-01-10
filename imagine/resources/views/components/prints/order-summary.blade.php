@@ -36,7 +36,7 @@
             </div>
             <div class="flex justify-between">
                 <dt class="text-sm text-gray-600">Quantity</dt>
-                <dd class="text-sm font-medium text-gray-900" x-text="selectedQuantity">{{ $order->quantity ?? 1 }}</dd>
+                <dd class="text-sm font-medium text-gray-900" x-text="selectedQuantity" x-effect="$el.textContent = selectedQuantity">{{ $order->quantity ?? 1 }}</dd>
             </div>
             <div class="flex justify-between">
                 <dt class="text-sm text-gray-600">Price per print</dt>
@@ -47,7 +47,7 @@
         <!-- Price Summary -->
         <div class="border-t border-gray-200 pt-4">
             <dl class="space-y-3">
-                <template x-if="getPresetData()?.savingsAmount > 0">
+                <template x-if="getPresetData() && getPresetData().savingsAmount > 0" x-effect="console.log('Preset data:', getPresetData())">
                     <div>
                         <div class="flex justify-between">
                             <dt class="text-sm text-gray-600">Original price</dt>
@@ -66,7 +66,7 @@
                 <div class="flex justify-between">
                     <dt class="text-sm text-gray-600">Subtotal</dt>
                     <dd class="text-sm font-medium text-gray-900">
-                        <span x-text="'$' + (calculateFinalPrice() / 100).toFixed(2)"></span>
+                        <span x-text="'$' + (calculateFinalPrice() / 100).toFixed(2)" x-effect="console.log('Final price:', calculateFinalPrice())"></span>
                     </dd>
                 </div>
                 <div class="flex justify-between">

@@ -31,9 +31,16 @@ class PrintOrderController extends Controller
         private PrintQuantityService $quantityService
     ) {}
 
+    public function store(InitiatePrintOrderRequest $request, Gallery $gallery)
+    {
+        // Store quantity in session
+        session(['print_order.quantity' => $request->quantity]);
+
+        return redirect()->route('prints.select-size', ['gallery' => $gallery]);
+    }
+
     public function create(InitiatePrintOrderRequest $request, Gallery $gallery)
     {
-        // Start the print order process by redirecting to the overview page
         return redirect()->route('prints.overview', ['gallery' => $gallery]);
     }
 
@@ -80,23 +87,27 @@ class PrintOrderController extends Controller
         $materialMultiplier = config('prints.materials')[$request->material]['price_multiplier'];
         $unitPrice = (int) ($basePrice * $materialMultiplier);
 
-        // Create the print order with default quantity of 1
+        // Get quantity from session or default to 1
+        $quantity = session('print_order.quantity', 1);
+        $totalPrice = $unitPrice * $quantity;
+
+        // Create the print order with quantity
         $order = PrintOrder::create([
             'user_id' => auth()->id(),
             'gallery_id' => $gallery->id,
             'size' => $selectedSize,
             'material' => $request->material,
             'status' => 'pending',
-            'quantity' => 1,
+            'quantity' => $quantity,
             'unit_price' => $unitPrice,
-            'total_price' => $unitPrice // Initial total price for quantity of 1
+            'total_price' => $totalPrice
         ]);
 
         // Clear the session data as we've created the order
-        session()->forget(['print_order.size', 'print_order.material']);
+        session()->forget(['print_order.size', 'print_order.material', 'print_order.quantity']);
 
-        // Redirect to quantity selection step
-        return redirect()->route('prints.select-quantity', ['order' => $order]);
+        // Redirect to checkout
+        return redirect()->route('prints.checkout', ['order' => $order]);
     }
 
     public function storeSize(StoreSizeRequest $request, Gallery $gallery)
@@ -105,41 +116,6 @@ class PrintOrderController extends Controller
         session(['print_order.size' => $request->size]);
 
         return redirect()->route('prints.select-material', ['gallery' => $gallery]);
-    }
-
-    public function selectQuantity(PrintOrder $order)
-    {
-        $presets = $this->quantityService->getPresets($order);
-
-        return view('prints.select-quantity', [
-            'order' => $order,
-            'presets' => $presets,
-            'maxQuantity' => $this->quantityService->getMaxQuantity()
-        ]);
-    }
-
-    public function updateQuantity(UpdateQuantityRequest $request, PrintOrder $order)
-    {
-        try {
-            $quantity = $request->input('quantity');
-            $priceData = $this->quantityService->calculatePrice($order, $quantity);
-
-            $order->update([
-                'quantity' => $quantity,
-                'total_price' => $priceData['total']
-            ]);
-
-            return redirect()->route('prints.checkout', ['order' => $order]);
-        } catch (\Exception $e) {
-            \Log::error('Update quantity error: ' . $e->getMessage(), [
-                'order_id' => $order->id,
-                'quantity' => $request->input('quantity'),
-                'final_price' => $request->input('final_price')
-            ]);
-            return back()
-                ->withInput()
-                ->withErrors(['quantity' => 'Failed to update quantity. Please try again.']);
-        }
     }
 
     public function checkout(ShowCheckoutRequest $request, PrintOrder $order)

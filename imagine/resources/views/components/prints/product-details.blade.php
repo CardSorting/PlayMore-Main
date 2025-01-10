@@ -1,4 +1,4 @@
-@props(['title', 'description', 'next-step'])
+@props(['title', 'description', 'nextStep'])
 
 <div x-data="{ showStickyBar: false }" class="relative">
     <!-- Product Header -->
@@ -31,6 +31,30 @@
         <div class="mt-6 space-y-6 text-base text-gray-500">
             <p>{{ $description }}</p>
         </div>
+
+        <!-- Quantity Form -->
+        <form action="{{ $nextStep }}" method="POST" class="mt-6">
+            @csrf
+            <div class="flex items-end gap-4">
+                <div>
+                    <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+                    <div class="mt-1 max-w-[120px]">
+                        <input type="number" 
+                            name="quantity" 
+                            id="quantity"
+                            value="1"
+                            min="1"
+                            max="250"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            required>
+                    </div>
+                </div>
+                <button type="submit" 
+                    class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Start Customizing
+                </button>
+            </div>
+        </form>
     </div>
 
     <!-- Sticky Bar -->
@@ -49,10 +73,11 @@
                     <h2 class="text-lg font-medium text-gray-900">{{ $title }}</h2>
                     <span class="ml-4 text-sm text-gray-500">From $19.99</span>
                 </div>
-                <a href="{{ $nextStep }}"
-                   class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    Start Customizing
-                </a>
+                <button type="button" 
+                    onclick="document.getElementById('quantity').focus()"
+                    class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Select Quantity
+                </button>
             </div>
         </div>
     </div>

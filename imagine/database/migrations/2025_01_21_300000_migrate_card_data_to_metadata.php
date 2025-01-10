@@ -18,25 +18,13 @@ return new class extends Migration
         foreach ($cards as $card) {
             $metadata = $card->metadata ?? [];
 
-            // Move card-specific data to metadata if not already there
-            if (!isset($metadata['mana_cost'])) {
-                $metadata['mana_cost'] = $card->getRawOriginal('mana_cost');
-            }
-            if (!isset($metadata['type'])) {
-                $metadata['type'] = $card->getRawOriginal('card_type');
-            }
-            if (!isset($metadata['abilities'])) {
-                $metadata['abilities'] = $card->getRawOriginal('abilities');
-            }
-            if (!isset($metadata['flavor_text'])) {
-                $metadata['flavor_text'] = $card->getRawOriginal('flavor_text');
-            }
-            if (!isset($metadata['power_toughness'])) {
-                $metadata['power_toughness'] = $card->getRawOriginal('power_toughness');
-            }
-            if (!isset($metadata['rarity'])) {
-                $metadata['rarity'] = $card->getRawOriginal('rarity');
-            }
+            // Move card-specific data to metadata with proper defaults
+            $metadata['mana_cost'] = $card->getRawOriginal('mana_cost') ?: '';
+            $metadata['type'] = $card->getRawOriginal('card_type') ?: 'Unknown Type';
+            $metadata['abilities'] = $card->getRawOriginal('abilities') ?: 'No abilities';
+            $metadata['flavor_text'] = $card->getRawOriginal('flavor_text') ?: '';
+            $metadata['power_toughness'] = $card->getRawOriginal('power_toughness');
+            $metadata['rarity'] = $card->getRawOriginal('rarity') ?: 'Common';
 
             // Update the card with the new metadata
             $card->metadata = $metadata;

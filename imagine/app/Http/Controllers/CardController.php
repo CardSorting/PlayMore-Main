@@ -43,8 +43,29 @@ class CardController extends Controller
         }
 
         $cards = $query->orderBy('created_at', 'desc')
-            ->paginate($perPage)
-            ->withQueryString();
+            ->get()
+            ->map(function ($card) {
+                $metadata = $card->metadata ?? [];
+                return [
+                    'name' => $card->name,
+                    'image_url' => $card->image_url,
+                    'mana_cost' => $metadata['mana_cost'] ?? '',
+                    'card_type' => $metadata['type'] ?? 'Unknown Type',
+                    'abilities' => $metadata['abilities'] ?? 'No abilities',
+                    'flavor_text' => $metadata['flavor_text'] ?? '',
+                    'power_toughness' => $metadata['power_toughness'] ?? null,
+                    'rarity' => $metadata['rarity'] ?? 'Common',
+                    'author' => optional($card->user)->name ?? 'Unknown Author'
+                ];
+            });
+
+        $cards = new \Illuminate\Pagination\LengthAwarePaginator(
+            $cards->forPage(request('page', 1), $perPage),
+            $cards->count(),
+            $perPage,
+            request('page', 1),
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         // Show success message if redirected from pack opening
         if ($request->has('opened')) {
@@ -203,12 +224,12 @@ class CardController extends Controller
                         'id' => $image->user->id,
                         'name' => $image->user->name
                     ],
-                    'mana_cost' => implode(',', str_split($validatedData['mana_cost'])),
+                    'mana_cost' => $validatedData['mana_cost'],
                     'type' => $validatedData['card_type'],
-                    'abilities' => $validatedData['abilities'],
-                    'flavor_text' => $validatedData['flavor_text'],
+                    'abilities' => $validatedData['abilities'] ?: 'No abilities',
+                    'flavor_text' => $validatedData['flavor_text'] ?: '',
                     'power_toughness' => $validatedData['power_toughness'],
-                    'rarity' => $selectedRarity
+                    'rarity' => $selectedRarity ?: 'Common'
                 ]
             ]);
 

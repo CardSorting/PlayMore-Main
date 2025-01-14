@@ -3,6 +3,11 @@
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\{Route, Redis};
 
+// Health check endpoint
+Route::get('/health', function () {
+    return response()->json(['status' => 'healthy']);
+});
+
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/features', [HomeController::class, 'features'])->name('features');

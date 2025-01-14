@@ -1,25 +1,29 @@
-# Use official PHP image with Apache
-FROM php:8.2-apache
-
-# Set working directory
-WORKDIR /var/www/html
+# Build stage
+FROM php:8.2-cli AS builder
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+    apt-get install -y \
     git \
-    curl \
+    unzip \
+    libzip-dev \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libpq-dev && \
+    docker-php-ext-install \
     zip \
-    unzip \
-    libzip-dev
-
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    gd \
+    mbstring \
+    bcmath \
+    xml \
+    pdo_mysql
 
 # Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Set working directory
+WORKDIR /var/www/html
 
 # Copy application files
 COPY . .
@@ -27,15 +31,43 @@ COPY . .
 # Install dependencies
 RUN composer install --optimize-autoloader --no-dev
 
-# Set permissions
+# Production stage
+FROM php:8.2-apache
+
+# Install runtime dependencies
+RUN apt-get update && \
+    apt-get install -y \
+    libzip-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libpq-dev && \
+    docker-php-ext-install \
+    zip \
+    gd \
+    mbstring \
+    bcmath \
+    xml \
+    pdo_mysql
+
+# Copy built application from builder
+COPY --from=builder /var/www/html /var/www/html
+
+# Copy SQLite database
+COPY database/database.sqlite /var/www/html/database/
+RUN chown www-data:www-data /var/www/html/database/database.sqlite
+
+# Configure Apache
+COPY docker/000-default.conf /etc/httpd/conf.d/
 RUN chown -R www-data:www-data /var/www/html/storage
 RUN chown -R www-data:www-data /var/www/html/bootstrap/cache
 
-# Enable Apache modules
-RUN a2enmod rewrite
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD curl -f http://localhost/health || exit 1
 
 # Expose port 80
 EXPOSE 80
 
 # Set entry point
-CMD ["apache2-foreground"]
+CMD ["httpd", "-D", "FOREGROUND"]

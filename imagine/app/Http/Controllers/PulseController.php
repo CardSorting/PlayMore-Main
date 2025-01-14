@@ -27,18 +27,21 @@ class PulseController extends Controller
 
     public function createPaymentIntent(Request $request)
     {
+        Log::info('Starting createPaymentIntent', [
+            'user_id' => auth()->id() ?? 'unauthenticated',
+            'request_data' => $request->all()
+        ]);
         try {
-            Log::info('Creating payment intent', [
-                'user_id' => auth()->id() ?? 'unauthenticated',
-                'request_data' => $request->all()
-            ]);
-
             // Validate the request
             $validated = $request->validate([
                 'cart' => 'required|array',
                 'cart.*.id' => 'required|string',
                 'cart.*.quantity' => 'required|integer|min:1',
                 'cart.*.price' => 'required|numeric|min:0'
+            ]);
+
+            Log::info('Payment intent validation successful', [
+                'validated_data' => $validated
             ]);
 
             // Create Stripe payment intent with cart data
@@ -86,16 +89,19 @@ class PulseController extends Controller
 
     public function confirmPayment(Request $request, $paymentIntentId)
     {
+        Log::info('Starting confirmPayment', [
+            'payment_intent_id' => $paymentIntentId,
+            'user_id' => auth()->id() ?? 'unauthenticated',
+            'request_data' => $request->all()
+        ]);
         try {
-            Log::info('Starting payment confirmation', [
-                'payment_intent_id' => $paymentIntentId,
-                'user_id' => auth()->id() ?? 'unauthenticated',
-                'request_data' => $request->all()
-            ]);
-
             // Validate the request
             $validated = $request->validate([
                 'amount' => 'required|integer|min:1'
+            ]);
+
+            Log::info('Payment confirmation validation successful', [
+                'validated_data' => $validated
             ]);
 
             // Confirm the Stripe payment first

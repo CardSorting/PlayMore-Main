@@ -40,8 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Payment Processing Routes
     Route::prefix('api')->group(function () {
         Route::get('/pulse', [PulseController::class, 'index'])->name('pulse.index');
-        Route::post('/payment-intent', [PulseController::class, 'createPaymentIntent'])
-            ->withoutMiddleware(['auth', 'verified']);
+        Route::post('/payment-intent', [PulseController::class, 'createPaymentIntent']);
         Route::post('/payment-intent/{paymentIntentId}/confirm', [PulseController::class, 'confirmPayment'])
             ->withoutMiddleware(['auth', 'verified']);
     });

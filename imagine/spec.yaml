@@ -3,9 +3,11 @@ region: nyc
 services:
 - name: web
   dockerfile_path: Dockerfile
-  git:
-    repo_clone_url: https://github.com/your-username/your-repo.git
-    branch: main
+  source_dir: .
+  github:
+    repo: CardSorting/PlayMore-Main
+    branch: apprunner
+    deploy_on_push: true
   envs:
   - key: APP_ENV
     scope: RUN_TIME

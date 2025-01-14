@@ -53,8 +53,9 @@ RUN apt-get update && \
 # Copy built application from builder
 COPY --from=builder /var/www/html /var/www/html
 
-# Copy SQLite database
-COPY database/database.sqlite /var/www/html/database/
+# Create and migrate database
+RUN touch /var/www/html/database/database.sqlite
+RUN php artisan migrate --force
 RUN chown www-data:www-data /var/www/html/database/database.sqlite
 
 # Install curl for health checks

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Laravel') }} - AI Image Generation Platform</title>
+    <title>{{ config('app.name', 'playmoretcg') }} - AI Image Generation Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="antialiased">
@@ -14,7 +14,7 @@
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
                         <a href="{{ route('home') }}" class="text-xl font-bold text-gray-800">
-                            {{ config('app.name', 'Laravel') }}
+                            {{ config('app.name', 'playmoretcgp') }}
                         </a>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -154,7 +154,7 @@
             </div>
             <div class="mt-8 md:mt-0 md:order-1">
                 <p class="text-center text-base text-gray-400">
-                    &copy; {{ date('Y') }} {{ config('app.name', 'Laravel') }}. All rights reserved.
+                    &copy; {{ date('Y') }} {{ config('app.name', 'playmoretcg') }}. All rights reserved.
                 </p>
             </div>
         </div>

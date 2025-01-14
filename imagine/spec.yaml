@@ -2,8 +2,8 @@ name: imagine-app
 region: nyc
 services:
 - name: web
-  dockerfile_path: Dockerfile
-  source_dir: .
+  dockerfile_path: imagine/Dockerfile
+  source_dir: imagine
   github:
     repo: CardSorting/PlayMore-Main
     branch: apprunner

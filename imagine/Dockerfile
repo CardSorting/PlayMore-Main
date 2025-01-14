@@ -57,8 +57,12 @@ COPY --from=builder /var/www/html /var/www/html
 COPY database/database.sqlite /var/www/html/database/
 RUN chown www-data:www-data /var/www/html/database/database.sqlite
 
+# Install curl for health checks
+RUN apt-get install -y curl
+
 # Configure Apache
-COPY docker/000-default.conf /etc/httpd/conf.d/
+COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
+RUN a2enmod rewrite headers expires
 RUN chown -R www-data:www-data /var/www/html/storage
 RUN chown -R www-data:www-data /var/www/html/bootstrap/cache
 
@@ -70,4 +74,4 @@ HEALTHCHECK --interval=30s --timeout=3s \
 EXPOSE 80
 
 # Set entry point
-CMD ["httpd", "-D", "FOREGROUND"]
+CMD ["apache2-foreground"]

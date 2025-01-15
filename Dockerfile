@@ -26,10 +26,11 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 WORKDIR /var/www/html
 
 # Copy application files
-COPY . /var/www/html/
+COPY ./imagine /var/www/html/imagine
+WORKDIR /var/www/html/imagine
 
 # Install dependencies
-WORKDIR /var/www/html
+WORKDIR /var/www/html/imagine
 RUN composer install --optimize-autoloader --no-dev
 
 # Production stage
@@ -55,18 +56,19 @@ RUN apt-get update && \
 COPY --from=builder /var/www/html /var/www/html
 
 # Create and migrate database
-RUN touch /var/www/html/database/database.sqlite
-RUN php artisan migrate --force
-RUN chown www-data:www-data /var/www/html/database/database.sqlite
+RUN mkdir -p /var/www/html/database && \
+    touch /var/www/html/database/database.sqlite && \
+    (cd /var/www/html/imagine && php artisan migrate --force) && \
+    chown www-data:www-data /var/www/html/database/database.sqlite
 
 # Install curl for health checks
 RUN apt-get install -y curl
 
 # Configure Apache
-COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
+COPY imagine/docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 RUN a2enmod rewrite headers expires
-RUN chown -R www-data:www-data /var/www/html/storage
-RUN chown -R www-data:www-data /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/imagine/storage
+RUN chown -R www-data:www-data /var/www/html/imagine/bootstrap/cache
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s \
